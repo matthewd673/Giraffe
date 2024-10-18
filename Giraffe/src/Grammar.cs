@@ -1,35 +1,48 @@
 using System.Text.RegularExpressions;
-using System.Collections.Specialized;
 
 namespace Giraffe;
 
 public class Grammar(Dictionary<string, Regex> terminals,
                      List<Production> productions) {
+  public const string Eof = "$$";
+  public const string Epsilon = "{}";
+
   private Dictionary<string, Regex> terminals = terminals;
   private List<Production> productions = productions;
 
-  private readonly Dictionary<string, bool> epsilon = [];
   private readonly Dictionary<string, HashSet<string>> first = [];
   private readonly Dictionary<string, HashSet<string>> follow = [];
+  private readonly Dictionary<int, HashSet<string>> predict = [];
 
   /// <summary>
-  /// Compute the First, Follow, and Predict sets for the grammar.
+  /// Compute the First, Follow, and Predict sets for the grammar. This also
+  /// marks nonterminals that have epsilon productions.
   /// </summary>
   public void ComputeSets() {
-    foreach (string nonterminal in productions.Select(p => p.Name).ToHashSet()) {
+    HashSet<string> nonterminals = productions.Select(p => p.Name).ToHashSet();
+
+    foreach (string nonterminal in nonterminals) {
       first.Add(nonterminal, ComputeFirst(nonterminal));
+    }
+    foreach (string nonterminal in nonterminals) {
       follow.Add(nonterminal, ComputeFollow(nonterminal));
     }
-
-    // TODO: Compute Predict set
+    for (int i = 0; i < productions.Count; i++) {
+      predict.Add(i, ComputePredict(productions[i]));
+    }
   }
 
   public bool HasEpsilon(string nonterminal) =>
-    epsilon.GetValueOrDefault(nonterminal, false);
+    ComputeFirst(nonterminal).Contains(Epsilon);
 
-  public HashSet<string> First(string nonterminal) => first[nonterminal];
+  public IEnumerable<string> First(string nonterminal) =>
+    first[nonterminal].Where(t => !t.Equals(Epsilon));
 
-  public HashSet<string> Follow(string nonterminal) => follow[nonterminal];
+  public IEnumerable<string> Follow(string nonterminal) =>
+    follow[nonterminal].Where(t => !t.Equals(Epsilon));
+
+  public IEnumerable<string> Predict(int index) =>
+    predict[index].Where(t => !t.Equals(Epsilon));
 
   private HashSet<string> ComputeFirst(string nonterminal) {
     // Re-use value if this has been computed in a previous step.
@@ -38,22 +51,37 @@ public class Grammar(Dictionary<string, Regex> terminals,
     }
 
     HashSet<string> first = [];
+
     // Check every production of the nonterminal (except for epsilon).
-    foreach (List<string> production in
+    foreach (Production production in
              productions.Where(p => p.Name.Equals(nonterminal))) {
-      // Note if this is an epsilon production and then skip it
-      if (production.Count == 0) {
-        epsilon[nonterminal] = true;
-        continue;
+      first.UnionWith(ComputeFirst(production));
+    }
+
+    return first;
+  }
+
+  private HashSet<string> ComputeFirst(Production production) {
+    // If this is an epsilon production, epsilon is added to FIRST
+    if (production.Count == 0) {
+      return [Epsilon];
+    }
+
+    HashSet<string> first = [];
+
+    foreach (string term in production) {
+      // If the first item is a terminal then it is in FIRST and we're done
+      if (IsTerminal(term)) {
+        first.Add(term);
+        break;
       }
 
-      // If the first item is a terminal then it is in FIRST
-      if (IsTerminal(production[0])) {
-        first.Add(production[0]);
-      }
       // If the first item is a nonterminal, then its entire FIRST set is in FIRST
-      else {
-        first.UnionWith(ComputeFirst(production[0]));
+      // Additionally, if it has an epsilon production then we'll need to add the
+      // next item in the sequence to FIRST as well.
+      first.UnionWith(ComputeFirst(term));
+      if (!HasEpsilon(term)) {
+        break;
       }
     }
 
@@ -71,15 +99,23 @@ public class Grammar(Dictionary<string, Regex> terminals,
     foreach (Production production in productions) {
       // For every occurrence of the given nonterminal in the production...
       foreach (int ntInd in IndexOfAll(production, nonterminal)) {
-        if (ntInd < production.Count - 1) {
+        for (int i = ntInd + 1; i < production.Count; i++) {
+          // If we've reached the end of the production, then add the
+          // productions' FOLLOW set to FOLLOW
+          if (i == production.Count) {
+            follow.UnionWith(ComputeFollow(production.Name));
+            break;
+          }
+
+          string next = production[i];
           // If it is followed by a terminal, then add that terminal to FOLLOW
           // If it is followed by a nonterminal, then add that nonterminal's FIRST set to FOLLOW
-          string next = production[ntInd + 1];
-          follow.UnionWith(IsTerminal(next) ? [next] : ComputeFirst(next));
-        }
-        // If it occurs at the end of the production, then add the production's nonterminal's FOLLOW set to FOLLOW
-        else {
-          follow.UnionWith(ComputeFollow(production.Name));
+          follow.UnionWith(IsTerminal(next) ? [next] : First(next));
+
+          // If it is followed by a nonterminal with an epsilon production, keep looking
+          if (!HasEpsilon(next)) {
+            break;
+          }
         }
       }
     }
@@ -88,21 +124,18 @@ public class Grammar(Dictionary<string, Regex> terminals,
   }
 
   private HashSet<string> ComputePredict(Production production) {
-    if (production.Count == 0) {
-      return follow[production.Name];
+    HashSet<string> predict = ComputeFirst(production);
+    if (predict.Contains(Epsilon)) {
+      predict.UnionWith(Follow(production.Name));
     }
-    else if (IsTerminal(production[0])) {
-      return [production[0]];
-    }
-    else {
-      return first[production[0]];
-    }
+    return predict;
   }
 
   private static IEnumerable<int> IndexOfAll<T>(IEnumerable<T> sequence, T element) =>
     sequence.Select((e, i) => (e, i))
-      .Where((e, i) => e.Equals(element))
-      .Select((e, i) => i);
+      .Where(t => t.e!.Equals(element))
+      .Select(t => t.i);
 
-  private static bool IsTerminal(string name) => char.IsLower(name[0]);
+  private static bool IsTerminal(string name) =>
+    char.IsLower(name[0]) || name.Equals(Eof);
 }
