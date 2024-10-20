@@ -14,6 +14,10 @@ public class Grammar(Dictionary<string, Regex> terminals,
   private readonly Dictionary<string, HashSet<string>> follow = [];
   private readonly Dictionary<int, HashSet<string>> predict = [];
 
+  public IEnumerable<string> Terminals => terminals.Keys;
+
+  public IEnumerable<string> NonTerminals => productions.Select(p => p.Name).Distinct();
+
   /// <summary>
   /// Compute the First, Follow, and Predict sets for the grammar. This also
   /// marks nonterminals that have epsilon productions.
@@ -32,15 +36,55 @@ public class Grammar(Dictionary<string, Regex> terminals,
     }
   }
 
+  public ParseTable BuildParseTable() {
+    ParseTable table = [];
+    for (int i = 0; i < productions.Count; i++) {
+      foreach (string terminal in Predict(i)) {
+        table.Insert(productions[i].Name, terminal, i);
+      }
+    }
+    return table;
+  }
+
+  /// <summary>
+  /// Check if a nonterminal has an epsilon production. Requires sets for this
+  /// grammar to be computed.
+  /// </summary>
+  /// <param name="nonterminal">The nonterminal to check.</param>
+  /// <returns>
+  ///   <c>true</c> if the nonterminal has an epsilon production,
+  ///   <c>false</c> otherwise.
+  /// </returns>
   public bool HasEpsilon(string nonterminal) =>
     ComputeFirst(nonterminal).Contains(Epsilon);
 
+  /// <summary>
+  /// Enumerate the FIRST set of a nonterminal. Requires sets for this grammar
+  /// to be computed.
+  /// </summary>
+  /// <param name="nonterminal">The nonterminal to enumerate the FIRST set for.</param>
+  /// <returns>An IEnumerable of the terminals in the nonterminal's FIRST set.</returns>
   public IEnumerable<string> First(string nonterminal) =>
     first[nonterminal].Where(t => !t.Equals(Epsilon));
 
+  /// <summary>
+  /// Enumerate the FOLLOW set of a nonterminal. Requires sets for this grammar
+  /// to be computed.
+  /// </summary>
+  /// <param name="nonterminal">The nonterminal to enumerate the FOLLOW set for.</param>
+  /// <returns>An IEnumerable of the terminals in the nonterminal's FOLLOW set.</returns>
   public IEnumerable<string> Follow(string nonterminal) =>
     follow[nonterminal].Where(t => !t.Equals(Epsilon));
 
+  /// <summary>
+  /// Enumerate the PREDICT set of a production. Requires sets for this grammar
+  /// to be computed.
+  /// </summary>
+  /// <param name="index">
+  ///   The index in the productions list of the production to enumerate the
+  ///   PREDICT set for.
+  /// </param>
+  /// <returns>An IEnumerable of the terminals in the production's PREDICT set.</returns>
   public IEnumerable<string> Predict(int index) =>
     predict[index].Where(t => !t.Equals(Epsilon));
 
