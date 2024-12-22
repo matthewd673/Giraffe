@@ -82,5 +82,6 @@ public class GrammarTest {
           }, table.Get(nonterminal, terminal));
       }
     }
+    Assert.True(table.IsLl1());
   }
 }

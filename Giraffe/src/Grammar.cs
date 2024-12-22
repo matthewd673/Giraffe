@@ -16,6 +16,8 @@ public class Grammar(Dictionary<string, Regex> terminals,
 
   public IEnumerable<string> Terminals => terminals.Keys;
 
+  public Regex GetTerminalRule(string terminal) => terminals[terminal];
+
   public IEnumerable<string> NonTerminals => productions.Select(p => p.Name).Distinct();
 
   /// <summary>

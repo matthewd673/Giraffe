@@ -31,11 +31,11 @@ public class ParseTable : Dictionary<(string, string), List<int>> {
       : [];
 
   /// <summary>
-  /// Check if the grammar is LR(1). Runs in O(n*m) time where n is the number
+  /// Check if the grammar is LL(1). Runs in O(n*m) time, where n is the number
   /// of nonterminals and m is the number of terminals.
   /// </summary>
   /// <returns>
-  ///   <c>true</c> if the grammar is LR(1). <c>false</c> otherwise.
+  ///   <c>true</c> if the grammar is LL(1). <c>false</c> otherwise.
   /// </returns>
-  public bool IsLR1() => !Values.Any(l => l.Count > 1);
+  public bool IsLl1() => !Values.Any(l => l.Count > 1);
 }
