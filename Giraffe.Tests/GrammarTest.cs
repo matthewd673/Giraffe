@@ -61,7 +61,7 @@ public class GrammarTest {
 
     // Table
     ParseTable table = grammar.BuildParseTable();
-    foreach (string nonterminal in grammar.NonTerminals) {
+    foreach (string nonterminal in grammar.Nonterminals) {
       foreach (string terminal in grammar.Terminals) {
         Assert.Equal((nonterminal, terminal) switch {
             ("S", "a") => [0],

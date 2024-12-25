@@ -1,6 +1,6 @@
 namespace Giraffe;
 
-public class ParseTable : Dictionary<(string, string), List<int>> {
+public class ParseTable : Dictionary<ParseTableKey, List<int>> {
   /// <summary>
   /// Insert a new entry into the parse table.
   /// </summary>
@@ -8,11 +8,11 @@ public class ParseTable : Dictionary<(string, string), List<int>> {
   /// <param name="terminal">The terminal of the entry.</param>
   /// <param name="prodInd">The production index to store in the table.</param>
   public void Insert(string nonterminal, string terminal, int prodInd) {
-    if (TryGetValue((nonterminal, terminal), out List<int>? prodList)) {
+    if (TryGetValue(new(nonterminal, terminal), out List<int>? prodList)) {
       prodList.Add(prodInd);
     }
     else {
-      Add((nonterminal, terminal), [prodInd]);
+      Add(new(nonterminal, terminal), [prodInd]);
     }
   }
 
@@ -26,7 +26,7 @@ public class ParseTable : Dictionary<(string, string), List<int>> {
   ///   given nonterminal and terminal in the table.
   /// </returns>
   public List<int> Get(string nonterminal, string terminal) =>
-    TryGetValue((nonterminal, terminal), out List<int>? prodIndList)
+    TryGetValue(new(nonterminal, terminal), out List<int>? prodIndList)
       ? prodIndList
       : [];
 

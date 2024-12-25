@@ -1,24 +1,29 @@
+using System.Collections.Immutable;
 using System.Text.RegularExpressions;
 
 namespace Giraffe;
 
-public class Grammar(Dictionary<string, Regex> terminals,
+public class Grammar(Dictionary<string, Regex> terminalDefs,
                      List<Production> productions) {
-  public const string Eof = "$$";
+  public const string Eof = "Eof";
   public const string Epsilon = "{}";
 
-  private Dictionary<string, Regex> terminals = terminals;
-  private List<Production> productions = productions;
+  private Dictionary<string, Regex> terminalDefs = terminalDefs;
+  public ImmutableList<Production> Productions { get; } =
+    ImmutableList.CreateRange(productions);
 
   private readonly Dictionary<string, HashSet<string>> first = [];
   private readonly Dictionary<string, HashSet<string>> follow = [];
   private readonly Dictionary<int, HashSet<string>> predict = [];
 
-  public IEnumerable<string> Terminals => terminals.Keys;
+  public ImmutableList<string> Terminals { get; } =
+    // If we don't manually add Eof as a terminal, consumers that read the table
+    // will be confused when they encounter it.
+    ImmutableList.CreateRange(terminalDefs.Keys).Add(Eof);
+  public ImmutableList<string> Nonterminals { get; } =
+    ImmutableList.CreateRange(productions.Select(p => p.Name).Distinct().ToList());
 
-  public Regex GetTerminalRule(string terminal) => terminals[terminal];
-
-  public IEnumerable<string> NonTerminals => productions.Select(p => p.Name).Distinct();
+  public Regex GetTerminalRule(string terminal) => terminalDefs[terminal];
 
   /// <summary>
   /// Compute the First, Follow, and Predict sets for the grammar. This also
@@ -182,6 +187,6 @@ public class Grammar(Dictionary<string, Regex> terminals,
       .Where(t => t.e!.Equals(element))
       .Select(t => t.i);
 
-  private static bool IsTerminal(string name) =>
+  public static bool IsTerminal(string name) =>
     char.IsLower(name[0]) || name.Equals(Eof);
 }
