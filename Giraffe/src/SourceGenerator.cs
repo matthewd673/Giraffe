@@ -12,11 +12,31 @@ public class SourceGenerator(Grammar grammar) {
    private const string ProductionsListName = "productions";
    private const string ParseTableFieldName = "parseTable";
 
-   private readonly Grammar grammar = grammar;
+   public string ParserClassName { get; set; } = "Parser";
+
    private readonly ParseTable parseTable = grammar.BuildParseTable();
 
    public string Generate() =>
-      GenerateProductionsListDeclaration().NormalizeWhitespace().ToString();
+      GenerateParserFile().NormalizeWhitespace().ToString();
+
+   private CompilationUnitSyntax GenerateParserFile() =>
+      CompilationUnit().WithUsings(List<UsingDirectiveSyntax>([
+                                      UsingDirective(QualifiedName(QualifiedName(IdentifierName("System"), IdentifierName("Collections")),
+                                                        IdentifierName("Generic"))),
+                                      UsingDirective(QualifiedName(QualifiedName(IdentifierName("System"), IdentifierName("Text")),
+                                                        IdentifierName("RegularExpressions"))),
+                                   ]))
+                       .WithMembers(SingletonList<MemberDeclarationSyntax>(GenerateParserClass()))
+                       .NormalizeWhitespace();
+
+   private ClassDeclarationSyntax GenerateParserClass() =>
+      ClassDeclaration(ParserClassName)
+         .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
+         .WithMembers(List<MemberDeclarationSyntax>([GenerateTokenTypeDeclaration(),
+                                                     GenerateTokenDefDictDeclaration(),
+                                                     GenerateProductionsListDeclaration(),
+                                                     GenerateTableDeclaration(),
+                                                    ]));
 
    /// <summary>
    /// This method generates the following:
@@ -168,11 +188,8 @@ public class SourceGenerator(Grammar grammar) {
       // by -(index + 1). This way they can be differentiated with no ambiguity.
       SeparatedList<ExpressionSyntax>(GenerateCommaSeparatedList(parseTable.Keys,
                                          key =>
-                                            GenerateTableEntry(GetNonterminalIndex(grammar.Nonterminals.IndexOf(key.Nonterminal)),
-                                               GetTerminalIndex(grammar
-                                                  .Terminals
-                                                  .IndexOf(key
-                                                     .Terminal)),
+                                            GenerateTableEntry(grammar.Nonterminals.IndexOf(key.Nonterminal),
+                                               grammar.Terminals.IndexOf(key.Terminal),
                                                parseTable[key][0])));
 
    /// <summary>
