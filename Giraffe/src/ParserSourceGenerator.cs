@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -6,7 +5,7 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Giraffe;
 
-public class ParserSourceGenerator(Grammar grammar) : SourceGenerator(grammar) {
+public class ParserSourceGenerator(Grammar grammar) : SourceGenerator {
   private const string ProductionsListName = "productions";
   private const string ParseTableFieldName = "parseTable";
 

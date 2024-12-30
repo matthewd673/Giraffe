@@ -5,7 +5,7 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Giraffe;
 
-public abstract class SourceGenerator(Grammar grammar) {
+public abstract class SourceGenerator {
   public abstract CompilationUnitSyntax Generate();
 
    protected delegate TOutput SyntaxTransformer<in TInput, out TOutput>(TInput input) where TOutput : SyntaxNode;
