@@ -8,7 +8,7 @@ namespace Giraffe;
 
 public class ScannerSourceGenerator(Grammar grammar) : SourceGenerator(grammar) {
   private const string TokenDefDictFieldName = "tokenDef";
-  private const string TerminalTypeEnumName = "TokenType";
+  private const string EofConstantName = "Eof";
 
   public string ScannerClassName { get; set; } = "Scanner";
 
@@ -27,25 +27,14 @@ public class ScannerSourceGenerator(Grammar grammar) : SourceGenerator(grammar) 
   private ClassDeclarationSyntax GenerateScannerClass() =>
     ClassDeclaration(ScannerClassName)
       .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
-      .WithMembers(List<MemberDeclarationSyntax>([GenerateTokenTypeDeclaration(),
-                                                  GenerateTokenDefDictDeclaration()]));
-
-  private EnumDeclarationSyntax GenerateTokenTypeDeclaration() =>
-    EnumDeclaration(TerminalTypeEnumName)
-      .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
-      .WithMembers(SeparatedList<EnumMemberDeclarationSyntax>(GenerateTokenTypeMembers()));
-
-  private IEnumerable<SyntaxNodeOrToken> GenerateTokenTypeMembers() =>
-    GenerateCommaSeparatedList(grammar.Terminals, GenerateTokenTypeMember);
-
-  private EnumMemberDeclarationSyntax GenerateTokenTypeMember(string terminal) =>
-    EnumMemberDeclaration(Identifier(terminal));
+      .WithMembers(List<MemberDeclarationSyntax>([GenerateTokenDefDictDeclaration(),
+                                                  GenerateEofConstant()]));
 
   private MemberDeclarationSyntax GenerateTokenDefDictDeclaration() =>
     FieldDeclaration(VariableDeclaration(GenericName(Identifier("Dictionary"))
                                            .WithTypeArgumentList(
                                              TypeArgumentList(SeparatedList<TypeSyntax>(new SyntaxNodeOrToken[] {
-                                               IdentifierName(TerminalTypeEnumName),
+                                               PredefinedType(Token(SyntaxKind.IntKeyword)),
                                                Token(SyntaxKind.CommaToken),
                                                IdentifierName("Regex")}))))
                        .WithVariables(SingletonSeparatedList(
@@ -60,17 +49,22 @@ public class ScannerSourceGenerator(Grammar grammar) : SourceGenerator(grammar) 
   private SeparatedSyntaxList<ExpressionSyntax> GenerateTokenDefEntries() =>
     // Don't try to generate a rule for Eof, which has none
     SeparatedList<ExpressionSyntax>(GenerateCommaSeparatedList(grammar.Terminals.Where(t => !t.Equals(Grammar.Eof)),
-                                    terminal => GenerateTokenDefEntry(terminal, grammar.GetTerminalRule(terminal))));
+                                    terminal => GenerateTokenDefEntry(grammar.Terminals.IndexOf(terminal), grammar.GetTerminalRule(terminal))));
 
-  private InitializerExpressionSyntax GenerateTokenDefEntry(string terminal, Regex regex) =>
+  private InitializerExpressionSyntax GenerateTokenDefEntry(int terminal, Regex regex) =>
     InitializerExpression(SyntaxKind.ArrayInitializerExpression,
                           SeparatedList<ExpressionSyntax>(new SyntaxNodeOrToken[] {
-                            MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
-                                                      IdentifierName(TerminalTypeEnumName),
-                                                      IdentifierName(terminal)),
+                            LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(terminal)),
                             Token(SyntaxKind.CommaToken),
                             ImplicitObjectCreationExpression()
                                  .WithArgumentList(ArgumentList(SingletonSeparatedList(
                                                      Argument(LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(regex.ToString())))))),
                           }));
+
+  private MemberDeclarationSyntax GenerateEofConstant() =>
+    FieldDeclaration(VariableDeclaration(PredefinedType(Token(SyntaxKind.IntKeyword)))
+                       .WithVariables(SingletonSeparatedList(VariableDeclarator(Identifier(EofConstantName))
+                       .WithInitializer(EqualsValueClause(LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(grammar.Terminals.Count - 1)))))))
+      .WithModifiers(TokenList(Token(SyntaxKind.PrivateKeyword),
+                               Token(SyntaxKind.ConstKeyword)));
 }

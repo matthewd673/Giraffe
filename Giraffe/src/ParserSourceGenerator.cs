@@ -66,34 +66,19 @@ public class ParserSourceGenerator(Grammar grammar) : SourceGenerator(grammar) {
 
   private MemberDeclarationSyntax GenerateTableDeclaration() =>
     FieldDeclaration(VariableDeclaration(GenericName(Identifier("Dictionary"))
-                                            .WithTypeArgumentList(
-                                             TypeArgumentList(SeparatedList
-                                                <TypeSyntax>(new
-                                                   SyntaxNodeOrToken
-                                                   [] {
-                                                      TupleType(SeparatedList
-                                                      <
-                                                         TupleElementSyntax>(new
-                                                         SyntaxNodeOrToken
-                                                         [] {
-                                                            TupleElement(PredefinedType(Token(SyntaxKind
-                                                               .IntKeyword))),
-                                                            Token(SyntaxKind
-                                                               .CommaToken),
-                                                            TupleElement(PredefinedType(Token(SyntaxKind
-                                                               .IntKeyword))),
-                                                         })),
-                                                      Token(SyntaxKind
-                                                         .CommaToken),
-                                                      PredefinedType(Token(SyntaxKind
-                                                         .IntKeyword)),
-                                                   }))))
-                        .WithVariables(SingletonSeparatedList(VariableDeclarator(Identifier(ParseTableFieldName))
-                                          .WithInitializer(EqualsValueClause(ImplicitObjectCreationExpression()
-                                             .WithInitializer(InitializerExpression(SyntaxKind.ComplexElementInitializerExpression,
-                                                GenerateTableEntries())))))))
-       .WithModifiers(TokenList(Token(SyntaxKind.PrivateKeyword),
-                                Token(SyntaxKind.ReadOnlyKeyword)));
+                                           .WithTypeArgumentList(TypeArgumentList(SeparatedList<TypeSyntax>(new SyntaxNodeOrToken[] {
+                                              TupleType(SeparatedList<TupleElementSyntax>(new SyntaxNodeOrToken[] {
+                                                   TupleElement(PredefinedType(Token(SyntaxKind.IntKeyword))),
+                                                   Token(SyntaxKind.CommaToken),
+                                                   TupleElement(PredefinedType(Token(SyntaxKind.IntKeyword)))})),
+                                              Token(SyntaxKind.CommaToken),
+                                              PredefinedType(Token(SyntaxKind.IntKeyword))}))))
+                       .WithVariables(SingletonSeparatedList(VariableDeclarator(Identifier(ParseTableFieldName))
+                                        .WithInitializer(EqualsValueClause(ImplicitObjectCreationExpression()
+                                          .WithInitializer(InitializerExpression(SyntaxKind.ComplexElementInitializerExpression,
+                                            GenerateTableEntries())))))))
+      .WithModifiers(TokenList(Token(SyntaxKind.PrivateKeyword),
+                               Token(SyntaxKind.ReadOnlyKeyword)));
 
   // TODO: This code assumes the grammar has look-ahead = 1
   // In table entries, we refer to nonterminals by (index + 1) and terminals

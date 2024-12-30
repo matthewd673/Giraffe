@@ -79,17 +79,12 @@ public class ManualParser(ManualScanner scanner) {
 
   // Temporary debug helper
   private string ProductionToReadableString(List<int> production) =>
-    $"[{string.Join(", ",
-                    production.Select(i =>
-                                        i < 0
-                                          ? $"{(ManualScanner.TokenType)(-i - 1)}"
-                                          : $"NT_{i - 1}"))}]";
+    $"[{string.Join(", ", production.Select(i => i < 0 ? $"T_{-i - 1}" : $"NT_{i - 1}"))}]";
 
   private IEnumerable<ManualScanner.Token> ParseNonterminal(int nonterminal) {
     Console.WriteLine($"Parsing: NT {nonterminal}");
 
-    if (parseTable.TryGetValue((nonterminal, (int)scanner.Peek().Type),
-                               out int production)) {
+    if (parseTable.TryGetValue((nonterminal, scanner.Peek().Type), out int production)) {
       foreach (ManualScanner.Token token in ParseProduction(production)) {
         yield return token;
       }
@@ -114,10 +109,10 @@ public class ManualParser(ManualScanner scanner) {
 
       // It's a terminal
       int nextTerm = -nextInd - 1;
-      Console.WriteLine($"Expecting: {nextTerm} ({(ManualScanner.TokenType)nextTerm})");
-      Console.WriteLine($"Seeing next: {scanner.Peek().Type} ({(int)scanner.Peek().Type})");
-      if (nextTerm != (int)scanner.Peek().Type) {
-        throw new ParserException(scanner.Peek(), $"Unexpected token {scanner.Peek().Type} (\"{scanner.Peek().Image}\")");
+      Console.WriteLine($"Expecting: T_{nextTerm}");
+      Console.WriteLine($"Seeing next: T_{scanner.Peek().Type}");
+      if (nextTerm != scanner.Peek().Type) {
+        throw new ParserException(scanner.Peek(), $"Unexpected token T_{scanner.Peek().Type} (\"{scanner.Peek().Image}\")");
       }
 
       Console.WriteLine($"Consuming: {scanner.Peek().Type} (\"{scanner.Peek().Image}\")");

@@ -3,8 +3,8 @@ using System.Text.RegularExpressions;
 namespace Giraffe;
 
 public class ManualScanner {
-  public readonly struct Token(TokenType type, string image) {
-    public TokenType Type { get; } = type;
+  public readonly struct Token(int type, string image) {
+    public int Type { get; } = type;
     public string Image { get; } = image;
   }
 
@@ -12,42 +12,32 @@ public class ManualScanner {
     public int Index { get; } = index;
   }
 
-  // TokenType is generated
-  public enum TokenType
-  {
-    a,
-    b,
-    c,
-    d,
-    e,
-    Eof,
-  }
-
   // tokenDef is generated
-  private readonly Dictionary<TokenType, Regex> tokenDef = new()
-  {
-    {
-      TokenType.a,
+  private readonly Dictionary<int, Regex> tokenDef = new()
+  { {
+      0,
       new("a")
     },
     {
-      TokenType.b,
+      1,
       new("b")
     },
     {
-      TokenType.c,
+      2,
       new("c")
     },
     {
-      TokenType.d,
+      3,
       new("d")
     },
     {
-      TokenType.e,
+      4,
       new("e")
     },
   };
 
+  // Eof is generated
+  private const int Eof = 5;
   private readonly string text;
   private int scanIndex = 0;
   private Token? nextToken = null;
@@ -70,12 +60,12 @@ public class ManualScanner {
   private Token ScanNext() {
     // Return end of file once we reach it
     if (scanIndex >= text.Length) {
-      return new(TokenType.Eof, "");
+      return new(Eof, "");
     }
 
     // Find the best possible token match from defs list
     Token? best = null;
-    foreach (TokenType t in tokenDef.Keys) {
+    foreach (int t in tokenDef.Keys) {
       // Find first match
       Match match = tokenDef[t].Match(text, scanIndex);
 
