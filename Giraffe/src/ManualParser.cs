@@ -2,57 +2,10 @@ using System.Text.RegularExpressions;
 
 namespace Giraffe;
 
-public class ManualParser(string text) {
-  public string Text { get; } = text;
-
-  public readonly struct Token(TokenType type, string image) {
-    public TokenType Type { get; } = type;
-    public string Image { get; } = image;
+public class ManualParser(ManualScanner scanner) {
+  public class ParserException(ManualScanner.Token token, string message) : Exception(message) {
+    public ManualScanner.Token Token { get; } = token;
   }
-
-  public class ScannerException(int index, string message) : Exception(message) {
-    public int Index { get; } = index;
-  }
-
-  public class ParserException(Token token, string message) : Exception(message) {
-    public Token Token { get; } = token;
-  }
-
-  // TokenType is generated
-  public enum TokenType
-  {
-    a,
-    b,
-    c,
-    d,
-    e,
-    Eof,
-  }
-
-  // tokenDef is generated
-  private readonly Dictionary<TokenType, Regex> tokenDef = new()
-  {
-    {
-      TokenType.a,
-      new("a")
-    },
-    {
-      TokenType.b,
-      new("b")
-    },
-    {
-      TokenType.c,
-      new("c")
-    },
-    {
-      TokenType.d,
-      new("d")
-    },
-    {
-      TokenType.e,
-      new("e")
-    },
-  };
 
   // productions is generated
   private readonly List<List<int>> productions = [[2, 3, 4, 5, 6, -6, ], [-1, ], [], [-2, ], [], [-3, ], [-4, ], [], [-5, ], [], ];
@@ -118,12 +71,9 @@ public class ManualParser(string text) {
     },
   };
 
-  private int scanIndex = 0;
-  private Token nextToken;
   private const int EntryNonterminal = 0;
 
-  public List<Token> Parse() {
-    nextToken = ScanNext();
+  public List<ManualScanner.Token> Parse() {
     return ParseNonterminal(EntryNonterminal).ToList();
   }
 
@@ -132,31 +82,31 @@ public class ManualParser(string text) {
     $"[{string.Join(", ",
                     production.Select(i =>
                                         i < 0
-                                          ? $"{(TokenType)(-i - 1)}"
+                                          ? $"{(ManualScanner.TokenType)(-i - 1)}"
                                           : $"NT_{i - 1}"))}]";
 
-  private IEnumerable<Token> ParseNonterminal(int nonterminal) {
+  private IEnumerable<ManualScanner.Token> ParseNonterminal(int nonterminal) {
     Console.WriteLine($"Parsing: NT {nonterminal}");
 
-    if (parseTable.TryGetValue((nonterminal, (int)nextToken.Type),
+    if (parseTable.TryGetValue((nonterminal, (int)scanner.Peek().Type),
                                out int production)) {
-      foreach (Token token in ParseProduction(production)) {
+      foreach (ManualScanner.Token token in ParseProduction(production)) {
         yield return token;
       }
     }
     else {
-      throw new ParserException(nextToken, $"{nextToken.Type} is not in FIRST(NT_{nonterminal})");
+      throw new ParserException(scanner.Peek(), $"{scanner.Peek().Type} is not in FIRST(NT_{nonterminal})");
     }
   }
 
-  private IEnumerable<Token> ParseProduction(int production) {
+  private IEnumerable<ManualScanner.Token> ParseProduction(int production) {
     Console.WriteLine($"Production: {production} ({ProductionToReadableString(productions[production])})");
 
     for (int currInd = 0; currInd < productions[production].Count; currInd += 1) {
       int nextInd = productions[production][currInd];
 
       if (nextInd > 0) { // It's a nonterminal
-        foreach (Token t in ParseNonterminal(nextInd - 1)) {
+        foreach (ManualScanner.Token t in ParseNonterminal(nextInd - 1)) {
           yield return t;
         }
         continue;
@@ -164,54 +114,16 @@ public class ManualParser(string text) {
 
       // It's a terminal
       int nextTerm = -nextInd - 1;
-      Console.WriteLine($"Expecting: {nextTerm} ({(TokenType)nextTerm})");
-      Console.WriteLine($"Seeing next: {nextToken.Type} ({(int)nextToken.Type})");
-      if (nextTerm != (int)nextToken.Type) {
-        throw new ParserException(nextToken, $"Unexpected token {nextToken.Type} (\"{nextToken.Image}\")");
+      Console.WriteLine($"Expecting: {nextTerm} ({(ManualScanner.TokenType)nextTerm})");
+      Console.WriteLine($"Seeing next: {scanner.Peek().Type} ({(int)scanner.Peek().Type})");
+      if (nextTerm != (int)scanner.Peek().Type) {
+        throw new ParserException(scanner.Peek(), $"Unexpected token {scanner.Peek().Type} (\"{scanner.Peek().Image}\")");
       }
 
-      Console.WriteLine($"Consuming: {nextToken.Type} (\"{nextToken.Image}\")");
-      yield return nextToken;
-      nextToken = ScanNext();
+      Console.WriteLine($"Consuming: {scanner.Peek().Type} (\"{scanner.Peek().Image}\")");
+      yield return scanner.Eat();
     }
 
     Console.WriteLine("Done!");
-  }
-
-  private Token ScanNext() {
-    // Return end of file once we reach it
-    if (scanIndex >= Text.Length) {
-      return new(TokenType.Eof, "");
-    }
-
-    // Find the best possible token match from defs list
-    Token? best = null;
-    foreach (TokenType t in tokenDef.Keys) {
-      // Find first match
-      Match match = tokenDef[t].Match(Text, scanIndex);
-
-      // Skip if no match or match is not at beginning of string
-      if (!match.Success || match.Index > scanIndex) {
-        continue;
-      }
-
-      if (!best.HasValue) {
-        best = new(t, match.Value);
-        continue;
-      }
-
-      // Check if this is better than the current best (longer is better)
-      if (match.Length > best.Value.Image.Length) {
-        best = new(t, match.Value);
-      }
-    }
-
-    if (!best.HasValue) {
-      throw new ScannerException(scanIndex, $"Illegal character: '{Text[scanIndex]}'");
-    }
-
-    // Trim best match from string and return
-    scanIndex += best.Value.Image.Length;
-    return best.Value;
   }
 }
