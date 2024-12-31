@@ -1,17 +1,15 @@
-using System.Diagnostics;
-
 namespace Giraffe.Tests;
 
 public class GrammarTest {
   [Fact]
-  public void GrammarSetCalculation() {
+  public void GivenSimpleLL1Grammar_WhenComputeSetsCalled_ThenCorrectSetsComputed() {
     Grammar grammar = new(
       new() {
-        {"a", new("a")},
-        {"b", new("b")},
-        {"c", new("c")},
-        {"d", new("d")},
-        {"e", new("e")},
+        { "a", new("a") },
+        { "b", new("b") },
+        { "c", new("c") },
+        { "d", new("d") },
+        { "e", new("e") },
       },
       [
         new("S", ["A", "B", "C", "D", "E", Grammar.Eof]),
@@ -25,6 +23,7 @@ public class GrammarTest {
     grammar.ComputeSets();
 
     // Epsilon
+    Assert.False(grammar.HasEpsilon("S"));
     Assert.True(grammar.HasEpsilon("A"));
     Assert.True(grammar.HasEpsilon("B"));
     Assert.False(grammar.HasEpsilon("C"));
@@ -61,27 +60,113 @@ public class GrammarTest {
 
     // Table
     ParseTable table = grammar.BuildParseTable();
-    foreach (string nonterminal in grammar.Nonterminals) {
-      foreach (string terminal in grammar.Terminals) {
-        Assert.Equal((nonterminal, terminal) switch {
-            ("S", "a") => [0],
-            ("S", "b") => [0],
-            ("S", "c") => [0],
-            ("A", "a") => [1],
-            ("A", "b") => [2],
-            ("A", "c") => [2],
-            ("B", "b") => [3],
-            ("B", "c") => [4],
-            ("C", "c") => [5],
-            ("D", "d") => [6],
-            ("D", "e") => [7],
-            ("D", Grammar.Eof) => [7],
-            ("E", "e") => [8],
-            ("E", Grammar.Eof) => [9],
-            _ => [],
-          }, table.Get(nonterminal, terminal));
+    AssertParseTableEntries(new() {
+      { ("S", "a"), [0] },
+      { ("S", "b"), [0] },
+      { ("S", "c"), [0] },
+      { ("A", "a"), [1] },
+      { ("A", "b"), [2] },
+      { ("A", "c"), [2] },
+      { ("B", "b"), [3] },
+      { ("B", "c"), [4] },
+      { ("C", "c"), [5] },
+      { ("D", "d"), [6] },
+      { ("D", "e"), [7] },
+      { ("D", Grammar.Eof), [7] },
+      { ("E", "e"), [8] },
+      { ("E", Grammar.Eof), [9] },
+    }, table);
+    Assert.True(table.IsLl1());
+  }
+
+  [Fact]
+  public void GivenRightRecursiveLL1Grammar_WhenComputeSetsCalled_ThenCorrectSetsComputed() {
+    Grammar grammar = new(
+      new() {
+        {"a", new("a")},
+      },
+      [
+        new("S", ["a", "T", Grammar.Eof]),
+        new("T", ["a", "T"]), new("T", []),
+      ]
+    );
+    grammar.ComputeSets();
+
+    // Epsilon
+    Assert.False(grammar.HasEpsilon("S"));
+    Assert.True(grammar.HasEpsilon("T"));
+
+    // First
+    Assert.Equal(["a"], grammar.First("S"));
+    Assert.Equal(["a"], grammar.First("T"));
+
+    // Follow
+    Assert.Equal([], grammar.Follow("S"));
+    Assert.Equal([Grammar.Eof], grammar.Follow("T"));
+
+    // Predict
+    Assert.Equal(["a"], grammar.Predict(0));
+    Assert.Equal(["a"], grammar.Predict(1));
+    Assert.Equal([Grammar.Eof], grammar.Predict(2));
+
+    // Table
+    ParseTable table = grammar.BuildParseTable();
+    AssertParseTableEntries(new() {
+        { ("S", "a"), [0] },
+        { ("T", "a"), [1] },
+        { ("T", Grammar.Eof), [2] },
+      }, table);
+    Assert.True(table.IsLl1());
+  }
+
+  [Fact]
+  public void GivenLL1GrammarWithNtThatFollowsItself_WhenComputeSetsCalled_ThenCorrectSetsComputed() {
+    Grammar grammar = new(new() {
+      { "a", new("a") },
+      { "b", new("b") },
+    },
+    [
+      new("S", ["A", "A", Grammar.Eof]),
+      new("A", ["a"]), new("A", ["b"]),
+    ]);
+    grammar.ComputeSets();
+
+    // Epsilon
+    Assert.False(grammar.HasEpsilon("S"));
+    Assert.False(grammar.HasEpsilon("A"));
+
+    // First
+    Assert.Equal(["a", "b"], grammar.First("S"));
+    Assert.Equal(["a", "b"], grammar.First("A"));
+
+    // Follow
+    Assert.Equal([], grammar.Follow("S"));
+    Assert.Equal(["a", "b", Grammar.Eof], grammar.Follow("A"));
+
+    // Predict
+    Assert.Equal(["a", "b"], grammar.Predict(0));
+    Assert.Equal(["a"], grammar.Predict(1));
+    Assert.Equal(["b"], grammar.Predict(2));
+
+    // Table
+    ParseTable table = grammar.BuildParseTable();
+    AssertParseTableEntries(new() {
+      { ("S", "a"), [0] },
+      { ("S", "b"), [0] },
+      { ("A", "a"), [1] },
+      { ("A", "b"), [2] },
+    }, table);
+    Assert.True(table.IsLl1());
+  }
+
+  private void AssertParseTableEntries(Dictionary<(string, string), List<int>> expected, ParseTable parseTable) {
+    foreach (string nonterminal in parseTable.Keys.Select(k => k.Nonterminal).ToHashSet()) {
+      foreach (string terminal in parseTable.Keys.Select(k => k.Terminal).ToHashSet()) {
+        Assert.Equal(expected.TryGetValue((nonterminal, terminal), out List<int>? expectedProduction)
+                       ? expectedProduction
+                       : [],
+                     parseTable.Get(nonterminal, terminal));
       }
     }
-    Assert.True(table.IsLl1());
   }
 }
