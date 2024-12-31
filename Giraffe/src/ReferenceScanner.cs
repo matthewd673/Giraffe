@@ -71,11 +71,7 @@ public class ManualScanner
                 continue;
             }
 
-            if (!best.HasValue)
-            {
-                best = new(t, match.Value);
-                continue;
-            }
+            best ??= new(t, match.Value);
 
             if (match.Length > best.Value.Image.Length)
             {
