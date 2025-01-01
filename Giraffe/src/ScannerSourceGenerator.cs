@@ -8,6 +8,7 @@ namespace Giraffe;
 
 public class ScannerSourceGenerator(Grammar grammar) : SourceGenerator {
   private const string TokenDefArrayFieldName = "tokenDef";
+  private const string NamesArrayFieldName = "names";
   private const string InputFieldName = "input";
   private const string ScanIndexFieldName = "scanIndex";
   private const string NextTokenFieldName = "nextToken";
@@ -18,6 +19,7 @@ public class ScannerSourceGenerator(Grammar grammar) : SourceGenerator {
   public string TokenStructImagePropertyName { get; set; } = "Image";
   public string ScannerExceptionClassName { get; set; } = "ScannerException";
   public string ScannerExceptionIndexPropertyName { get; set; } = "Index";
+  public string NameOfMethodName { get; set; } = "NameOf";
   public string PeekMethodName { get; set; } = "Peek";
   public string EatMethodName { get; set; } = "Eat";
   public string ScanNextMethodName { get; set; } = "ScanNext";
@@ -40,11 +42,13 @@ public class ScannerSourceGenerator(Grammar grammar) : SourceGenerator {
     ClassDeclaration(ScannerClassName)
       .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
       .WithMembers(List<MemberDeclarationSyntax>([GenerateTokenDefArrayDeclaration(),
+                                                  GenerateNamesArrayDeclaration(),
                                                   // Boilerplate...
                                                   GenerateTokenStructBoilerplate(),
                                                   GenerateScannerExceptionBoilerplate(),
                                                   ..GenerateFieldBoilerplate(),
                                                   GenerateConstructorBoilerplate(),
+                                                  GenerateNameOfMethodBoilerplate(),
                                                   GeneratePeekMethodBoilerplate(),
                                                   GenerateEatMethodBoilerplate(),
                                                   GenerateScanNextMethodBoilerplate(),
@@ -70,6 +74,21 @@ public class ScannerSourceGenerator(Grammar grammar) : SourceGenerator {
     ExpressionElement(ImplicitObjectCreationExpression()
                         .WithArgumentList(ArgumentList(SingletonSeparatedList(Argument(LiteralExpression(SyntaxKind.StringLiteralExpression,
                                                                                 Literal(regex.ToString())))))));
+
+  private FieldDeclarationSyntax GenerateNamesArrayDeclaration() =>
+      FieldDeclaration(VariableDeclaration(ArrayType(PredefinedType(Token(SyntaxKind.StringKeyword)))
+                                               .WithRankSpecifiers(SingletonList(ArrayRankSpecifier(SingletonSeparatedList
+                                                                       <ExpressionSyntax>(OmittedArraySizeExpression())))))
+                           .WithVariables(SingletonSeparatedList(VariableDeclarator(Identifier(NamesArrayFieldName))
+                                                                     .WithInitializer(EqualsValueClause(CollectionExpression(GenerateNamesElements()))))))
+      .WithModifiers(TokenList(Token(SyntaxKind.PrivateKeyword), Token(SyntaxKind.ReadOnlyKeyword)));
+
+  private SeparatedSyntaxList<CollectionElementSyntax> GenerateNamesElements() =>
+    SeparatedList<CollectionElementSyntax>(GenerateCommaSeparatedList(grammar.Terminals.Where(t => !t.Equals(Grammar.Eof)),
+                                                                      GenerateNamesElement));
+
+  private ExpressionElementSyntax GenerateNamesElement(string name) =>
+  ExpressionElement(LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(name)));
 
   private StructDeclarationSyntax GenerateTokenStructBoilerplate() =>
     StructDeclaration(TokenStructName)
@@ -150,6 +169,17 @@ public class ScannerSourceGenerator(Grammar grammar) : SourceGenerator {
                                     ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression,
                                                                              IdentifierName(NextTokenFieldName),
                                                                              InvocationExpression(IdentifierName(ScanNextMethodName)))))));
+
+  private GlobalStatementSyntax GenerateNameOfMethodBoilerplate() =>
+      GlobalStatement(LocalFunctionStatement(PredefinedType(Token(SyntaxKind.StringKeyword)),
+                                             Identifier(NameOfMethodName))
+                      .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
+                      .WithParameterList(ParameterList(SingletonSeparatedList(Parameter(Identifier("terminal"))
+                                                                                  .WithType(PredefinedType(Token(SyntaxKind
+                                                                                      .IntKeyword))))))
+                      .WithExpressionBody(ArrowExpressionClause(ElementAccessExpression(IdentifierName(NamesArrayFieldName))
+                                                                    .WithArgumentList(BracketedArgumentList(SingletonSeparatedList(Argument(IdentifierName("terminal")))))))
+                      .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)));
 
   private GlobalStatementSyntax GeneratePeekMethodBoilerplate() =>
     GlobalStatement(LocalFunctionStatement(IdentifierName(TokenStructName), Identifier(PeekMethodName))
