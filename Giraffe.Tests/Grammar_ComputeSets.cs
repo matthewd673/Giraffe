@@ -1,6 +1,6 @@
 namespace Giraffe.Tests;
 
-public class GrammarTest {
+public class Grammar_ComputeSets {
   [Fact]
   public void GivenSimpleLL1Grammar_WhenComputeSetsCalled_ThenCorrectSetsComputed() {
     Grammar grammar = new(
@@ -57,26 +57,6 @@ public class GrammarTest {
     Assert.Equal(["e", Grammar.Eof], grammar.Predict(7));
     Assert.Equal(["e"], grammar.Predict(8));
     Assert.Equal([Grammar.Eof], grammar.Predict(9));
-
-    // Table
-    ParseTable table = grammar.BuildParseTable();
-    AssertParseTableEntries(new() {
-      { ("S", "a"), [0] },
-      { ("S", "b"), [0] },
-      { ("S", "c"), [0] },
-      { ("A", "a"), [1] },
-      { ("A", "b"), [2] },
-      { ("A", "c"), [2] },
-      { ("B", "b"), [3] },
-      { ("B", "c"), [4] },
-      { ("C", "c"), [5] },
-      { ("D", "d"), [6] },
-      { ("D", "e"), [7] },
-      { ("D", Grammar.Eof), [7] },
-      { ("E", "e"), [8] },
-      { ("E", Grammar.Eof), [9] },
-    }, table);
-    Assert.True(table.IsLl1());
   }
 
   [Fact]
@@ -108,15 +88,6 @@ public class GrammarTest {
     Assert.Equal(["a"], grammar.Predict(0));
     Assert.Equal(["a"], grammar.Predict(1));
     Assert.Equal([Grammar.Eof], grammar.Predict(2));
-
-    // Table
-    ParseTable table = grammar.BuildParseTable();
-    AssertParseTableEntries(new() {
-        { ("S", "a"), [0] },
-        { ("T", "a"), [1] },
-        { ("T", Grammar.Eof), [2] },
-      }, table);
-    Assert.True(table.IsLl1());
   }
 
   [Fact]
@@ -147,26 +118,5 @@ public class GrammarTest {
     Assert.Equal(["a", "b"], grammar.Predict(0));
     Assert.Equal(["a"], grammar.Predict(1));
     Assert.Equal(["b"], grammar.Predict(2));
-
-    // Table
-    ParseTable table = grammar.BuildParseTable();
-    AssertParseTableEntries(new() {
-      { ("S", "a"), [0] },
-      { ("S", "b"), [0] },
-      { ("A", "a"), [1] },
-      { ("A", "b"), [2] },
-    }, table);
-    Assert.True(table.IsLl1());
-  }
-
-  private void AssertParseTableEntries(Dictionary<(string, string), List<int>> expected, ParseTable parseTable) {
-    foreach (string nonterminal in parseTable.Keys.Select(k => k.Nonterminal).ToHashSet()) {
-      foreach (string terminal in parseTable.Keys.Select(k => k.Terminal).ToHashSet()) {
-        Assert.Equal(expected.TryGetValue((nonterminal, terminal), out List<int>? expectedProduction)
-                       ? expectedProduction
-                       : [],
-                     parseTable.Get(nonterminal, terminal));
-      }
-    }
   }
 }
