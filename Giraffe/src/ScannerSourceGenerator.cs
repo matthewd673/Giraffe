@@ -7,10 +7,20 @@ using System.Text.RegularExpressions;
 namespace Giraffe;
 
 public class ScannerSourceGenerator(Grammar grammar) : SourceGenerator {
-  private const string TokenDefDictFieldName = "tokenDef";
-  private const string EofConstantName = "Eof";
+  private const string TokenDefArrayFieldName = "tokenDef";
+  private const string InputFieldName = "input";
+  private const string ScanIndexFieldName = "scanIndex";
+  private const string NextTokenFieldName = "nextToken";
 
   public string ScannerClassName { get; set; } = "Scanner";
+  public string TokenStructName { get; set; } = "Token";
+  public string TokenStructTypePropertyName { get; set; } = "Type";
+  public string TokenStructImagePropertyName { get; set; } = "Image";
+  public string ScannerExceptionClassName { get; set; } = "ScannerException";
+  public string ScannerExceptionIndexPropertyName { get; set; } = "Index";
+  public string PeekMethodName { get; set; } = "Peek";
+  public string EatMethodName { get; set; } = "Eat";
+  public string ScanNextMethodName { get; set; } = "ScanNext";
 
   public override CompilationUnitSyntax Generate() => GenerateScannerFile();
 
@@ -29,8 +39,7 @@ public class ScannerSourceGenerator(Grammar grammar) : SourceGenerator {
   private ClassDeclarationSyntax GenerateScannerClass() =>
     ClassDeclaration(ScannerClassName)
       .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
-      .WithMembers(List<MemberDeclarationSyntax>([GenerateTokenDefDictDeclaration(),
-                                                  GenerateEofConstant(),
+      .WithMembers(List<MemberDeclarationSyntax>([GenerateTokenDefArrayDeclaration(),
                                                   // Boilerplate...
                                                   GenerateTokenStructBoilerplate(),
                                                   GenerateScannerExceptionBoilerplate(),
@@ -41,46 +50,29 @@ public class ScannerSourceGenerator(Grammar grammar) : SourceGenerator {
                                                   GenerateScanNextMethodBoilerplate(),
                                                  ]));
 
-  private FieldDeclarationSyntax GenerateTokenDefDictDeclaration() =>
-    FieldDeclaration(VariableDeclaration(GenericName(Identifier("Dictionary"))
-                                           .WithTypeArgumentList(
-                                             TypeArgumentList(SeparatedList<TypeSyntax>(new SyntaxNodeOrToken[] {
-                                               PredefinedType(Token(SyntaxKind.IntKeyword)),
-                                               Token(SyntaxKind.CommaToken),
-                                               IdentifierName("Regex")}))))
-                       .WithVariables(SingletonSeparatedList(
-                                        VariableDeclarator(Identifier(TokenDefDictFieldName))
-                                          .WithInitializer(EqualsValueClause(ImplicitObjectCreationExpression()
-                                          .WithInitializer(InitializerExpression(SyntaxKind.ComplexElementInitializerExpression,
-                                             GenerateTokenDefEntries())))))))
-       .WithModifiers(TokenList(Token(SyntaxKind.PrivateKeyword),
-                                Token(SyntaxKind.ReadOnlyKeyword)));
+  private FieldDeclarationSyntax GenerateTokenDefArrayDeclaration() =>
+    FieldDeclaration(VariableDeclaration(ArrayType(IdentifierName("Regex"))
+                                           .WithRankSpecifiers(SingletonList(ArrayRankSpecifier(SingletonSeparatedList<
+                                                                               ExpressionSyntax>(OmittedArraySizeExpression())))))
+                       .WithVariables(SingletonSeparatedList(VariableDeclarator(Identifier(TokenDefArrayFieldName))
+                                                               .WithInitializer(EqualsValueClause(CollectionExpression(SeparatedList(GenerateTokenDefElements())))))))
+      .WithModifiers(TokenList(Token(SyntaxKind.PrivateKeyword), Token(SyntaxKind.ReadOnlyKeyword)));
 
 
-  private SeparatedSyntaxList<ExpressionSyntax> GenerateTokenDefEntries() =>
+  private SeparatedSyntaxList<CollectionElementSyntax> GenerateTokenDefElements() =>
     // Don't try to generate a rule for Eof, which has none
-    SeparatedList<ExpressionSyntax>(GenerateCommaSeparatedList(grammar.Terminals.Where(t => !t.Equals(Grammar.Eof)),
-                                    terminal => GenerateTokenDefEntry(grammar.Terminals.IndexOf(terminal), grammar.GetTerminalRule(terminal))));
+    SeparatedList<CollectionElementSyntax>(GenerateCommaSeparatedList(grammar.Terminals.Where(t => !t.Equals(Grammar.Eof)),
+                                                                      terminal =>
+                                                                        GenerateTokenDefElement(grammar
+                                                                          .GetTerminalRule(terminal))));
 
-  private InitializerExpressionSyntax GenerateTokenDefEntry(int terminal, Regex regex) =>
-    InitializerExpression(SyntaxKind.ArrayInitializerExpression,
-                          SeparatedList<ExpressionSyntax>(new SyntaxNodeOrToken[] {
-                            LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(terminal)),
-                            Token(SyntaxKind.CommaToken),
-                            ImplicitObjectCreationExpression()
-                                 .WithArgumentList(ArgumentList(SingletonSeparatedList(
-                                                     Argument(LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(regex.ToString())))))),
-                          }));
+  private ExpressionElementSyntax GenerateTokenDefElement(Regex regex) =>
+    ExpressionElement(ImplicitObjectCreationExpression()
+                        .WithArgumentList(ArgumentList(SingletonSeparatedList(Argument(LiteralExpression(SyntaxKind.StringLiteralExpression,
+                                                                                Literal(regex.ToString())))))));
 
-  private FieldDeclarationSyntax GenerateEofConstant() =>
-    FieldDeclaration(VariableDeclaration(PredefinedType(Token(SyntaxKind.IntKeyword)))
-                       .WithVariables(SingletonSeparatedList(VariableDeclarator(Identifier(EofConstantName))
-                       .WithInitializer(EqualsValueClause(LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(grammar.Terminals.Count - 1)))))))
-      .WithModifiers(TokenList(Token(SyntaxKind.PrivateKeyword),
-                               Token(SyntaxKind.ConstKeyword)));
-
-  private static StructDeclarationSyntax GenerateTokenStructBoilerplate() =>
-    StructDeclaration("Token")
+  private StructDeclarationSyntax GenerateTokenStructBoilerplate() =>
+    StructDeclaration(TokenStructName)
       .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.ReadOnlyKeyword)))
       .WithParameterList(ParameterList(SeparatedList<ParameterSyntax>(new SyntaxNodeOrToken[] {
         Parameter(Identifier(TriviaList(), SyntaxKind.TypeKeyword, "type", "type", TriviaList()))
@@ -89,14 +81,14 @@ public class ScannerSourceGenerator(Grammar grammar) : SourceGenerator {
         Parameter(Identifier("image")).WithType(PredefinedType(Token(SyntaxKind.StringKeyword)))
       })))
       .WithMembers(List(new MemberDeclarationSyntax[] {
-        PropertyDeclaration(PredefinedType(Token(SyntaxKind.IntKeyword)), Identifier("Type"))
+        PropertyDeclaration(PredefinedType(Token(SyntaxKind.IntKeyword)), Identifier(TokenStructTypePropertyName))
           .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
           .WithAccessorList(AccessorList(SingletonList(AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
                                                          .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)))))
           .WithInitializer(EqualsValueClause(IdentifierName(Identifier(TriviaList(), SyntaxKind.TypeKeyword, "type",
                                                                        "type", TriviaList()))))
           .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)),
-        PropertyDeclaration(PredefinedType(Token(SyntaxKind.StringKeyword)), Identifier("Image"))
+        PropertyDeclaration(PredefinedType(Token(SyntaxKind.StringKeyword)), Identifier(TokenStructImagePropertyName))
           .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
           .WithAccessorList(AccessorList(SingletonList(AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
                                                          .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)))))
@@ -104,8 +96,8 @@ public class ScannerSourceGenerator(Grammar grammar) : SourceGenerator {
           .WithSemicolonToken(Token(SyntaxKind.SemicolonToken))
       }));
 
-  private static ClassDeclarationSyntax GenerateScannerExceptionBoilerplate() =>
-    ClassDeclaration("ScannerException")
+  private ClassDeclarationSyntax GenerateScannerExceptionBoilerplate() =>
+    ClassDeclaration(ScannerExceptionClassName)
       .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
       .WithParameterList(ParameterList(SeparatedList<ParameterSyntax>(new SyntaxNodeOrToken[] {
         Parameter(Identifier("index")).WithType(PredefinedType(Token(SyntaxKind.IntKeyword))),
@@ -115,7 +107,7 @@ public class ScannerSourceGenerator(Grammar grammar) : SourceGenerator {
       .WithBaseList(BaseList(SingletonSeparatedList<BaseTypeSyntax>(PrimaryConstructorBaseType(IdentifierName("Exception"))
                                                                       .WithArgumentList(ArgumentList(SingletonSeparatedList(Argument(IdentifierName("message"))))))))
       .WithMembers(SingletonList<MemberDeclarationSyntax>(PropertyDeclaration(PredefinedType(Token(SyntaxKind.IntKeyword)),
-                                                                              Identifier("Index"))
+                                                                              Identifier(ScannerExceptionIndexPropertyName))
                                                           .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
                                                           .WithAccessorList(AccessorList(SingletonList(AccessorDeclaration(SyntaxKind
                                                                                 .GetAccessorDeclaration)
@@ -124,192 +116,222 @@ public class ScannerSourceGenerator(Grammar grammar) : SourceGenerator {
                                                           .WithInitializer(EqualsValueClause(IdentifierName("index")))
                                                           .WithSemicolonToken(Token(SyntaxKind.SemicolonToken))));
 
-  private static FieldDeclarationSyntax[] GenerateFieldBoilerplate() => [
-                                                                          GenerateTextFieldBoilerplate(),
-                                                                          GenerateScanIndexFieldBoilerplate(),
-                                                                          GenerateNextTokenFieldBoilerplate(),
-                                                                        ];
+  private FieldDeclarationSyntax[] GenerateFieldBoilerplate() => [GenerateTextFieldBoilerplate(),
+                                                                  GenerateScanIndexFieldBoilerplate(),
+                                                                  GenerateNextTokenFieldBoilerplate(),
+                                                                 ];
 
   private static FieldDeclarationSyntax GenerateTextFieldBoilerplate() =>
     FieldDeclaration(VariableDeclaration(PredefinedType(Token(SyntaxKind.StringKeyword)))
-                       .WithVariables(SingletonSeparatedList(VariableDeclarator(Identifier("text")))))
+                       .WithVariables(SingletonSeparatedList(VariableDeclarator(Identifier(InputFieldName)))))
       .WithModifiers(TokenList(Token(SyntaxKind.PrivateKeyword), Token(SyntaxKind.ReadOnlyKeyword)));
 
   private static FieldDeclarationSyntax GenerateScanIndexFieldBoilerplate() =>
     FieldDeclaration(VariableDeclaration(PredefinedType(Token(SyntaxKind.IntKeyword)))
-                       .WithVariables(SingletonSeparatedList(VariableDeclarator(Identifier("scanIndex"))
+                       .WithVariables(SingletonSeparatedList(VariableDeclarator(Identifier(ScanIndexFieldName))
                                                                .WithInitializer(EqualsValueClause(LiteralExpression(SyntaxKind.NumericLiteralExpression,
                                                                                   Literal(0)))))))
       .WithModifiers(TokenList(Token(SyntaxKind.PrivateKeyword)));
 
-  private static FieldDeclarationSyntax GenerateNextTokenFieldBoilerplate() =>
-    FieldDeclaration(VariableDeclaration(NullableType(IdentifierName("Token")))
-                       .WithVariables(SingletonSeparatedList(VariableDeclarator(Identifier("nextToken"))
+  private FieldDeclarationSyntax GenerateNextTokenFieldBoilerplate() =>
+    FieldDeclaration(VariableDeclaration(NullableType(IdentifierName(TokenStructName)))
+                       .WithVariables(SingletonSeparatedList(VariableDeclarator(Identifier(NextTokenFieldName))
                                                                .WithInitializer(EqualsValueClause(LiteralExpression(SyntaxKind
                                                                                   .NullLiteralExpression))))))
       .WithModifiers(TokenList(Token(SyntaxKind.PrivateKeyword)));
 
-  private static GlobalStatementSyntax GenerateConstructorBoilerplate() =>
-    GlobalStatement(LocalFunctionStatement(IdentifierName("ManualScanner"), MissingToken(SyntaxKind.IdentifierToken))
+  private GlobalStatementSyntax GenerateConstructorBoilerplate() =>
+    GlobalStatement(LocalFunctionStatement(IdentifierName(ScannerClassName), MissingToken(SyntaxKind.IdentifierToken))
                     .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
-                    .WithParameterList(ParameterList(SingletonSeparatedList(Parameter(Identifier("text"))
+                    .WithParameterList(ParameterList(SingletonSeparatedList(Parameter(Identifier(InputFieldName))
                                                                               .WithType(PredefinedType(Token(SyntaxKind
                                                                                 .StringKeyword))))))
-                    .WithBody(Block(ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, ThisExpression(), IdentifierName("text")), IdentifierName("text"))),
+                    .WithBody(Block(ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, ThisExpression(), IdentifierName(InputFieldName)), IdentifierName(InputFieldName))),
                                     ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression,
-                                                                             IdentifierName("nextToken"),
-                                                                             InvocationExpression(IdentifierName("ScanNext")))))));
+                                                                             IdentifierName(NextTokenFieldName),
+                                                                             InvocationExpression(IdentifierName(ScanNextMethodName)))))));
 
-  private static GlobalStatementSyntax GeneratePeekMethodBoilerplate() =>
-    GlobalStatement(LocalFunctionStatement(IdentifierName("Token"), Identifier("Peek"))
+  private GlobalStatementSyntax GeneratePeekMethodBoilerplate() =>
+    GlobalStatement(LocalFunctionStatement(IdentifierName(TokenStructName), Identifier(PeekMethodName))
                     .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
                     .WithExpressionBody(ArrowExpressionClause(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                                                 PostfixUnaryExpression(SyntaxKind.SuppressNullableWarningExpression,
-                                                                  IdentifierName("nextToken")),
+                                                                  IdentifierName(NextTokenFieldName)),
                                                                 IdentifierName("Value"))))
                     .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)));
 
-  private static GlobalStatementSyntax GenerateEatMethodBoilerplate() =>
-    GlobalStatement(LocalFunctionStatement(IdentifierName("Token"), Identifier("Eat"))
+  private GlobalStatementSyntax GenerateEatMethodBoilerplate() =>
+    GlobalStatement(LocalFunctionStatement(IdentifierName(TokenStructName), Identifier(EatMethodName))
                     .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
-                    .WithBody(Block(LocalDeclarationStatement(VariableDeclaration(IdentifierName("Token")).WithVariables(SingletonSeparatedList(VariableDeclarator(Identifier("consumed")).WithInitializer(EqualsValueClause(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, PostfixUnaryExpression(SyntaxKind.SuppressNullableWarningExpression, IdentifierName("nextToken")), IdentifierName("Value"))))))),
+                    .WithBody(Block(LocalDeclarationStatement(VariableDeclaration(IdentifierName(TokenStructName)).WithVariables(SingletonSeparatedList(VariableDeclarator(Identifier("consumed")).WithInitializer(EqualsValueClause(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, PostfixUnaryExpression(SyntaxKind.SuppressNullableWarningExpression, IdentifierName(NextTokenFieldName)), IdentifierName("Value"))))))),
                                     ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression,
-                                                                             IdentifierName("nextToken"),
-                                                                             InvocationExpression(IdentifierName("ScanNext")))),
+                                                                             IdentifierName(NextTokenFieldName),
+                                                                             InvocationExpression(IdentifierName(ScanNextMethodName)))),
                                     ReturnStatement(IdentifierName("consumed")))));
 
-  private static GlobalStatementSyntax GenerateScanNextMethodBoilerplate() =>
-    GlobalStatement(LocalFunctionStatement(IdentifierName("Token"), Identifier("ScanNext"))
-                    .WithModifiers(TokenList(Token(SyntaxKind.PrivateKeyword)))
-                    .WithBody(Block(
-                                    IfStatement(BinaryExpression(SyntaxKind.GreaterThanOrEqualExpression, IdentifierName("scanIndex"), MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName("text"), IdentifierName("Length"))),
-                                                Block(SingletonList<
-                                                        StatementSyntax>(ReturnStatement(ImplicitObjectCreationExpression()
-                                                                           .WithArgumentList(ArgumentList(SeparatedList
-                                                                           <
-                                                                             ArgumentSyntax>(new
-                                                                             SyntaxNodeOrToken
-                                                                             [] {
-                                                                               Argument(IdentifierName("Eof")),
-                                                                               Token(SyntaxKind
-                                                                                 .CommaToken),
-                                                                               Argument(LiteralExpression(SyntaxKind.StringLiteralExpression,
-                                                                                 Literal("")))
-                                                                             }))))))),
-                                    LocalDeclarationStatement(VariableDeclaration(NullableType(IdentifierName("Token")))
-                                                                .WithVariables(SingletonSeparatedList(VariableDeclarator(Identifier("best"))
-                                                                                 .WithInitializer(EqualsValueClause(LiteralExpression(SyntaxKind
-                                                                                   .NullLiteralExpression)))))),
-                                    ForEachStatement(PredefinedType(Token(SyntaxKind.IntKeyword)), Identifier("t"),
-                                                     MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
-                                                                            IdentifierName("tokenDef"),
-                                                                            IdentifierName("Keys")),
-                                                     Block(
-                                                           LocalDeclarationStatement(
-                                                            VariableDeclaration(IdentifierName("Match"))
+  private GlobalStatementSyntax GenerateScanNextMethodBoilerplate() =>
+      GlobalStatement(LocalFunctionStatement(IdentifierName(TokenStructName), Identifier(ScanNextMethodName))
+                      .WithModifiers(TokenList(Token(SyntaxKind.PrivateKeyword)))
+                      .WithBody(Block(
+                                      IfStatement(
+                                                  BinaryExpression(SyntaxKind.GreaterThanOrEqualExpression,
+                                                                   IdentifierName(ScanIndexFieldName),
+                                                                   MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                                                                       IdentifierName(InputFieldName),
+                                                                       IdentifierName("Length"))),
+                                                  Block(SingletonList<
+                                                            StatementSyntax>(ReturnStatement(ImplicitObjectCreationExpression()
+                                                                                 .WithArgumentList(ArgumentList(SeparatedList
+                                                                                 <
+                                                                                     ArgumentSyntax>(new
+                                                                                     SyntaxNodeOrToken
+                                                                                     [] {
+                                                                                         Argument(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                                                                                             IdentifierName(TokenDefArrayFieldName),
+                                                                                             IdentifierName("Length"))),
+                                                                                         Token(SyntaxKind
+                                                                                             .CommaToken),
+                                                                                         Argument(LiteralExpression(SyntaxKind.StringLiteralExpression,
+                                                                                             Literal("")))
+                                                                                     }))))))),
+                                      LocalDeclarationStatement(VariableDeclaration(NullableType(IdentifierName(TokenStructName)))
+                                                                    .WithVariables(SingletonSeparatedList(VariableDeclarator(Identifier("best"))
+                                                                        .WithInitializer(EqualsValueClause(LiteralExpression(SyntaxKind
+                                                                            .NullLiteralExpression)))))),
+                                      ForStatement(
+                                                   Block(
+                                                         LocalDeclarationStatement(
+                                                          VariableDeclaration(IdentifierName("Match"))
                                                               .WithVariables(SingletonSeparatedList(
                                                                               VariableDeclarator(Identifier("match"))
-                                                                                .WithInitializer(EqualsValueClause(InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
-                                                                                    ElementAccessExpression(IdentifierName("tokenDef"))
-                                                                                      .WithArgumentList(BracketedArgumentList(SingletonSeparatedList(Argument(IdentifierName("t"))))),
-                                                                                    IdentifierName("Match")))
-                                                                                  .WithArgumentList(ArgumentList(SeparatedList
-                                                                                  <
-                                                                                    ArgumentSyntax>(new
-                                                                                    SyntaxNodeOrToken
-                                                                                    [] {
-                                                                                      Argument(IdentifierName("text")),
-                                                                                      Token(SyntaxKind
-                                                                                        .CommaToken),
-                                                                                      Argument(IdentifierName("scanIndex"))
-                                                                                    })))))))),
-                                                           IfStatement(BinaryExpression(SyntaxKind.LogicalOrExpression, PrefixUnaryExpression(SyntaxKind.LogicalNotExpression, MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName("match"), IdentifierName("Success"))), BinaryExpression(SyntaxKind.GreaterThanExpression, MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName("match"), IdentifierName("Index")), IdentifierName("scanIndex"))),
-                                                                       Block(SingletonList<
+                                                                                  .WithInitializer(
+                                                                                   EqualsValueClause(
+                                                                                    InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                                                                                            ElementAccessExpression(IdentifierName(TokenDefArrayFieldName))
+                                                                                                .WithArgumentList(BracketedArgumentList(SingletonSeparatedList(Argument(IdentifierName("t"))))),
+                                                                                            IdentifierName("Match")))
+                                                                                        .WithArgumentList(ArgumentList(SeparatedList
+                                                                                        <
+                                                                                            ArgumentSyntax>(new
+                                                                                            SyntaxNodeOrToken
+                                                                                            [] {
+                                                                                                Argument(IdentifierName(InputFieldName)),
+                                                                                                Token(SyntaxKind
+                                                                                                    .CommaToken),
+                                                                                                Argument(IdentifierName(ScanIndexFieldName))
+                                                                                            })))))))),
+                                                         IfStatement(BinaryExpression(SyntaxKind.LogicalOrExpression, PrefixUnaryExpression(SyntaxKind.LogicalNotExpression, MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName("match"), IdentifierName("Success"))), BinaryExpression(SyntaxKind.GreaterThanExpression, MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName("match"), IdentifierName(ScannerExceptionIndexPropertyName)), IdentifierName(ScanIndexFieldName))),
+                                                                     Block(SingletonList<
                                                                                StatementSyntax>(ContinueStatement()))),
-                                                           IfStatement(
-                                                                       PrefixUnaryExpression(SyntaxKind.LogicalNotExpression,
+                                                         ExpressionStatement(AssignmentExpression(SyntaxKind.CoalesceAssignmentExpression,
+                                                                                 IdentifierName("best"),
+                                                                                 ImplicitObjectCreationExpression()
+                                                                                     .WithArgumentList(ArgumentList(SeparatedList
+                                                                                     <
+                                                                                         ArgumentSyntax>(new
+                                                                                         SyntaxNodeOrToken
+                                                                                         [] {
+                                                                                             Argument(IdentifierName("t")),
+                                                                                             Token(SyntaxKind
+                                                                                                 .CommaToken),
+                                                                                             Argument(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                                                                                                 IdentifierName("match"),
+                                                                                                 IdentifierName("Value")))
+                                                                                         }))))),
+                                                         IfStatement(
+                                                                     BinaryExpression(SyntaxKind.GreaterThanExpression,
                                                                          MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
-                                                                           IdentifierName("best"),
-                                                                           IdentifierName("HasValue"))),
-                                                                       Block(ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, IdentifierName("best"), ImplicitObjectCreationExpression().WithArgumentList(ArgumentList(SeparatedList<ArgumentSyntax>(new SyntaxNodeOrToken[] { Argument(IdentifierName("t")), Token(SyntaxKind.CommaToken), Argument(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName("match"), IdentifierName("Value"))) }))))),
-                                                                             ContinueStatement())),
-                                                           IfStatement(
-                                                                       BinaryExpression(SyntaxKind.GreaterThanExpression,
+                                                                             IdentifierName("match"),
+                                                                             IdentifierName("Length")),
                                                                          MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
-                                                                           IdentifierName("match"),
-                                                                           IdentifierName("Length")),
-                                                                         MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
-                                                                           MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                                                              MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
-                                                                               IdentifierName("best"),
-                                                                               IdentifierName("Value")),
-                                                                             IdentifierName("Image")),
-                                                                           IdentifierName("Length"))),
-                                                                       Block(SingletonList<
+                                                                                 MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                                                                                     IdentifierName("best"),
+                                                                                     IdentifierName("Value")),
+                                                                                 IdentifierName(TokenStructImagePropertyName)),
+                                                                             IdentifierName("Length"))),
+                                                                     Block(SingletonList<
                                                                                StatementSyntax>(ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression,
                                                                                IdentifierName("best"),
                                                                                ImplicitObjectCreationExpression()
-                                                                                 .WithArgumentList(ArgumentList(SeparatedList
-                                                                                 <
-                                                                                   ArgumentSyntax>(new
-                                                                                   SyntaxNodeOrToken
-                                                                                   [] {
-                                                                                     Argument(IdentifierName("t")),
+                                                                                   .WithArgumentList(ArgumentList(SeparatedList
+                                                                                   <
+                                                                                       ArgumentSyntax>(new
+                                                                                       SyntaxNodeOrToken
+                                                                                       [] {
+                                                                                           Argument(IdentifierName("t")),
+                                                                                           Token(SyntaxKind
+                                                                                               .CommaToken),
+                                                                                           Argument(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                                                                                               IdentifierName("match"),
+                                                                                               IdentifierName("Value")))
+                                                                                       }))))))))))
+                                          .WithDeclaration(VariableDeclaration(PredefinedType(Token(SyntaxKind
+                                                                                   .IntKeyword)))
+                                                               .WithVariables(SingletonSeparatedList(VariableDeclarator(Identifier("t"))
+                                                                                  .WithInitializer(EqualsValueClause(LiteralExpression(SyntaxKind.NumericLiteralExpression,
+                                                                                      Literal(0)))))))
+                                          .WithCondition(BinaryExpression(SyntaxKind.LessThanExpression,
+                                                                          IdentifierName("t"),
+                                                                          MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                                                                              IdentifierName(TokenDefArrayFieldName),
+                                                                              IdentifierName("Length"))))
+                                          .WithIncrementors(SingletonSeparatedList<
+                                                                ExpressionSyntax>(PostfixUnaryExpression(SyntaxKind.PostIncrementExpression,
+                                                                IdentifierName("t")))),
+                                      IfStatement(
+                                                  PrefixUnaryExpression(SyntaxKind.LogicalNotExpression,
+                                                                        MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                                                                            IdentifierName("best"),
+                                                                            IdentifierName("HasValue"))),
+                                                  Block(
+                                                        SingletonList<StatementSyntax>(
+                                                         ThrowStatement(
+                                                                        ObjectCreationExpression(IdentifierName(ScannerExceptionClassName))
+                                                                            .WithArgumentList(
+                                                                             ArgumentList(SeparatedList<
+                                                                                 ArgumentSyntax>(new
+                                                                                 SyntaxNodeOrToken
+                                                                                 [] {
+                                                                                     Argument(IdentifierName(ScanIndexFieldName)),
                                                                                      Token(SyntaxKind
-                                                                                       .CommaToken),
-                                                                                     Argument(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
-                                                                                       IdentifierName("match"),
-                                                                                       IdentifierName("Value")))
-                                                                                   })))))))))),
-                                    IfStatement(
-                                                PrefixUnaryExpression(SyntaxKind.LogicalNotExpression,
-                                                                      MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
-                                                                        IdentifierName("best"),
-                                                                        IdentifierName("HasValue"))),
-                                                Block(
-                                                      SingletonList<StatementSyntax>(
-                                                       ThrowStatement(
-                                                                      ObjectCreationExpression(IdentifierName("ScannerException"))
-                                                                        .WithArgumentList(ArgumentList(SeparatedList<
-                                                                          ArgumentSyntax>(new
-                                                                          SyntaxNodeOrToken
-                                                                          [] {
-                                                                            Argument(IdentifierName("scanIndex")),
-                                                                            Token(SyntaxKind
-                                                                              .CommaToken),
-                                                                            Argument(
-                                                                             InterpolatedStringExpression(Token(SyntaxKind
-                                                                                 .InterpolatedStringStartToken))
-                                                                               .WithContents(List<
-                                                                                 InterpolatedStringContentSyntax>([
-                                                                                 InterpolatedStringText()
-                                                                                   .WithTextToken(Token(TriviaList(),
-                                                                                     SyntaxKind
-                                                                                       .InterpolatedStringTextToken,
-                                                                                     "Illegal character: '",
-                                                                                     "Illegal character: '",
-                                                                                     TriviaList())),
-                                                                                 Interpolation(ElementAccessExpression(IdentifierName("text"))
-                                                                                   .WithArgumentList(BracketedArgumentList(SingletonSeparatedList(Argument(IdentifierName("scanIndex")))))),
-                                                                                 InterpolatedStringText()
-                                                                                   .WithTextToken(Token(TriviaList(),
-                                                                                     SyntaxKind
-                                                                                       .InterpolatedStringTextToken,
-                                                                                     "'",
-                                                                                     "'",
-                                                                                     TriviaList())),
-                                                                               ])))
-                                                                          }))))))),
-                                    ExpressionStatement(AssignmentExpression(SyntaxKind.AddAssignmentExpression,
-                                                                             IdentifierName("scanIndex"),
-                                                                             MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                                                                                         .CommaToken),
+                                                                                     Argument(
+                                                                                      InterpolatedStringExpression(Token(SyntaxKind
+                                                                                              .InterpolatedStringStartToken))
+                                                                                          .WithContents(
+                                                                                           List(
+                                                                                            new
+                                                                                                InterpolatedStringContentSyntax
+                                                                                                [] {
+                                                                                                    InterpolatedStringText()
+                                                                                                        .WithTextToken(Token(TriviaList(),
+                                                                                                            SyntaxKind
+                                                                                                                .InterpolatedStringTextToken,
+                                                                                                            "Illegal character: '",
+                                                                                                            "Illegal character: '",
+                                                                                                            TriviaList())),
+                                                                                                    Interpolation(ElementAccessExpression(IdentifierName(InputFieldName))
+                                                                                                        .WithArgumentList(BracketedArgumentList(SingletonSeparatedList(Argument(IdentifierName(ScanIndexFieldName)))))),
+                                                                                                    InterpolatedStringText()
+                                                                                                        .WithTextToken(Token(TriviaList(),
+                                                                                                            SyntaxKind
+                                                                                                                .InterpolatedStringTextToken,
+                                                                                                            "'",
+                                                                                                            "'",
+                                                                                                            TriviaList()))
+                                                                                                })))
+                                                                                 }))))))),
+                                      ExpressionStatement(AssignmentExpression(SyntaxKind.AddAssignmentExpression,
+                                                                               IdentifierName(ScanIndexFieldName),
                                                                                MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
-                                                                                 MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
-                                                                                   IdentifierName("best"),
-                                                                                   IdentifierName("Value")),
-                                                                                 IdentifierName("Image")),
-                                                                               IdentifierName("Length")))),
-                                    ReturnStatement(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
-                                                                           IdentifierName("best"),
-                                                                           IdentifierName("Value"))))));
+                                                                                   MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                                                                                       MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                                                                                           IdentifierName("best"),
+                                                                                           IdentifierName("Value")),
+                                                                                       IdentifierName(TokenStructImagePropertyName)),
+                                                                                   IdentifierName("Length")))),
+                                      ReturnStatement(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                                                                             IdentifierName("best"),
+                                                                             IdentifierName("Value"))))));
 }
