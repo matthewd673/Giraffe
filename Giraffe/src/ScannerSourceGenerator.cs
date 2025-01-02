@@ -13,6 +13,7 @@ public class ScannerSourceGenerator(Grammar grammar) : SourceGenerator {
   private const string ScanIndexFieldName = "scanIndex";
   private const string NextTokenFieldName = "nextToken";
 
+  public string FileNamespace { get; set; } = "Giraffe";
   public string ScannerClassName { get; set; } = "Scanner";
   public string TokenStructName { get; set; } = "Token";
   public string TokenStructTypePropertyName { get; set; } = "Type";
@@ -29,7 +30,8 @@ public class ScannerSourceGenerator(Grammar grammar) : SourceGenerator {
   private CompilationUnitSyntax GenerateScannerFile() =>
     CompilationUnit()
       .WithUsings(List(GenerateUsings()))
-      .WithMembers(SingletonList<MemberDeclarationSyntax>(GenerateScannerClass()))
+      .WithMembers(List<MemberDeclarationSyntax>([GenerateNamespaceDeclaration(FileNamespace),
+                                                  GenerateScannerClass()]))
       .NormalizeWhitespace();
 
   private static SyntaxList<UsingDirectiveSyntax> GenerateUsings() =>

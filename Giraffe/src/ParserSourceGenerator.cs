@@ -9,6 +9,7 @@ public class ParserSourceGenerator(Grammar grammar) : SourceGenerator {
   private const string ProductionsArrayFieldName = "productions";
   private const string ParseTableFieldName = "parseTable";
 
+  public string FileNamespace { get; set; } = "Giraffe";
   public string ParserClassName { get; set; } = "Parser";
 
   private readonly ParseTable parseTable = grammar.BuildParseTable();
@@ -21,7 +22,8 @@ public class ParserSourceGenerator(Grammar grammar) : SourceGenerator {
                                                     IdentifierName("System"),
                                                     IdentifierName("Collections")),
                                                     IdentifierName("Generic")))]))
-                     .WithMembers(SingletonList<MemberDeclarationSyntax>(GenerateParserClass()))
+                     .WithMembers(List<MemberDeclarationSyntax>([GenerateNamespaceDeclaration(FileNamespace),
+                                                                 GenerateParserClass()]))
                      .NormalizeWhitespace();
 
   private ClassDeclarationSyntax GenerateParserClass() =>
