@@ -6,7 +6,7 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 namespace Giraffe;
 
 public class ParserSourceGenerator(Grammar grammar) : SourceGenerator {
-  private const string ProductionsListName = "productions";
+  private const string ProductionsArrayFieldName = "productions";
   private const string ParseTableFieldName = "parseTable";
 
   public string ParserClassName { get; set; } = "Parser";
@@ -31,18 +31,15 @@ public class ParserSourceGenerator(Grammar grammar) : SourceGenerator {
                                                     GenerateTableDeclaration()]));
 
   private MemberDeclarationSyntax GenerateProductionsListDeclaration() =>
-    FieldDeclaration(VariableDeclaration(GenericName(Identifier("List"))
-                                            .WithTypeArgumentList(
-                                              TypeArgumentList(SingletonSeparatedList<TypeSyntax>(
-                                                GenericName(Identifier("List"))
-                                                  .WithTypeArgumentList(
-                                                    TypeArgumentList(SingletonSeparatedList<TypeSyntax>(
-                                                      PredefinedType(Token(SyntaxKind.IntKeyword)))))))))
-                     .WithVariables(SingletonSeparatedList(
-                                      VariableDeclarator(Identifier(ProductionsListName))
-                                        .WithInitializer(EqualsValueClause(CollectionExpression(GenerateProductionsElements()))))))
-                     .WithModifiers(TokenList(Token(SyntaxKind.PrivateKeyword),
-                                              Token(SyntaxKind.ReadOnlyKeyword)));
+    FieldDeclaration(VariableDeclaration(ArrayType(PredefinedType(Token(SyntaxKind.IntKeyword)))
+                                           .WithRankSpecifiers(List([ArrayRankSpecifier(SingletonSeparatedList<
+                                                                        ExpressionSyntax>(OmittedArraySizeExpression())),
+                                                                      ArrayRankSpecifier(SingletonSeparatedList<
+                                                                        ExpressionSyntax>(OmittedArraySizeExpression())),
+                                                                    ])))
+                       .WithVariables(SingletonSeparatedList(VariableDeclarator(Identifier(ProductionsArrayFieldName))
+                                                               .WithInitializer(EqualsValueClause(CollectionExpression(GenerateProductionsElements()))))))
+      .WithModifiers(TokenList(Token(SyntaxKind.PrivateKeyword), Token(SyntaxKind.ReadOnlyKeyword)));
 
   private SeparatedSyntaxList<CollectionElementSyntax> GenerateProductionsElements() =>
      SeparatedList<CollectionElementSyntax>(GenerateCommaSeparatedList(grammar.Productions,

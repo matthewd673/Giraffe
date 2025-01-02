@@ -1,16 +1,14 @@
-using System.Text.RegularExpressions;
-
 namespace Giraffe;
 
-public class ManualParser(ManualScanner scanner) {
-  public class ParserException(ManualScanner.Token token, string message) : Exception(message) {
-    public ManualScanner.Token Token { get; } = token;
+public class ReferenceParser(ReferenceScanner scanner) {
+  public class ParserException(ReferenceScanner.Token token, string message) : Exception(message) {
+    public ReferenceScanner.Token Token { get; } = token;
   }
 
-  // productions is generated
-  private readonly List<List<int>> productions = [[2, 3, 4, 5, 6, -6, ], [-1, ], [], [-2, ], [], [-3, ], [-4, ], [], [-5, ], [], ];
+  // productions is dynamic
+  private readonly int[][] productions = [[2, 3, 4, 5, 6, -6, ], [-1, ], [], [-2, ], [], [-3, ], [-4, ], [], [-5, ], [], ];
 
-  // parseTable is generated
+  // parseTable is dynamic
   private readonly Dictionary<(int, int), int> parseTable = new()
   {
     {
@@ -71,21 +69,22 @@ public class ManualParser(ManualScanner scanner) {
     },
   };
 
+  // TODO: EntryNonterminal should be dynamic
   private const int EntryNonterminal = 0;
 
-  public List<ManualScanner.Token> Parse() {
+  public List<ReferenceScanner.Token> Parse() {
     return ParseNonterminal(EntryNonterminal).ToList();
   }
 
-  // Temporary debug helper
-  private string ProductionToReadableString(List<int> production) =>
+  // TODO: Temporary debug helper
+  private string ProductionToReadableString(int[] production) =>
     $"[{string.Join(", ", production.Select(i => i < 0 ? $"T_{-i - 1}" : $"NT_{i - 1}"))}]";
 
-  private IEnumerable<ManualScanner.Token> ParseNonterminal(int nonterminal) {
+  private IEnumerable<ReferenceScanner.Token> ParseNonterminal(int nonterminal) {
     Console.WriteLine($"Parsing: NT {nonterminal}");
 
     if (parseTable.TryGetValue((nonterminal, scanner.Peek().Type), out int production)) {
-      foreach (ManualScanner.Token token in ParseProduction(production)) {
+      foreach (ReferenceScanner.Token token in ParseProduction(production)) {
         yield return token;
       }
     }
@@ -94,14 +93,14 @@ public class ManualParser(ManualScanner scanner) {
     }
   }
 
-  private IEnumerable<ManualScanner.Token> ParseProduction(int production) {
+  private IEnumerable<ReferenceScanner.Token> ParseProduction(int production) {
     Console.WriteLine($"Production: {production} ({ProductionToReadableString(productions[production])})");
 
-    for (int currInd = 0; currInd < productions[production].Count; currInd += 1) {
+    for (int currInd = 0; currInd < productions[production].Length; currInd += 1) {
       int nextInd = productions[production][currInd];
 
       if (nextInd > 0) { // It's a nonterminal
-        foreach (ManualScanner.Token t in ParseNonterminal(nextInd - 1)) {
+        foreach (ReferenceScanner.Token t in ParseNonterminal(nextInd - 1)) {
           yield return t;
         }
         continue;
