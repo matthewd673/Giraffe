@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 public class ReferenceScanner
 {
   private readonly Regex[] tokenDef = [new("a"), new("b"), new("c"), new("d"), new("e")];
-  private readonly string[] names = ["a", "b", "c", "d", "e", ];
+  private readonly string[] names = ["a", "b", "c", "d", "e", "$$", ];
   public readonly struct Token(int type, string image)
   {
     public int Type { get; } = type;

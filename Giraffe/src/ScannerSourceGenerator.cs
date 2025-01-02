@@ -84,8 +84,7 @@ public class ScannerSourceGenerator(Grammar grammar) : SourceGenerator {
       .WithModifiers(TokenList(Token(SyntaxKind.PrivateKeyword), Token(SyntaxKind.ReadOnlyKeyword)));
 
   private SeparatedSyntaxList<CollectionElementSyntax> GenerateNamesElements() =>
-    SeparatedList<CollectionElementSyntax>(GenerateCommaSeparatedList(grammar.Terminals.Where(t => !t.Equals(Grammar.Eof)),
-                                                                      GenerateNamesElement));
+    SeparatedList<CollectionElementSyntax>(GenerateCommaSeparatedList(grammar.Terminals, GenerateNamesElement));
 
   private ExpressionElementSyntax GenerateNamesElement(string name) =>
   ExpressionElement(LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(name)));
