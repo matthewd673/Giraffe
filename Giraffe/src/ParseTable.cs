@@ -1,33 +1,32 @@
 namespace Giraffe;
 
-public class ParseTable : Dictionary<ParseTableKey, List<int>> {
+public class ParseTable : Dictionary<ParseTableKey, HashSet<Rule>> {
   /// <summary>
   /// Insert a new entry into the parse table.
   /// </summary>
   /// <param name="nonterminal">The nonterminal of the entry.</param>
   /// <param name="terminal">The terminal of the entry.</param>
-  /// <param name="prodInd">The production index to store in the table.</param>
-  public void Insert(string nonterminal, string terminal, int prodInd) {
-    if (TryGetValue(new(nonterminal, terminal), out List<int>? prodList)) {
-      prodList.Add(prodInd);
+  /// <param name="rule">The rule to store in the table.</param>
+  public void Insert(string nonterminal, string terminal, Rule rule) {
+    if (TryGetValue(new(nonterminal, terminal), out HashSet<Rule>? rules)) {
+      rules.Add(rule);
     }
     else {
-      Add(new(nonterminal, terminal), [prodInd]);
+      Add(new(nonterminal, terminal), [rule]);
     }
   }
 
   /// <summary>
-  /// Get the list of productions for a given nonterminal and terminal.
+  /// Get a set of rules for a given nonterminal and terminal.
   /// </summary>
   /// <param name="nonterminal">The nonterminal of the entry.</param>
   /// <param name="terminal">The terminal of the entry.</param>
   /// <returns>
-  ///   A list of indices of productions in the grammar corresponding with the
-  ///   given nonterminal and terminal in the table.
+  ///   A set of rules in the grammar corresponding with the given nonterminal and terminal in the table.
   /// </returns>
-  public List<int> Get(string nonterminal, string terminal) =>
-    TryGetValue(new(nonterminal, terminal), out List<int>? prodIndList)
-      ? prodIndList
+  public HashSet<Rule> Get(string nonterminal, string terminal) =>
+    TryGetValue(new(nonterminal, terminal), out HashSet<Rule>? rules)
+      ? rules
       : [];
 
   /// <summary>

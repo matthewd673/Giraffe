@@ -3,6 +3,14 @@ namespace Giraffe.Tests;
 public class Grammar_ComputeSets {
   [Fact]
   public void GivenSimpleLL1Grammar_WhenComputeSetsCalled_ThenCorrectSetsComputed() {
+    Rule[] rules = [
+      new("S", ["A", "B", "C", "D", "E", Grammar.Eof]),
+      new("A", ["a"]), new("A", []),
+      new("B", ["b"]), new("B", []),
+      new("C", ["c"]),
+      new("D", ["d"]), new("D", []),
+      new("E", ["e"]), new("E", []),
+    ];
     Grammar grammar = new(
       new() {
         { "a", new("a") },
@@ -10,16 +18,7 @@ public class Grammar_ComputeSets {
         { "c", new("c") },
         { "d", new("d") },
         { "e", new("e") },
-      },
-      [
-        new("S", ["A", "B", "C", "D", "E", Grammar.Eof]),
-        new("A", ["a"]), new("A", []),
-        new("B", ["b"]), new("B", []),
-        new("C", ["c"]),
-        new("D", ["d"]), new("D", []),
-        new("E", ["e"]), new("E", []),
-      ]
-    );
+      }, rules.ToHashSet());
     grammar.ComputeSets();
 
     // Epsilon
@@ -47,29 +46,28 @@ public class Grammar_ComputeSets {
     Assert.Equal([Grammar.Eof], grammar.Follow("E"));
 
     // Predict
-    Assert.Equal(["a", "b", "c"], grammar.Predict(0));
-    Assert.Equal(["a"], grammar.Predict(1));
-    Assert.Equal(["b", "c"], grammar.Predict(2));
-    Assert.Equal(["b"], grammar.Predict(3));
-    Assert.Equal(["c"], grammar.Predict(4));
-    Assert.Equal(["c"], grammar.Predict(5));
-    Assert.Equal(["d"], grammar.Predict(6));
-    Assert.Equal(["e", Grammar.Eof], grammar.Predict(7));
-    Assert.Equal(["e"], grammar.Predict(8));
-    Assert.Equal([Grammar.Eof], grammar.Predict(9));
+    Assert.Equal(["a", "b", "c"], grammar.Predict(rules[0]));
+    Assert.Equal(["a"], grammar.Predict(rules[1]));
+    Assert.Equal(["b", "c"], grammar.Predict(rules[2]));
+    Assert.Equal(["b"], grammar.Predict(rules[3]));
+    Assert.Equal(["c"], grammar.Predict(rules[4]));
+    Assert.Equal(["c"], grammar.Predict(rules[5]));
+    Assert.Equal(["d"], grammar.Predict(rules[6]));
+    Assert.Equal(["e", Grammar.Eof], grammar.Predict(rules[7]));
+    Assert.Equal(["e"], grammar.Predict(rules[8]));
+    Assert.Equal([Grammar.Eof], grammar.Predict(rules[9]));
   }
 
   [Fact]
   public void GivenRightRecursiveLL1Grammar_WhenComputeSetsCalled_ThenCorrectSetsComputed() {
+    Rule[] rules = [
+      new("S", ["a", "T", Grammar.Eof]),
+      new("T", ["a", "T"]), new("T", []),
+    ];
     Grammar grammar = new(
       new() {
         {"a", new("a")},
-      },
-      [
-        new("S", ["a", "T", Grammar.Eof]),
-        new("T", ["a", "T"]), new("T", []),
-      ]
-    );
+      }, rules.ToHashSet());
     grammar.ComputeSets();
 
     // Epsilon
@@ -85,21 +83,21 @@ public class Grammar_ComputeSets {
     Assert.Equal([Grammar.Eof], grammar.Follow("T"));
 
     // Predict
-    Assert.Equal(["a"], grammar.Predict(0));
-    Assert.Equal(["a"], grammar.Predict(1));
-    Assert.Equal([Grammar.Eof], grammar.Predict(2));
+    Assert.Equal(["a"], grammar.Predict(rules[0]));
+    Assert.Equal(["a"], grammar.Predict(rules[1]));
+    Assert.Equal([Grammar.Eof], grammar.Predict(rules[2]));
   }
 
   [Fact]
   public void GivenLL1GrammarWithNtThatFollowsItself_WhenComputeSetsCalled_ThenCorrectSetsComputed() {
+    Rule[] rules = [
+      new("S", ["A", "A", Grammar.Eof]),
+      new("A", ["a"]), new("A", ["b"]),
+    ];
     Grammar grammar = new(new() {
       { "a", new("a") },
       { "b", new("b") },
-    },
-    [
-      new("S", ["A", "A", Grammar.Eof]),
-      new("A", ["a"]), new("A", ["b"]),
-    ]);
+    }, rules.ToHashSet());
     grammar.ComputeSets();
 
     // Epsilon
@@ -115,8 +113,8 @@ public class Grammar_ComputeSets {
     Assert.Equal(["a", "b", Grammar.Eof], grammar.Follow("A"));
 
     // Predict
-    Assert.Equal(["a", "b"], grammar.Predict(0));
-    Assert.Equal(["a"], grammar.Predict(1));
-    Assert.Equal(["b"], grammar.Predict(2));
+    Assert.Equal(["a", "b"], grammar.Predict(rules[0]));
+    Assert.Equal(["a"], grammar.Predict(rules[1]));
+    Assert.Equal(["b"], grammar.Predict(rules[2]));
   }
 }
