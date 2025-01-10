@@ -7,15 +7,16 @@ public class EpsilonRuleElimination_Run {
   // Test case from "Parsing Techniques" Fig.s 4.10-4.11
   public void GivenGrammarWithEpsilonRules_WhenRunCalled_ThenEpsilonRulesRemovedProperly() {
     Grammar grammar = new(new() {
-      { "a", new("a") },
-    },
-    [
-      new("S", ["L", "a", "M"]),
-      new("L", ["L", "M"]),
-      new("L", []),
-      new("M", ["M", "M"]),
-      new("M", []),
-    ]);
+        { "a", new("a") },
+      },
+      [
+        new("S", ["L", "a", "M"]),
+        new("L", ["L", "M"]),
+        new("L", []),
+        new("M", ["M", "M"]),
+        new("M", []),
+      ],
+      ["S"]);
 
     EpsilonRuleElimination epsilonRuleElimination = new(grammar);
     epsilonRuleElimination.Run();

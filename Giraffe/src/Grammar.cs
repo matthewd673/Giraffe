@@ -1,9 +1,11 @@
+using System.Collections.Immutable;
 using System.Text.RegularExpressions;
 
 namespace Giraffe;
 
 public class Grammar(Dictionary<string, Regex> terminalDefs,
-                     HashSet<Rule> rules) {
+                     HashSet<Rule> rules,
+                     HashSet<string> entryNonterminals) {
   public const string Eof = "$$";
 
   public HashSet<Rule> Rules { get; } = rules; // Copy just in case
@@ -17,6 +19,8 @@ public class Grammar(Dictionary<string, Regex> terminalDefs,
   public HashSet<string> Nonterminals { get; } = rules.Select(p => p.Name).ToHashSet();
 
   public Regex GetTerminalRule(string terminal) => terminalDefs[terminal];
+
+  public ImmutableHashSet<string> EntryNonterminals = ImmutableHashSet.CreateRange(entryNonterminals);
 
   /// <summary>
   /// Compute the First, Follow, and Predict sets for the grammar. This also

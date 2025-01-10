@@ -6,13 +6,15 @@ public class UndefinedTerminalsCheck_Evaluate {
     [Fact]
     public void GivenGrammarWithNoUndefinedTerminals_WhenEvaluateCalled_ThenCheckPasses() {
         Grammar grammar = new(new() {
-            { "a", new("a") },
-            { "b", new("b") },
-        }, [
+          { "a", new("a") },
+          { "b", new("b") },
+        },
+        [
           new("S", ["A", "B"]),
           new("A", ["a"]),
           new("B", ["b"]),
-       ]);
+       ],
+       ["S"]);
 
         UndefinedTerminalsCheck undefinedTerminalsCheck = new(grammar);
         Assert.True(undefinedTerminalsCheck.Evaluate().Pass);
@@ -26,7 +28,8 @@ public class UndefinedTerminalsCheck_Evaluate {
           new("S", ["A", "B"]),
           new("A", ["a"]),
           new("B", ["b"]),
-       ]);
+       ],
+       ["S"]);
 
         UndefinedTerminalsCheck undefinedTerminalsCheck = new(grammar);
         Assert.False(undefinedTerminalsCheck.Evaluate().Pass);

@@ -11,14 +11,13 @@ public class Grammar_BuildParseTable {
       new("D", ["d"]), new("D", []),
       new("E", ["e"]), new("E", []),
     ];
-    Grammar grammar = new(
-      new() {
+    Grammar grammar = new(new() {
         { "a", new("a") },
         { "b", new("b") },
         { "c", new("c") },
         { "d", new("d") },
         { "e", new("e") },
-      }, rules.ToHashSet());
+      }, rules.ToHashSet(), ["S"]);
     grammar.ComputeSets();
     ParseTable parseTable = grammar.BuildParseTable();
 
@@ -50,7 +49,7 @@ public class Grammar_BuildParseTable {
     Grammar grammar = new(
       new() {
         {"a", new("a")},
-      }, rules.ToHashSet());
+      }, rules.ToHashSet(), ["S"]);
     grammar.ComputeSets();
     ParseTable parseTable = grammar.BuildParseTable();
 
@@ -71,7 +70,7 @@ public class Grammar_BuildParseTable {
     Grammar grammar = new(new() {
       { "a", new("a") },
       { "b", new("b") },
-    }, rules.ToHashSet());
+    }, rules.ToHashSet(), ["S"]);
     grammar.ComputeSets();
     ParseTable parseTable = grammar.BuildParseTable();
 

@@ -18,7 +18,7 @@ public class Grammar_ComputeSets {
         { "c", new("c") },
         { "d", new("d") },
         { "e", new("e") },
-      }, rules.ToHashSet());
+      }, rules.ToHashSet(), ["S"]);
     grammar.ComputeSets();
 
     // Epsilon
@@ -67,7 +67,7 @@ public class Grammar_ComputeSets {
     Grammar grammar = new(
       new() {
         {"a", new("a")},
-      }, rules.ToHashSet());
+      }, rules.ToHashSet(), ["S"]);
     grammar.ComputeSets();
 
     // Epsilon
@@ -97,7 +97,7 @@ public class Grammar_ComputeSets {
     Grammar grammar = new(new() {
       { "a", new("a") },
       { "b", new("b") },
-    }, rules.ToHashSet());
+    }, rules.ToHashSet(), ["S"]);
     grammar.ComputeSets();
 
     // Epsilon
