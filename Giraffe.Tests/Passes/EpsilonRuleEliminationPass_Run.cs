@@ -2,7 +2,7 @@ using Giraffe.Passes;
 
 namespace Giraffe.Tests.Passes;
 
-public class EpsilonRuleElimination_Run {
+public class EpsilonRuleEliminationPass_Run {
   [Fact]
   // Test case from "Parsing Techniques" Fig.s 4.10-4.11
   public void GivenGrammarWithEpsilonRules_WhenRunCalled_ThenEpsilonRulesRemovedProperly() {
