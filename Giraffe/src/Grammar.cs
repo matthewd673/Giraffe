@@ -89,6 +89,9 @@ public class Grammar(Dictionary<string, Regex> terminalDefs,
   /// <returns>An IEnumerable of the terminals in the production's PREDICT set.</returns>
   public IEnumerable<string> Predict(Rule rule) => predict[rule];
 
+  public IEnumerable<Rule> GetAllRulesForNonterminal(string nonterminal) =>
+    Rules.Where(rule => rule.Name.Equals(nonterminal));
+
   /// <summary>
   /// Remove a nonterminal from the grammar. Also remove all rules associated with the nonterminal and all rules
   /// where the nonterminal appears on the right-hand side.
