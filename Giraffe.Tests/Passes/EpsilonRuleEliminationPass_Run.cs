@@ -18,8 +18,8 @@ public class EpsilonRuleEliminationPass_Run {
       ],
       ["S"]);
 
-    EpsilonRuleElimination epsilonRuleElimination = new(grammar);
-    epsilonRuleElimination.Run();
+    EpsilonRuleEliminationPass epsilonRuleEliminationPass = new(grammar);
+    epsilonRuleEliminationPass.Run();
 
     Assert.Equal(["a", "$$"], grammar.Terminals);
     Assert.Equal(["S", "L", "M", "L'", "M'"], grammar.Nonterminals);

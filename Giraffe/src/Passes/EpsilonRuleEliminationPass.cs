@@ -1,11 +1,11 @@
 namespace Giraffe.Passes;
 
 /// <summary>
-/// Pass to remove epsilon rules from a Grammar.
+/// Remove epsilon rules from a grammar.
 /// Adapted from "Parsing Techniques: A Practical Guide" Section 4.2.3.1
 /// </summary>
 /// <param name="grammar">The Grammar to run the pass on. It will be modified in place.</param>
-public class EpsilonRuleElimination(Grammar grammar) : Pass(grammar) {
+public class EpsilonRuleEliminationPass(Grammar grammar) : Pass(grammar) {
   public override void Run() {
     Dictionary<string, string> ntDerivations = [];
 
