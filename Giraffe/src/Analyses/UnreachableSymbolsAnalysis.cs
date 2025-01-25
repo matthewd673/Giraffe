@@ -15,8 +15,8 @@ public class UnreachableSymbolsAnalysis(Grammar grammar) : Analysis<IEnumerable<
       toSee.Remove(current);
 
       if (!Grammar.IsTerminal(current)) {
-        IEnumerable<string> rightHandSymbols = Grammar.Rules.Where(r => r.Name.Equals(current))
-                                                            .SelectMany(r => r.Symbols);
+        HashSet<string> rightHandSymbols = Grammar.Rules.Where(r => r.Name.Equals(current))
+                                                        .SelectMany(r => r.Symbols).ToHashSet();
 
         // Mark any terminal on the right hand sides as seen
         seen.UnionWith(rightHandSymbols.Where(Grammar.IsTerminal));
