@@ -25,7 +25,7 @@ public class DirectLeftRecursionEliminationPass(Grammar grammar) : Pass(grammar)
       return;
     }
 
-    // If every rule is direct left recursive, its an infinite loop
+    // If every rule is direct left recursive, it's an infinite loop
     if (others.Count == 0) {
       throw new($"Grammar contains loop in rule for nonterminal \"{nonterminal}\"");
     }

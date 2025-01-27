@@ -21,7 +21,7 @@ public class DirectLeftRecursionEliminationPass_Run {
     directLeftRecursionEliminationPass.Run();
 
     Assert.Equal(["a", "b", "c", "$$"], grammar.Terminals);
-    Assert.Equal(["S", "A"], grammar.Nonterminals);
+    Assert.Equal(["S", "A", "A#tail", "A#tails", "A#head"], grammar.Nonterminals);
 
     Assert.Equal([
       new("S", ["A"]),

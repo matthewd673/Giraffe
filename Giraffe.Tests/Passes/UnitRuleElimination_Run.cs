@@ -82,11 +82,11 @@ public class UnitRuleElimination_Run {
     unitRuleEliminationPass.Run();
 
     Assert.Equal(["$$"], grammar.Terminals);
-    Assert.Equal(["S", "A"], grammar.Nonterminals);
+    Assert.Equal(["S"], grammar.Nonterminals);
 
     Assert.Equal(
       [
-        new("S", ["A", "$$"]),
+        new("S", ["A", "$$"]), // A is now an undefined non-terminal
       ],
       grammar.Rules);
   }
