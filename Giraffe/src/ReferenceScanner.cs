@@ -24,6 +24,8 @@ public class ReferenceScanner
     nextToken = ScanNext();
   }
 
+  private bool See(params int[] terminals) => terminals.Contains(Peek().Type);
+
   public string NameOf(int terminal) => names[terminal];
   public Token Peek() => nextToken!.Value;
   public Token Eat()
@@ -32,6 +34,8 @@ public class ReferenceScanner
     nextToken = ScanNext();
     return consumed;
   }
+
+  private Token Eat(int terminal) => See(terminal) ? Eat() : throw new Exception();
 
   private Token ScanNext()
   {

@@ -1,19 +1,18 @@
+using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
-using System.Text.RegularExpressions;
 
-namespace Giraffe;
+namespace Giraffe.SourceGeneration.CSharp;
 
-public class ScannerSourceGenerator(Grammar grammar) : SourceGenerator {
+public class CSharpScannerSourceGenerator(Grammar grammar) : CSharpSourceGenerator {
   private const string TokenDefArrayFieldName = "tokenDef";
   private const string NamesArrayFieldName = "names";
   private const string InputFieldName = "input";
   private const string ScanIndexFieldName = "scanIndex";
   private const string NextTokenFieldName = "nextToken";
 
-  public string FileNamespace { get; set; } = "Giraffe";
   public string ScannerClassName { get; set; } = "Scanner";
   public string TokenStructName { get; set; } = "Token";
   public string TokenStructTypePropertyName { get; set; } = "Type";
@@ -46,7 +45,6 @@ public class ScannerSourceGenerator(Grammar grammar) : SourceGenerator {
       .WithMembers(List<MemberDeclarationSyntax>([GenerateTokenDefArrayDeclaration(),
                                                   GenerateNamesArrayDeclaration(),
                                                   // Boilerplate...
-                                                  GenerateTokenStructBoilerplate(),
                                                   GenerateScannerExceptionBoilerplate(),
                                                   ..GenerateFieldBoilerplate(),
                                                   GenerateConstructorBoilerplate(),
@@ -69,8 +67,8 @@ public class ScannerSourceGenerator(Grammar grammar) : SourceGenerator {
     // Don't try to generate a rule for Eof, which has none
     SeparatedList<CollectionElementSyntax>(GenerateCommaSeparatedList(grammar.Terminals.Where(t => !t.Equals(Grammar.Eof)),
                                                                       terminal =>
-                                                                        GenerateTokenDefElement(grammar
-                                                                          .GetTerminalRule(terminal))));
+                                                                          GenerateTokenDefElement(grammar
+                                                                              .GetTerminalRule(terminal))));
 
   private ExpressionElementSyntax GenerateTokenDefElement(Regex regex) =>
     ExpressionElement(ImplicitObjectCreationExpression()
@@ -91,30 +89,7 @@ public class ScannerSourceGenerator(Grammar grammar) : SourceGenerator {
   private ExpressionElementSyntax GenerateNamesElement(string name) =>
   ExpressionElement(LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(name)));
 
-  private StructDeclarationSyntax GenerateTokenStructBoilerplate() =>
-    StructDeclaration(TokenStructName)
-      .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.ReadOnlyKeyword)))
-      .WithParameterList(ParameterList(SeparatedList<ParameterSyntax>(new SyntaxNodeOrToken[] {
-        Parameter(Identifier(TriviaList(), SyntaxKind.TypeKeyword, "type", "type", TriviaList()))
-          .WithType(PredefinedType(Token(SyntaxKind.IntKeyword))),
-        Token(SyntaxKind.CommaToken),
-        Parameter(Identifier("image")).WithType(PredefinedType(Token(SyntaxKind.StringKeyword)))
-      })))
-      .WithMembers(List(new MemberDeclarationSyntax[] {
-        PropertyDeclaration(PredefinedType(Token(SyntaxKind.IntKeyword)), Identifier(TokenStructTypePropertyName))
-          .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
-          .WithAccessorList(AccessorList(SingletonList(AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
-                                                         .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)))))
-          .WithInitializer(EqualsValueClause(IdentifierName(Identifier(TriviaList(), SyntaxKind.TypeKeyword, "type",
-                                                                       "type", TriviaList()))))
-          .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)),
-        PropertyDeclaration(PredefinedType(Token(SyntaxKind.StringKeyword)), Identifier(TokenStructImagePropertyName))
-          .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
-          .WithAccessorList(AccessorList(SingletonList(AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
-                                                         .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)))))
-          .WithInitializer(EqualsValueClause(IdentifierName("image")))
-          .WithSemicolonToken(Token(SyntaxKind.SemicolonToken))
-      }));
+
 
   private ClassDeclarationSyntax GenerateScannerExceptionBoilerplate() =>
     ClassDeclaration(ScannerExceptionClassName)

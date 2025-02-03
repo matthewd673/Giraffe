@@ -22,7 +22,7 @@ public class SetsAnalysis(Grammar grammar) : Analysis<GrammarSets>(grammar) {
       GetPredict(rule);
     }
 
-    return new(first, follow, predict);
+    return new(Grammar, first, follow, predict);
   }
 
   private HashSet<string> GetFirst(string symbol) {
