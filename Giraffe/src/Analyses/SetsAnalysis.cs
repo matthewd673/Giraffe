@@ -90,11 +90,24 @@ public class SetsAnalysis(Grammar grammar) : Analysis<GrammarSets>(grammar) {
           break;
         }
 
-        // Nonterminal appears at the end of the rule
-        followSet.UnionWith(index == rule.Symbols.Count - 1
-                              ? GetFollow(rule.Name)
-                              : GetFirst(rule.Symbols[index + 1]));
         searchIndex = index + 1;
+
+        // Scan forward from the index to build the FOLLOW set.
+        // We will continue scanning until we reach a symbol that doesn't have an epsilon production,
+        // we reach the end of the rule, or we reach another occurrence of ourselves.
+        while (searchIndex < rule.Symbols.Count) {
+          followSet.UnionWith(GetFirst(rule.Symbols[searchIndex]));
+
+          if (!HasEpsilon(rule.Symbols[searchIndex])) {
+            break;
+          }
+
+          searchIndex += 1;
+        }
+
+        if (searchIndex == rule.Symbols.Count) {
+          followSet.UnionWith(GetFollow(rule.Name));
+        }
       }
     }
 
