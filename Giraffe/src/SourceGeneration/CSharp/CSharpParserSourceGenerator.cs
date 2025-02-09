@@ -13,6 +13,7 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
 
   private const string SeeMethodName = "See";
   private const string EatMethodName = "Eat";
+  private const string EntryMethodName = "Parse";
   private const string ScannerFieldName = "scanner";
   private const string ScannerPeekMethodName = "Peek";
   private const string ScannerEatMethodName = "Eat";
@@ -35,14 +36,22 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
       .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
       .WithParameterList(ParameterList(SingletonSeparatedList(Parameter(Identifier(ScannerFieldName))
                                                                 .WithType(IdentifierName(ScannerClassName)))))
-      .WithMembers(List([GenerateSeeMethod(),
+      .WithMembers(List([GenerateEntryRoutine(topLevel.EntryRoutine),
+                         GenerateSeeMethod(),
                          GenerateEatMethod(),
                          ..GenerateRoutines(topLevel.Routines)]));
 
   private IEnumerable<MemberDeclarationSyntax> GenerateRoutines(IEnumerable<Routine> routines) =>
     routines.Select(GenerateRoutine);
 
-  private MemberDeclarationSyntax GenerateRoutine(Routine routine) =>
+  private MethodDeclarationSyntax GenerateEntryRoutine(EntryRoutine entryRoutine) =>
+    MethodDeclaration(PredefinedType(Token(SyntaxKind.VoidKeyword)),
+                      Identifier(EntryMethodName))
+      .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
+      .WithBody(Block((IEnumerable<StatementSyntax>)[..GeneratePredictions(entryRoutine.Predictions),
+                                                     GenerateExceptionThrowStatement()]));
+
+  private MethodDeclarationSyntax GenerateRoutine(Routine routine) =>
     MethodDeclaration(PredefinedType(Token(SyntaxKind.VoidKeyword)), // TODO: Return type
                       Identifier(GetParseMethodName(routine.Nonterminal)))
       .WithModifiers(TokenList(Token(SyntaxKind.PrivateKeyword)))

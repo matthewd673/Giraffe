@@ -1,27 +1,20 @@
 namespace Giraffe;
-public class ReferenceParser
+public class ReferenceParser(ReferenceScanner scanner)
 {
-  ReferenceScanner scanner;
-  public ReferenceParser(ReferenceScanner scanner)
+  public void Parse()
   {
-    this.scanner = scanner;
-  }
-
-  private bool See(params int[] terminals) => terminals.Contains(scanner.Peek().Type);
-  private ReferenceScanner.Token Eat(int terminal) => See(terminal) ? scanner.Eat() : throw new Exception();
-
-  // TODO: Hand-written
-  public void Parse() {
-    if (See(0, 1, 2)) {
+    if (See(0, 1, 2))
+    {
       ParseS();
-      Eat(5); // Eof
-      Console.WriteLine("Good");
+      Eat(5);
       return;
     }
 
     throw new Exception();
   }
 
+  private bool See(params int[] terminals) => terminals.Contains(scanner.Peek().Type);
+  private ReferenceScanner.Token Eat(int terminal) => See(terminal) ? scanner.Eat() : throw new Exception();
   private void ParseS()
   {
     if (See(0, 1, 2))
@@ -45,7 +38,7 @@ public class ReferenceParser
       return;
     }
 
-    if (See(1))
+    if (See(1, 2))
     {
       return;
     }
@@ -88,7 +81,7 @@ public class ReferenceParser
       return;
     }
 
-    if (See(4))
+    if (See(4, 5))
     {
       return;
     }
