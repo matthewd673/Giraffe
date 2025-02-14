@@ -9,7 +9,7 @@ namespace Giraffe.SourceGeneration.CSharp;
 public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSourceGenerator {
   public string ParserClassName { get; set; } = "Parser";
   public string ScannerClassName { get; set; } = "Scanner";
-  public string ExceptionClassName { get; set; } = "ParserException";
+  public string ParserExceptionClassName { get; set; } = "ParserException";
 
   private const string SeeMethodName = "See";
   private const string EatMethodName = "Eat";
@@ -92,11 +92,11 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
     Argument(LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(GetTerminalIndex(terminal))));
 
   private ThrowStatementSyntax GenerateExceptionThrowStatement() =>
-    ThrowStatement(ObjectCreationExpression(IdentifierName(ExceptionClassName))
+    ThrowStatement(ObjectCreationExpression(IdentifierName(ParserExceptionClassName))
                      .WithArgumentList(ArgumentList()));
 
   private ThrowExpressionSyntax GenerateExceptionThrowExpression() =>
-    ThrowExpression(ObjectCreationExpression(IdentifierName(ExceptionClassName))
+    ThrowExpression(ObjectCreationExpression(IdentifierName(ParserExceptionClassName))
                      .WithArgumentList(ArgumentList()));
 
   private static string GetParseMethodName(string nonterminal) => $"Parse{SanitizeMethodName(nonterminal)}";

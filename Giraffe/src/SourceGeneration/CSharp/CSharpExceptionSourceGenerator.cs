@@ -10,7 +10,8 @@ public class CSharpExceptionSourceGenerator(string exceptionClassName) : CSharpS
 
   public override CompilationUnitSyntax Generate() =>
     CompilationUnit()
-      .WithMembers(List<MemberDeclarationSyntax>([GenerateExceptionClass()]))
+      .WithMembers(List<MemberDeclarationSyntax>([GenerateNamespaceDeclaration(FileNamespace),
+                                                  GenerateExceptionClass()]))
       .NormalizeWhitespace();
 
   private ClassDeclarationSyntax GenerateExceptionClass() =>
