@@ -24,6 +24,7 @@ public class CSharpSourceFilesGenerator(GrammarSets grammarSets) {
       ParserClassName = ParserClassName,
       ScannerClassName = ScannerClassName,
       ParserExceptionClassName = ParserExceptionClassName,
+      TokenStructName = TokenStructName,
     };
     sourceFiles.Add(new(GetFileName(ParserClassName), parserSourceGenerator.Generate()));
 

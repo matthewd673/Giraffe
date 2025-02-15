@@ -10,6 +10,7 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
   public string ParserClassName { get; set; } = "Parser";
   public string ScannerClassName { get; set; } = "Scanner";
   public string ParserExceptionClassName { get; set; } = "ParserException";
+  public string TokenStructName { get; set; } = "Token";
 
   private const string SeeMethodName = "See";
   private const string EatMethodName = "Eat";
@@ -17,7 +18,8 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
   private const string ScannerFieldName = "scanner";
   private const string ScannerPeekMethodName = "Peek";
   private const string ScannerEatMethodName = "Eat";
-  private const string TokenClassName = "Token";
+  private const string ScannerNameOfMethodName = "NameOf";
+  private const string TokenStructTypePropertyName = "Type";
 
   private readonly List<string> terminalsOrdering = grammarSets.Grammar.Terminals.ToList();
 
@@ -49,14 +51,14 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
                       Identifier(EntryMethodName))
       .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
       .WithBody(Block((IEnumerable<StatementSyntax>)[..GeneratePredictions(entryRoutine.Predictions),
-                                                     GenerateExceptionThrowStatement()]));
+                                                     GenerateExceptionThrowStatement(ParserExceptionClassName, GetParseEntryRoutineExceptionMessage(entryRoutine))]));
 
   private MethodDeclarationSyntax GenerateRoutine(Routine routine) =>
     MethodDeclaration(PredefinedType(Token(SyntaxKind.VoidKeyword)), // TODO: Return type
                       Identifier(GetParseMethodName(routine.Nonterminal)))
       .WithModifiers(TokenList(Token(SyntaxKind.PrivateKeyword)))
       .WithBody(Block((IEnumerable<StatementSyntax>)[..GeneratePredictions(routine.Predictions),
-                                                     GenerateExceptionThrowStatement()])); // TODO: Exception message
+                                                     GenerateExceptionThrowStatement(ParserExceptionClassName, GetParseRoutineExceptionMessage(routine))]));
 
   private IEnumerable<IfStatementSyntax> GeneratePredictions(IEnumerable<Prediction> predictions) =>
     predictions.Select(GeneratePrediction);
@@ -91,17 +93,17 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
   private ArgumentSyntax TerminalToIntArgument(string terminal) =>
     Argument(LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(GetTerminalIndex(terminal))));
 
-  private ThrowStatementSyntax GenerateExceptionThrowStatement() =>
-    ThrowStatement(ObjectCreationExpression(IdentifierName(ParserExceptionClassName))
-                     .WithArgumentList(ArgumentList()));
-
-  private ThrowExpressionSyntax GenerateExceptionThrowExpression() =>
-    ThrowExpression(ObjectCreationExpression(IdentifierName(ParserExceptionClassName))
-                     .WithArgumentList(ArgumentList()));
 
   private static string GetParseMethodName(string nonterminal) => $"Parse{SanitizeMethodName(nonterminal)}";
 
   private int GetTerminalIndex(string terminal) => terminalsOrdering.IndexOf(terminal);
+
+  private string GetParseEntryRoutineExceptionMessage(EntryRoutine entryRoutine) =>
+    $"Cannot begin parsing {{{string.Join(", ", grammarSets.Grammar.EntryNonterminals)}}}, " +
+    $"expected one of {{{string.Join(", ", entryRoutine.Predictions.SelectMany(p => p.PredictSet))}}}";
+
+  private static string GetParseRoutineExceptionMessage(Routine routine) =>
+    $"Cannot parse {routine.Nonterminal}";
 
   // Generates: `private bool See(params int[] terminals) => terminals.Contains(scanner.Peek().Type);`
   private static MethodDeclarationSyntax GenerateSeeMethod() {
@@ -122,23 +124,48 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
                                                                            InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                                                              IdentifierName(ScannerFieldName),
                                                                              IdentifierName(ScannerPeekMethodName))),
-                                                                           IdentifierName("Type"))))))))
+                                                                           IdentifierName(TokenStructTypePropertyName))))))))
            .WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
   }
 
   // Generates: `private Token Eat(int terminal) => See(terminal) ? scanner.Eat() : throw new Exception();`
   private MethodDeclarationSyntax GenerateEatMethod() {
     const string terminalParamName = "terminal";
-    return MethodDeclaration(IdentifierName(TokenClassName), Identifier(EatMethodName))
+    return MethodDeclaration(IdentifierName(TokenStructName), Identifier(EatMethodName))
            .WithModifiers(TokenList(Token(SyntaxKind.PrivateKeyword)))
            .WithParameterList(ParameterList(SingletonSeparatedList(Parameter(Identifier(terminalParamName))
                                                                      .WithType(PredefinedType(Token(SyntaxKind.IntKeyword))))))
            .WithExpressionBody(ArrowExpressionClause(ConditionalExpression(InvocationExpression(IdentifierName(SeeMethodName))
                                                                              .WithArgumentList(ArgumentList(SingletonSeparatedList(Argument(IdentifierName(terminalParamName))))),
                                                                            InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
-                                                                              IdentifierName(ScannerFieldName),
-                                                                              IdentifierName(ScannerEatMethodName))),
-                                                                           GenerateExceptionThrowExpression())))
+                                                                             IdentifierName(ScannerFieldName),
+                                                                             IdentifierName(ScannerEatMethodName))),
+                                                                           GenerateExceptionThrowExpression(
+                                                                            ParserExceptionClassName,
+                                                                            GetUnexpectedTerminalExceptionMessage(
+                                                                             InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                                                                                 IdentifierName(ScannerFieldName),
+                                                                                 IdentifierName(ScannerNameOfMethodName)))
+                                                                               .WithArgumentList(ArgumentList(SingletonSeparatedList(Argument(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                                                                                 InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                                                                                   IdentifierName(ScannerFieldName),
+                                                                                   IdentifierName(ScannerPeekMethodName))),
+                                                                                 IdentifierName(TokenStructTypePropertyName)))))),
+                                                                             InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                                                                                 IdentifierName(ScannerFieldName),
+                                                                                 IdentifierName(ScannerNameOfMethodName)))
+                                                                               .WithArgumentList(ArgumentList(SingletonSeparatedList(Argument(IdentifierName(terminalParamName))))))))))
            .WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
   }
+
+  private static InterpolatedStringExpressionSyntax GetUnexpectedTerminalExceptionMessage(ExpressionSyntax sawExpression, ExpressionSyntax expectedExpression) =>
+    InterpolatedStringExpression(Token(SyntaxKind.InterpolatedStringStartToken))
+      .WithContents(List(new InterpolatedStringContentSyntax[] {
+        InterpolatedStringText()
+          .WithTextToken(Token(TriviaList(), SyntaxKind.InterpolatedStringTextToken, "Unexpected terminal, saw '", "Unexpected terminal, saw '", TriviaList())),
+        Interpolation(sawExpression),
+        InterpolatedStringText()
+          .WithTextToken(Token(TriviaList(), SyntaxKind.InterpolatedStringTextToken, "' but expected '", "' but expected '", TriviaList())),
+        Interpolation(expectedExpression),
+        InterpolatedStringText().WithTextToken(Token(TriviaList(), SyntaxKind.InterpolatedStringTextToken, "'", "'", TriviaList()))}));
 }

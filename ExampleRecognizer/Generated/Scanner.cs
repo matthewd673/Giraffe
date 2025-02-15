@@ -5,11 +5,6 @@ public class Scanner
 {
     private readonly Regex[] tokenDef = [new("a"), new("b"), new("c"), new("d"), new("e")];
     private readonly string[] names = ["a", "b", "c", "d", "e", "$$"];
-    public class ScannerException(int index, string message) : Exception(message)
-    {
-        public int Index { get; } = index;
-    }
-
     private readonly string input;
     private int scanIndex = 0;
     private Token? nextToken = null;
@@ -53,7 +48,7 @@ public class Scanner
 
         if (!best.HasValue)
         {
-            throw new ScannerException(scanIndex, $"Illegal character: '{input[scanIndex]}'");
+            throw new ScannerException($"Illegal character '{input[scanIndex]}' at index {scanIndex}");
         }
 
         scanIndex += best.Value.Image.Length;

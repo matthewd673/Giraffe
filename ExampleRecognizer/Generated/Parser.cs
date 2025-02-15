@@ -10,11 +10,11 @@ public class Parser(Scanner scanner)
             return;
         }
 
-        throw new ParserException();
+        throw new ParserException("Cannot begin parsing {S}, expected one of {a, b, c}");
     }
 
     private bool See(params int[] terminals) => terminals.Contains(scanner.Peek().Type);
-    private Token Eat(int terminal) => See(terminal) ? scanner.Eat() : throw new ParserException();
+    private Token Eat(int terminal) => See(terminal) ? scanner.Eat() : throw new ParserException($"Unexpected terminal, saw '{scanner.NameOf(scanner.Peek().Type)}' but expected '{scanner.NameOf(terminal)}'");
     private void ParseS()
     {
         if (See(0, 1, 2))
@@ -27,7 +27,7 @@ public class Parser(Scanner scanner)
             return;
         }
 
-        throw new ParserException();
+        throw new ParserException("Cannot parse S");
     }
 
     private void ParseA()
@@ -43,7 +43,7 @@ public class Parser(Scanner scanner)
             return;
         }
 
-        throw new ParserException();
+        throw new ParserException("Cannot parse A");
     }
 
     private void ParseB()
@@ -59,7 +59,7 @@ public class Parser(Scanner scanner)
             return;
         }
 
-        throw new ParserException();
+        throw new ParserException("Cannot parse B");
     }
 
     private void ParseC()
@@ -70,7 +70,7 @@ public class Parser(Scanner scanner)
             return;
         }
 
-        throw new ParserException();
+        throw new ParserException("Cannot parse C");
     }
 
     private void ParseD()
@@ -86,7 +86,7 @@ public class Parser(Scanner scanner)
             return;
         }
 
-        throw new ParserException();
+        throw new ParserException("Cannot parse D");
     }
 
     private void ParseE()
@@ -102,6 +102,6 @@ public class Parser(Scanner scanner)
             return;
         }
 
-        throw new ParserException();
+        throw new ParserException("Cannot parse E");
     }
 }

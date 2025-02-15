@@ -12,6 +12,18 @@ public abstract class CSharpSourceGenerator {
 
   protected delegate TOutput SyntaxTransformer<in TInput, out TOutput>(TInput input) where TOutput : SyntaxNode;
 
+  protected static ThrowStatementSyntax GenerateExceptionThrowStatement(string exceptionClassName, string message) =>
+    ThrowStatement(GenerateExceptionObjectCreation(exceptionClassName, message));
+
+  protected static ThrowStatementSyntax GenerateExceptionThrowStatement(string exceptionClassName, InterpolatedStringExpressionSyntax message) =>
+    ThrowStatement(GenerateExceptionObjectCreation(exceptionClassName, message));
+
+  protected static ThrowExpressionSyntax GenerateExceptionThrowExpression(string exceptionClassName, string message) =>
+    ThrowExpression(GenerateExceptionObjectCreation(exceptionClassName, message));
+
+  protected static ThrowExpressionSyntax GenerateExceptionThrowExpression(string exceptionClassName, InterpolatedStringExpressionSyntax message) =>
+    ThrowExpression(GenerateExceptionObjectCreation(exceptionClassName, message));
+
   protected static IEnumerable<SyntaxNodeOrToken> GenerateCommaSeparatedList<TInput, TOutput>(IEnumerable<TInput> collection,
                                                                                               SyntaxTransformer<TInput, TOutput> transformer)
     where TOutput : SyntaxNode =>
@@ -25,4 +37,12 @@ public abstract class CSharpSourceGenerator {
   }
 
   protected static string SanitizeMethodName(string name) => name; // TODO
+
+  private static ObjectCreationExpressionSyntax GenerateExceptionObjectCreation(string exceptionClassName, string message) =>
+    ObjectCreationExpression(IdentifierName(exceptionClassName))
+      .WithArgumentList(ArgumentList(SingletonSeparatedList(Argument(LiteralExpression(SyntaxKind.StringLiteralExpression,
+                                                                     Literal(message))))));
+  private static ObjectCreationExpressionSyntax GenerateExceptionObjectCreation(string exceptionClassName, InterpolatedStringExpressionSyntax message) =>
+    ObjectCreationExpression(IdentifierName(exceptionClassName))
+      .WithArgumentList(ArgumentList(SingletonSeparatedList(Argument(message))));
 }
