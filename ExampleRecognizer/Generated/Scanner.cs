@@ -11,13 +11,18 @@ public class Scanner
     public Scanner(string input)
     {
         this.input = input;
-        nextToken = ScanNext();
     }
 
     public string NameOf(int terminal) => names[terminal];
-    public Token Peek() => nextToken!.Value;
+    public Token Peek()
+    {
+        nextToken ??= ScanNext();
+        return nextToken!.Value;
+    }
+
     public Token Eat()
     {
+        nextToken ??= ScanNext();
         Token consumed = nextToken!.Value;
         nextToken = ScanNext();
         return consumed;

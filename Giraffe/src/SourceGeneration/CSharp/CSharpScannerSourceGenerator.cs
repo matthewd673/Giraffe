@@ -117,10 +117,11 @@ public class CSharpScannerSourceGenerator(Grammar grammar) : CSharpSourceGenerat
                     .WithParameterList(ParameterList(SingletonSeparatedList(Parameter(Identifier(InputFieldName))
                                                                               .WithType(PredefinedType(Token(SyntaxKind
                                                                                 .StringKeyword))))))
-                    .WithBody(Block(ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression, MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, ThisExpression(), IdentifierName(InputFieldName)), IdentifierName(InputFieldName))),
-                                    ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression,
-                                                                             IdentifierName(NextTokenFieldName),
-                                                                             InvocationExpression(IdentifierName(ScanNextMethodName)))))));
+                    .WithBody(Block(ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression,
+                                                                             MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                                                                                 ThisExpression(),
+                                                                                 IdentifierName(InputFieldName)),
+                                                                             IdentifierName(InputFieldName))))));
 
   private GlobalStatementSyntax GenerateNameOfMethodBoilerplate() =>
       GlobalStatement(LocalFunctionStatement(PredefinedType(Token(SyntaxKind.StringKeyword)),
@@ -134,18 +135,25 @@ public class CSharpScannerSourceGenerator(Grammar grammar) : CSharpSourceGenerat
                       .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)));
 
   private GlobalStatementSyntax GeneratePeekMethodBoilerplate() =>
-    GlobalStatement(LocalFunctionStatement(IdentifierName(TokenStructName), Identifier(PeekMethodName))
-                    .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
-                    .WithExpressionBody(ArrowExpressionClause(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
-                                                                PostfixUnaryExpression(SyntaxKind.SuppressNullableWarningExpression,
-                                                                  IdentifierName(NextTokenFieldName)),
-                                                                IdentifierName("Value"))))
-                    .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)));
+      GlobalStatement(LocalFunctionStatement(IdentifierName(TokenStructName), Identifier(PeekMethodName))
+                      .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
+                      .WithBody(Block(ExpressionStatement(AssignmentExpression(SyntaxKind.CoalesceAssignmentExpression,
+                                                                               IdentifierName(NextTokenFieldName),
+                                                                               InvocationExpression(IdentifierName(ScanNextMethodName)))),
+                                      ReturnStatement(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                                                                             PostfixUnaryExpression(SyntaxKind.SuppressNullableWarningExpression,
+                                                                                      IdentifierName(NextTokenFieldName)),
+                                                                             IdentifierName("Value"))))));
 
   private GlobalStatementSyntax GenerateEatMethodBoilerplate() =>
     GlobalStatement(LocalFunctionStatement(IdentifierName(TokenStructName), Identifier(EatMethodName))
                     .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
-                    .WithBody(Block(LocalDeclarationStatement(VariableDeclaration(IdentifierName(TokenStructName)).WithVariables(SingletonSeparatedList(VariableDeclarator(Identifier("consumed")).WithInitializer(EqualsValueClause(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, PostfixUnaryExpression(SyntaxKind.SuppressNullableWarningExpression, IdentifierName(NextTokenFieldName)), IdentifierName("Value"))))))),
+                    .WithBody(Block(ExpressionStatement(AssignmentExpression(SyntaxKind.CoalesceAssignmentExpression,
+                                                                             IdentifierName(NextTokenFieldName),
+                                                                             InvocationExpression(IdentifierName(ScanNextMethodName)))),
+                                    LocalDeclarationStatement(VariableDeclaration(IdentifierName(TokenStructName))
+                                                                  .WithVariables(SingletonSeparatedList(VariableDeclarator(Identifier("consumed"))
+                                                                      .WithInitializer(EqualsValueClause(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,PostfixUnaryExpression(SyntaxKind.SuppressNullableWarningExpression, IdentifierName(NextTokenFieldName)), IdentifierName("Value"))))))),
                                     ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression,
                                                                              IdentifierName(NextTokenFieldName),
                                                                              InvocationExpression(IdentifierName(ScanNextMethodName)))),
@@ -265,8 +273,8 @@ public class CSharpScannerSourceGenerator(Grammar grammar) : CSharpSourceGenerat
                                                                                  IdentifierName("HasValue"))),
                                                   Block(SingletonList<StatementSyntax>(GenerateExceptionThrowStatement(ScannerExceptionClassName,
                                                             GetIllegalCharacterExceptionMessage(ElementAccessExpression(IdentifierName("input"))
-                                                                .WithArgumentList(BracketedArgumentList(SingletonSeparatedList(Argument(IdentifierName("scanIndex"))))),
-                                                                 IdentifierName("scanIndex")))))),
+                                                                .WithArgumentList(BracketedArgumentList(SingletonSeparatedList(Argument(IdentifierName(ScanIndexFieldName))))),
+                                                                 IdentifierName(ScanIndexFieldName)))))),
                                       ExpressionStatement(AssignmentExpression(SyntaxKind.AddAssignmentExpression,
                                                                                IdentifierName(ScanIndexFieldName),
                                                                                MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
