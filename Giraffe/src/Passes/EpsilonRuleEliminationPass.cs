@@ -58,14 +58,12 @@ public class EpsilonRuleEliminationPass(Grammar grammar) : Pass(grammar) {
 
       foreach (Rule r in rulesWithNt) {
         // Replace the original NT with the new version (which should have no epsilon rule)
-        Grammar.Rules.Remove(r); // If we just edit the rule in place we may end up with duplicates in the set
+        Grammar.Rules.Remove(r);
         int ntInd = r.Symbols.FindIndex(s => s.Equals(originalNt));
-        r.Symbols[ntInd] = newNt;
-        Grammar.Rules.Add(r);
+        Grammar.Rules.Add(r with { Symbols = r.Symbols.SetItem(ntInd, newNt) });
 
         // Create a copy of the production with NT removed (simulating the case where it goes to epsilon)
-        Rule ruleWithoutNt = r with { Symbols = [..r.Symbols] }; // Make sure we clone the symbol list
-        ruleWithoutNt.Symbols.RemoveAt(ntInd);
+        Rule ruleWithoutNt = r with { Symbols = r.Symbols.RemoveAt(ntInd) };
         Grammar.Rules.Add(ruleWithoutNt);
       }
     }

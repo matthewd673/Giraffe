@@ -32,7 +32,7 @@ public class DirectLeftRecursionEliminationPass(Grammar grammar) : Pass(grammar)
 
     Grammar.Rules.UnionWith(others.Select(r => r with { Name = $"{r.Name}#head" }));
 
-    Grammar.Rules.UnionWith(directLeftRecursive.Select(r => new Rule($"{r.Name}#tail", r.Symbols[1..])));
+    Grammar.Rules.UnionWith(directLeftRecursive.Select(r => new Rule($"{r.Name}#tail", r.Symbols.RemoveAt(0))));
 
     Grammar.Rules.RemoveWhere(r => r.Name.Equals(nonterminal));
 

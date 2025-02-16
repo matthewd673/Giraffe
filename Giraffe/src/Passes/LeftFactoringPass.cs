@@ -10,7 +10,7 @@ public class LeftFactoringPass(Grammar grammar) : Pass(grammar) {
     bool changed = true;
     while (changed) {
       changed = Grammar.Nonterminals.Aggregate(false,
-                                               (c, nonterminal) => c | LeftFactorNonterminalRules(nonterminal));
+                                               (acc, nt) => acc | LeftFactorNonterminalRules(nt));
     }
   }
 
@@ -37,7 +37,7 @@ public class LeftFactoringPass(Grammar grammar) : Pass(grammar) {
       changed = true;
 
       string tailName = $"{nonterminal}-{firstSymbol}#tail";
-      List<Rule> tails = rules.Select(r => new Rule(tailName, r.Symbols[1..])).ToList();
+      List<Rule> tails = rules.Select(r => new Rule(tailName, r.Symbols.RemoveAt(0))).ToList();
       Grammar.Rules.RemoveWhere(r => rules.Contains(r));
 
       Rule newHead = new(nonterminal, [firstSymbol, tailName]);

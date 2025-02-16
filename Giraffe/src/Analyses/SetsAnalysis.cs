@@ -85,7 +85,7 @@ public class SetsAnalysis(Grammar grammar) : Analysis<GrammarSets>(grammar) {
     foreach (Rule rule in Grammar.Rules.Where(r => r.Symbols.Contains(symbol))) {
       int searchIndex = 0;
       while (true) {
-        int index = rule.Symbols.IndexOf(symbol, searchIndex);
+        int index = Utils.IndexOf(rule.Symbols, symbol, searchIndex);
         if (index == -1) {
           break;
         }
