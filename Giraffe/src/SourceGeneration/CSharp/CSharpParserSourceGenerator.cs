@@ -98,12 +98,62 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
 
   private int GetTerminalIndex(string terminal) => terminalsOrdering.IndexOf(terminal);
 
-  private string GetParseEntryRoutineExceptionMessage(EntryRoutine entryRoutine) =>
-    $"Cannot begin parsing {{{string.Join(", ", grammarSets.Grammar.EntryNonterminals)}}}, " +
-    $"expected one of {{{string.Join(", ", entryRoutine.Predictions.SelectMany(p => p.PredictSet))}}}";
+  private InterpolatedStringExpressionSyntax GetParseEntryRoutineExceptionMessage(EntryRoutine entryRoutine) {
+    string[] textTokens = ["Cannot parse {{" +
+                            string.Join(", ", grammarSets.Grammar.EntryNonterminals
+                                                         .Select(nt => GetDisplayName(grammarSets.Grammar, nt))) +
+                            "}}, saw ",
+                           " but expected one of {{" +
+                            string.Join(", ", entryRoutine.Predictions
+                                                          .SelectMany(p => p.PredictSet
+                                                                            .Select(t => GetDisplayName(grammarSets.Grammar, t)))) +
+                            "}}",
+                          ];
+    return InterpolatedStringExpression(Token(SyntaxKind.InterpolatedStringStartToken))
+      .WithContents(List(new InterpolatedStringContentSyntax[] {
+        InterpolatedStringText()
+          .WithTextToken(Token(TriviaList(), SyntaxKind.InterpolatedStringTextToken, textTokens[0], textTokens[0],
+                               TriviaList())),
+        Interpolation(InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                                                                  IdentifierName(ScannerFieldName),
+                                                                  IdentifierName(ScannerNameOfMethodName)))
+                        .WithArgumentList(ArgumentList(SingletonSeparatedList(Argument(
+                                                                               MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                                                                                 InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                                                                                   IdentifierName(ScannerFieldName),
+                                                                                   IdentifierName(ScannerPeekMethodName))),
+                                                                                 IdentifierName(TokenStructTypePropertyName))))))),
+        InterpolatedStringText()
+          .WithTextToken(Token(TriviaList(), SyntaxKind.InterpolatedStringTextToken, textTokens[1], textTokens[1],
+                               TriviaList())),
+      }));
+  }
 
-  private static string GetParseRoutineExceptionMessage(Routine routine) =>
-    $"Cannot parse {routine.Nonterminal}";
+  private InterpolatedStringExpressionSyntax GetParseRoutineExceptionMessage(Routine routine) {
+    string[] textTokens = [$"Cannot parse {GetDisplayName(grammarSets.Grammar, routine.Nonterminal)}, saw ",
+                           " but expected one of {{" +
+                            string.Join(", ", routine.Predictions
+                                                     .SelectMany(p => p.PredictSet
+                                                                       .Select(t => GetDisplayName(grammarSets.Grammar, t)))) +
+                            "}}",
+                          ];
+    return InterpolatedStringExpression(Token(SyntaxKind.InterpolatedStringStartToken))
+      .WithContents(List(new InterpolatedStringContentSyntax[] {
+        InterpolatedStringText()
+          .WithTextToken(Token(TriviaList(), SyntaxKind.InterpolatedStringTextToken,textTokens[0], textTokens[0], TriviaList())),
+        Interpolation(InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                                                                  IdentifierName(ScannerFieldName),
+                                                                  IdentifierName(ScannerNameOfMethodName)))
+                        .WithArgumentList(ArgumentList(SingletonSeparatedList(Argument(
+                                                                                 MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                                                                                      InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                                                                                                IdentifierName(ScannerFieldName),
+                                                                                                IdentifierName(ScannerPeekMethodName))),
+                                                                                      IdentifierName(TokenStructTypePropertyName))))))),
+        InterpolatedStringText()
+          .WithTextToken(Token(TriviaList(), SyntaxKind.InterpolatedStringTextToken, textTokens[1], textTokens[1], TriviaList())),
+      }));
+  }
 
   // Generates: `private bool See(params int[] terminals) => terminals.Contains(scanner.Peek().Type);`
   private static MethodDeclarationSyntax GenerateSeeMethod() {

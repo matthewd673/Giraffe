@@ -11,6 +11,8 @@ public record Grammar(Dictionary<string, Regex> terminalDefs,
 
   public HashSet<string> Nonterminals => Rules.Select(p => p.Name).ToHashSet();
 
+  public Dictionary<string, string> DisplayNames { get; } = new();
+
   public Regex GetTerminalRule(string terminal) => terminalDefs[terminal];
 
   public IEnumerable<Rule> GetAllRulesForNonterminal(string nonterminal) =>

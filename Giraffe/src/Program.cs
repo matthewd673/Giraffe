@@ -31,6 +31,9 @@ public class Program {
       ["S"]
     );
 
+    grammar.DisplayNames.Add(Grammar.Eof, "<end of input>");
+    grammar.DisplayNames.Add("S", "Start");
+
     SetsAnalysis setsAnalysis = new(grammar);
     GrammarSets sets = setsAnalysis.Analyze();
 

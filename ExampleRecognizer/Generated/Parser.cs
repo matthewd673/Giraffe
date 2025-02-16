@@ -10,7 +10,7 @@ public class Parser(Scanner scanner)
             return;
         }
 
-        throw new ParserException("Cannot begin parsing {S}, expected one of {a, b, c}");
+        throw new ParserException($"Cannot parse {{Start}}, saw {scanner.NameOf(scanner.Peek().Type)} but expected one of {{a, b, c}}");
     }
 
     private bool See(params int[] terminals) => terminals.Contains(scanner.Peek().Type);
@@ -27,7 +27,7 @@ public class Parser(Scanner scanner)
             return;
         }
 
-        throw new ParserException("Cannot parse S");
+        throw new ParserException($"Cannot parse Start, saw {scanner.NameOf(scanner.Peek().Type)} but expected one of {{a, b, c}}");
     }
 
     private void ParseA()
@@ -43,7 +43,7 @@ public class Parser(Scanner scanner)
             return;
         }
 
-        throw new ParserException("Cannot parse A");
+        throw new ParserException($"Cannot parse A, saw {scanner.NameOf(scanner.Peek().Type)} but expected one of {{a, b, c}}");
     }
 
     private void ParseB()
@@ -59,7 +59,7 @@ public class Parser(Scanner scanner)
             return;
         }
 
-        throw new ParserException("Cannot parse B");
+        throw new ParserException($"Cannot parse B, saw {scanner.NameOf(scanner.Peek().Type)} but expected one of {{b, c}}");
     }
 
     private void ParseC()
@@ -70,7 +70,7 @@ public class Parser(Scanner scanner)
             return;
         }
 
-        throw new ParserException("Cannot parse C");
+        throw new ParserException($"Cannot parse C, saw {scanner.NameOf(scanner.Peek().Type)} but expected one of {{c}}");
     }
 
     private void ParseD()
@@ -86,7 +86,7 @@ public class Parser(Scanner scanner)
             return;
         }
 
-        throw new ParserException("Cannot parse D");
+        throw new ParserException($"Cannot parse D, saw {scanner.NameOf(scanner.Peek().Type)} but expected one of {{d, e, <end of input>}}");
     }
 
     private void ParseE()
@@ -102,6 +102,6 @@ public class Parser(Scanner scanner)
             return;
         }
 
-        throw new ParserException("Cannot parse E");
+        throw new ParserException($"Cannot parse E, saw {scanner.NameOf(scanner.Peek().Type)} but expected one of {{e, <end of input>}}");
     }
 }

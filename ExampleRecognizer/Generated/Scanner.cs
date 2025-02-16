@@ -4,10 +4,10 @@ namespace ExampleRecognizer.Generated;
 public class Scanner
 {
     private readonly Regex[] tokenDef = [new("a"), new("b"), new("c"), new("d"), new("e")];
-    private readonly string[] names = ["a", "b", "c", "d", "e", "$$"];
+    private readonly string[] names = ["a", "b", "c", "d", "e", "<end of input>"];
     private readonly string input;
-    private int scanIndex = 0;
-    private Token? nextToken = null;
+    private int scanIndex;
+    private Token? nextToken;
     public Scanner(string input)
     {
         this.input = input;
