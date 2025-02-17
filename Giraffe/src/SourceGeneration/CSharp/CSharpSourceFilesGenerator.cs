@@ -25,6 +25,9 @@ public class CSharpSourceFilesGenerator(GrammarSets grammarSets) {
   public string NonterminalChildrenPropertyName { get; init; } = "Children";
 
   public List<CSharpSourceFile> GenerateSourceFiles() {
+    List<string> terminalsOrdering = grammarSets.Grammar.Terminals.ToList();
+    List<string> nonterminalsOrdering = grammarSets.Grammar.Nonterminals.ToList();
+
     List<CSharpSourceFile> sourceFiles = [];
 
     CSharpScannerSourceGenerator scannerSourceGenerator = new(grammarSets.Grammar) {
@@ -37,6 +40,7 @@ public class CSharpSourceFilesGenerator(GrammarSets grammarSets) {
       PeekMethodName = ScannerPeekMethodName,
       EatMethodName = ScannerEatMethodName,
       ScanNextMethodName = ScannerScanNextMethodName,
+      TerminalsOrdering = terminalsOrdering,
     };
     sourceFiles.Add(new(GetFileName(ScannerClassName), scannerSourceGenerator.Generate()));
 
@@ -45,12 +49,16 @@ public class CSharpSourceFilesGenerator(GrammarSets grammarSets) {
       ParserClassName = ParserClassName,
       ScannerClassName = ScannerClassName,
       ParserExceptionClassName = ParserExceptionClassName,
+      ParseNodeRecordName = ParseNodeRecordName,
       TokenRecordName = TokenRecordName,
+      NonterminalRecordName = NonterminalRecordName,
       ParseNodeKindPropertyName = ParseNodeKindPropertyName,
       ScannerPeekMethodName = ScannerPeekMethodName,
       ScannerEatMethodName = ScannerEatMethodName,
       ScannerNameOfMethodName = ScannerNameOfMethodName,
       EntryMethodName = ParserEntryMethodName,
+      TerminalsOrdering = terminalsOrdering,
+      NonterminalsOrdering = nonterminalsOrdering,
     };
     sourceFiles.Add(new(GetFileName(ParserClassName), parserSourceGenerator.Generate()));
 

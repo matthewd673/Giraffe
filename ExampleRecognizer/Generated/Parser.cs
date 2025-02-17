@@ -1,13 +1,12 @@
 namespace ExampleRecognizer.Generated;
 public class Parser(Scanner scanner)
 {
-    public void Parse()
+    public Nonterminal Parse()
     {
         if (See(0, 1, 2))
         {
-            ParseS();
-            Eat(5);
-            return;
+            ParseNode[] c = [ParseS(), Eat(5)];
+            return new(-1, c);
         }
 
         throw new ParserException($"Cannot parse {{Start}}, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{a, b, c}}");
@@ -15,94 +14,94 @@ public class Parser(Scanner scanner)
 
     private bool See(params int[] terminals) => terminals.Contains(scanner.Peek().Kind);
     private Token Eat(int terminal) => See(terminal) ? scanner.Eat() : throw new ParserException($"Unexpected terminal, saw '{scanner.NameOf(scanner.Peek().Kind)}' but expected '{scanner.NameOf(terminal)}'");
-    private void ParseS()
+    private Nonterminal ParseS()
     {
         if (See(0, 1, 2))
         {
             Console.WriteLine("Semantic action!");
-            ParseA();
-            ParseB();
-            ParseC();
-            ParseD();
-            ParseE();
+            ParseNode[] c = [ParseA(), ParseB(), ParseC(), ParseD(), ParseE()];
             Console.WriteLine("Done :D");
-            return;
+            return new(0, c);
         }
 
         throw new ParserException($"Cannot parse Start, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{a, b, c}}");
     }
 
-    private void ParseA()
+    private Nonterminal ParseA()
     {
         if (See(0))
         {
-            Eat(0);
-            return;
+            ParseNode[] c = [Eat(0)];
+            return new(1, c);
         }
 
         if (See(1, 2))
         {
-            return;
+            ParseNode[] c = [];
+            return new(1, c);
         }
 
         throw new ParserException($"Cannot parse A, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{a, b, c}}");
     }
 
-    private void ParseB()
+    private Nonterminal ParseB()
     {
         if (See(1))
         {
-            Eat(1);
-            return;
+            ParseNode[] c = [Eat(1)];
+            return new(2, c);
         }
 
         if (See(2))
         {
-            return;
+            ParseNode[] c = [];
+            return new(2, c);
         }
 
         throw new ParserException($"Cannot parse B, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{b, c}}");
     }
 
-    private void ParseC()
+    private Nonterminal ParseC()
     {
         if (See(2))
         {
             Console.WriteLine("See C");
-            Eat(2);
-            return;
+            ParseNode[] c = [Eat(2)];
+            return new(3, c);
         }
 
         throw new ParserException($"Cannot parse C, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{c}}");
     }
 
-    private void ParseD()
+    private Nonterminal ParseD()
     {
         if (See(3))
         {
-            Eat(3);
-            return;
+            ParseNode[] c = [Eat(3)];
+            return new(4, c);
         }
 
         if (See(4, 5))
         {
-            return;
+            ParseNode[] c = [];
+            return new(4, c);
         }
 
         throw new ParserException($"Cannot parse D, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{d, e, <end of input>}}");
     }
 
-    private void ParseE()
+    private Nonterminal ParseE()
     {
         if (See(4))
         {
-            Eat(4);
-            return;
+            ParseNode[] c = [Eat(4)];
+            return new(5, c);
         }
 
         if (See(5))
         {
-            return;
+            ParseNode[] c = [];
+            return new(5, c);
         }
 
         throw new ParserException($"Cannot parse E, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{e, <end of input>}}");

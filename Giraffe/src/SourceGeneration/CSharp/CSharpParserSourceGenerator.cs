@@ -10,18 +10,22 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
   public required string ParserClassName { get; init; }
   public required string ScannerClassName { get; init; }
   public required string ParserExceptionClassName { get; init; }
+  public required string ParseNodeRecordName { get; init; }
   public required string TokenRecordName { get; init; }
+  public required string NonterminalRecordName { get; init; }
   public required string ParseNodeKindPropertyName { get; init; }
   public required string ScannerPeekMethodName { get; init; }
   public required string ScannerEatMethodName { get; init; }
   public required string ScannerNameOfMethodName { get; init; }
   public required string EntryMethodName { get; init; }
 
+  public required List<string> TerminalsOrdering { get; init; }
+  public required List<string> NonterminalsOrdering { get; init; }
+
   private const string SeeMethodName = "See";
   private const string EatMethodName = "Eat";
   private const string ScannerFieldName = "scanner";
-
-  private readonly List<string> terminalsOrdering = grammarSets.Grammar.Terminals.ToList();
+  private const string ChildrenVariableName = "c";
 
   public override CompilationUnitSyntax Generate() {
     TopLevel topLevel = grammarSets.BuildRDT();
@@ -47,53 +51,64 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
     routines.Select(GenerateRoutine);
 
   private MethodDeclarationSyntax GenerateEntryRoutine(EntryRoutine entryRoutine) =>
-    MethodDeclaration(PredefinedType(Token(SyntaxKind.VoidKeyword)),
+    MethodDeclaration(IdentifierName(NonterminalRecordName),
                       Identifier(EntryMethodName))
       .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
-      .WithBody(Block((IEnumerable<StatementSyntax>)[..GeneratePredictions(entryRoutine.Predictions),
+      .WithBody(Block((IEnumerable<StatementSyntax>)[..GeneratePredictions(entryRoutine.Predictions, ""), // TODO: Proper nonterminal for entry method
                                                      GenerateExceptionThrowStatement(ParserExceptionClassName, GetParseEntryRoutineExceptionMessage(entryRoutine))]));
 
   private MethodDeclarationSyntax GenerateRoutine(Routine routine) =>
-    MethodDeclaration(PredefinedType(Token(SyntaxKind.VoidKeyword)), // TODO: Return type
+    MethodDeclaration(IdentifierName(NonterminalRecordName),
                       Identifier(GetParseMethodName(routine.Nonterminal)))
       .WithModifiers(TokenList(Token(SyntaxKind.PrivateKeyword)))
-      .WithBody(Block((IEnumerable<StatementSyntax>)[..GeneratePredictions(routine.Predictions),
+      .WithBody(Block((IEnumerable<StatementSyntax>)[..GeneratePredictions(routine.Predictions, routine.Nonterminal),
                                                      GenerateExceptionThrowStatement(ParserExceptionClassName, GetParseRoutineExceptionMessage(routine))]));
 
-  private IEnumerable<IfStatementSyntax> GeneratePredictions(IEnumerable<Prediction> predictions) =>
-    predictions.Select(GeneratePrediction);
+  private IEnumerable<IfStatementSyntax> GeneratePredictions(IEnumerable<Prediction> predictions, string nonterminal) =>
+    predictions.Select(p => GeneratePrediction(p, nonterminal));
 
-  private IfStatementSyntax GeneratePrediction(Prediction prediction) =>
+  private IfStatementSyntax GeneratePrediction(Prediction prediction, string nonterminal) =>
     IfStatement(GeneratePeekCall(prediction.PredictSet),
                 Block((IEnumerable<StatementSyntax>)[..GenerateSemanticAction(prediction.SemanticAction.Before),
-                                                     ..GenerateConsumptions(prediction.Consumptions),
+                                                     GenerateConsumptions(prediction.Consumptions),
                                                      ..GenerateSemanticAction(prediction.SemanticAction.After),
-                                                     ReturnStatement()])); // TODO: Return an object
+                                                     GenerateNonterminalReturnStatement(nonterminal)]));
 
   private InvocationExpressionSyntax GeneratePeekCall(HashSet<string> predictSet) =>
     InvocationExpression(IdentifierName(SeeMethodName))
       .WithArgumentList(ArgumentList(SeparatedList<ArgumentSyntax>(GenerateCommaSeparatedList(predictSet, TerminalToIntArgument))));
 
-  private IEnumerable<StatementSyntax> GenerateConsumptions(IEnumerable<Consumption> consumptions) =>
-    consumptions.Select(GenerateConsumption);
+  private LocalDeclarationStatementSyntax GenerateConsumptions(IEnumerable<Consumption> consumptions) =>
+    LocalDeclarationStatement(VariableDeclaration(ArrayType(IdentifierName(ParseNodeRecordName))
+                                                    .WithRankSpecifiers(SingletonList(ArrayRankSpecifier(SingletonSeparatedList<ExpressionSyntax>(OmittedArraySizeExpression())))))
+                                .WithVariables(SingletonSeparatedList(VariableDeclarator(Identifier(ChildrenVariableName))
+                                                                        .WithInitializer(EqualsValueClause(CollectionExpression(SeparatedList<CollectionElementSyntax>(consumptions.Select(c => ExpressionElement(GenerateConsumption(c))))))))));
 
-  private StatementSyntax GenerateConsumption(Consumption consumption) =>
+  private InvocationExpressionSyntax GenerateConsumption(Consumption consumption) =>
     consumption switch {
       TerminalConsumption terminalConsumption => GenerateTerminalConsumption(terminalConsumption),
       NonterminalConsumption nonterminalConsumption => GenerateNonterminalConsumption(nonterminalConsumption),
       _ => throw new CSharpSourceGeneratorException($"Cannot generate source code for consumption type {consumption.GetType().FullName}"),
     };
 
-  private ExpressionStatementSyntax GenerateTerminalConsumption(TerminalConsumption terminalConsumption) =>
-    ExpressionStatement(InvocationExpression(IdentifierName(EatMethodName))
-                          .WithArgumentList(ArgumentList(SingletonSeparatedList(TerminalToIntArgument(terminalConsumption.Terminal)))));
+  private InvocationExpressionSyntax GenerateTerminalConsumption(TerminalConsumption terminalConsumption) =>
+    InvocationExpression(IdentifierName(EatMethodName))
+                          .WithArgumentList(ArgumentList(SingletonSeparatedList(TerminalToIntArgument(terminalConsumption.Terminal))));
 
-  private static ExpressionStatementSyntax GenerateNonterminalConsumption(NonterminalConsumption nonterminalConsumption) =>
-    ExpressionStatement(InvocationExpression(IdentifierName(GetParseMethodName(nonterminalConsumption.Nonterminal)))
-                          .WithArgumentList(ArgumentList()));
+  private static InvocationExpressionSyntax GenerateNonterminalConsumption(NonterminalConsumption nonterminalConsumption) =>
+    InvocationExpression(IdentifierName(GetParseMethodName(nonterminalConsumption.Nonterminal)))
+                           .WithArgumentList(ArgumentList());
 
   private static List<StatementSyntax> GenerateSemanticAction(string? semanticAction) =>
     semanticAction is null ? [] : [ParseStatement(semanticAction)];
+
+  private ReturnStatementSyntax GenerateNonterminalReturnStatement(string nonterminal) =>
+    ReturnStatement(ImplicitObjectCreationExpression()
+                      .WithArgumentList(ArgumentList(SeparatedList<ArgumentSyntax>(new SyntaxNodeOrToken[] {
+                        Argument(LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(GetNonterminalIndex(nonterminal)))),
+                        Token(SyntaxKind.CommaToken),
+                        Argument(IdentifierName(ChildrenVariableName)),
+                      }))));
 
   private ArgumentSyntax TerminalToIntArgument(string terminal) =>
     Argument(LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(GetTerminalIndex(terminal))));
@@ -101,7 +116,9 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
 
   private static string GetParseMethodName(string nonterminal) => $"Parse{SanitizeMethodName(nonterminal)}";
 
-  private int GetTerminalIndex(string terminal) => terminalsOrdering.IndexOf(terminal);
+  private int GetTerminalIndex(string terminal) => TerminalsOrdering.IndexOf(terminal);
+
+  private int GetNonterminalIndex(string nonterminal) => NonterminalsOrdering.IndexOf(nonterminal);
 
   private InterpolatedStringExpressionSyntax GetParseEntryRoutineExceptionMessage(EntryRoutine entryRoutine) {
     string[] textTokens = ["Cannot parse {{" +

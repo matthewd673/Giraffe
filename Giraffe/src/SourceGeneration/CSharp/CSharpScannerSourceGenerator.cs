@@ -16,6 +16,8 @@ public class CSharpScannerSourceGenerator(Grammar grammar) : CSharpSourceGenerat
   public required string EatMethodName { get; init; }
   public required string ScanNextMethodName { get; init; }
 
+  public required List<string> TerminalsOrdering { get; init; }
+
   private const string TokenDefArrayFieldName = "tokenDef";
   private const string NamesArrayFieldName = "names";
   private const string InputFieldName = "input";
@@ -63,7 +65,7 @@ public class CSharpScannerSourceGenerator(Grammar grammar) : CSharpSourceGenerat
 
   private SeparatedSyntaxList<CollectionElementSyntax> GenerateTokenDefElements() =>
     // Don't try to generate a rule for Eof, which has none
-    SeparatedList<CollectionElementSyntax>(GenerateCommaSeparatedList(grammar.Terminals.Where(t => !t.Equals(Grammar.Eof)),
+    SeparatedList<CollectionElementSyntax>(GenerateCommaSeparatedList(TerminalsOrdering.Where(t => !t.Equals(Grammar.Eof)),
                                                                       terminal =>
                                                                           GenerateTokenDefElement(grammar
                                                                               .GetTerminalRule(terminal))));
@@ -82,7 +84,7 @@ public class CSharpScannerSourceGenerator(Grammar grammar) : CSharpSourceGenerat
       .WithModifiers(TokenList(Token(SyntaxKind.PrivateKeyword), Token(SyntaxKind.ReadOnlyKeyword)));
 
   private SeparatedSyntaxList<CollectionElementSyntax> GenerateNamesElements() =>
-    SeparatedList<CollectionElementSyntax>(GenerateCommaSeparatedList(grammar.Terminals, GenerateNamesElement));
+    SeparatedList<CollectionElementSyntax>(GenerateCommaSeparatedList(TerminalsOrdering, GenerateNamesElement));
 
   private ExpressionElementSyntax GenerateNamesElement(string name) =>
     ExpressionElement(LiteralExpression(SyntaxKind.StringLiteralExpression,
