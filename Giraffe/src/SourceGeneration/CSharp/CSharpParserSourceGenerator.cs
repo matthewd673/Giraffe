@@ -7,19 +7,19 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 namespace Giraffe.SourceGeneration.CSharp;
 
 public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSourceGenerator {
-  public string ParserClassName { get; set; } = "Parser";
-  public string ScannerClassName { get; set; } = "Scanner";
-  public string ParserExceptionClassName { get; set; } = "ParserException";
-  public string TokenStructName { get; set; } = "Token";
+  public required string ParserClassName { get; init; }
+  public required string ScannerClassName { get; init; }
+  public required string ParserExceptionClassName { get; init; }
+  public required string TokenRecordName { get; init; }
+  public required string ParseNodeKindPropertyName { get; init; }
+  public required string ScannerPeekMethodName { get; init; }
+  public required string ScannerEatMethodName { get; init; }
+  public required string ScannerNameOfMethodName { get; init; }
+  public required string EntryMethodName { get; init; }
 
   private const string SeeMethodName = "See";
   private const string EatMethodName = "Eat";
-  private const string EntryMethodName = "Parse";
   private const string ScannerFieldName = "scanner";
-  private const string ScannerPeekMethodName = "Peek";
-  private const string ScannerEatMethodName = "Eat";
-  private const string ScannerNameOfMethodName = "NameOf";
-  private const string TokenStructTypePropertyName = "Type";
 
   private readonly List<string> terminalsOrdering = grammarSets.Grammar.Terminals.ToList();
 
@@ -65,7 +65,9 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
 
   private IfStatementSyntax GeneratePrediction(Prediction prediction) =>
     IfStatement(GeneratePeekCall(prediction.PredictSet),
-                Block((IEnumerable<StatementSyntax>)[..GenerateConsumptions(prediction.Consumptions),
+                Block((IEnumerable<StatementSyntax>)[..GenerateSemanticAction(prediction.SemanticAction.Before),
+                                                     ..GenerateConsumptions(prediction.Consumptions),
+                                                     ..GenerateSemanticAction(prediction.SemanticAction.After),
                                                      ReturnStatement()])); // TODO: Return an object
 
   private InvocationExpressionSyntax GeneratePeekCall(HashSet<string> predictSet) =>
@@ -89,6 +91,9 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
   private static ExpressionStatementSyntax GenerateNonterminalConsumption(NonterminalConsumption nonterminalConsumption) =>
     ExpressionStatement(InvocationExpression(IdentifierName(GetParseMethodName(nonterminalConsumption.Nonterminal)))
                           .WithArgumentList(ArgumentList()));
+
+  private static List<StatementSyntax> GenerateSemanticAction(string? semanticAction) =>
+    semanticAction is null ? [] : [ParseStatement(semanticAction)];
 
   private ArgumentSyntax TerminalToIntArgument(string terminal) =>
     Argument(LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(GetTerminalIndex(terminal))));
@@ -122,7 +127,7 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
                                                                                  InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                                                                    IdentifierName(ScannerFieldName),
                                                                                    IdentifierName(ScannerPeekMethodName))),
-                                                                                 IdentifierName(TokenStructTypePropertyName))))))),
+                                                                                 IdentifierName(ParseNodeKindPropertyName))))))),
         InterpolatedStringText()
           .WithTextToken(Token(TriviaList(), SyntaxKind.InterpolatedStringTextToken, textTokens[1], textTokens[1],
                                TriviaList())),
@@ -149,14 +154,14 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
                                                                                       InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                                                                                 IdentifierName(ScannerFieldName),
                                                                                                 IdentifierName(ScannerPeekMethodName))),
-                                                                                      IdentifierName(TokenStructTypePropertyName))))))),
+                                                                                      IdentifierName(ParseNodeKindPropertyName))))))),
         InterpolatedStringText()
           .WithTextToken(Token(TriviaList(), SyntaxKind.InterpolatedStringTextToken, textTokens[1], textTokens[1], TriviaList())),
       }));
   }
 
   // Generates: `private bool See(params int[] terminals) => terminals.Contains(scanner.Peek().Type);`
-  private static MethodDeclarationSyntax GenerateSeeMethod() {
+  private MethodDeclarationSyntax GenerateSeeMethod() {
     const string terminalsParamName = "terminals";
     return MethodDeclaration(PredefinedType(Token(SyntaxKind.BoolKeyword)), Identifier(SeeMethodName))
            .WithModifiers(TokenList(Token(SyntaxKind.PrivateKeyword)))
@@ -174,14 +179,14 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
                                                                            InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                                                              IdentifierName(ScannerFieldName),
                                                                              IdentifierName(ScannerPeekMethodName))),
-                                                                           IdentifierName(TokenStructTypePropertyName))))))))
+                                                                           IdentifierName(ParseNodeKindPropertyName))))))))
            .WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
   }
 
   // Generates: `private Token Eat(int terminal) => See(terminal) ? scanner.Eat() : throw new Exception();`
   private MethodDeclarationSyntax GenerateEatMethod() {
     const string terminalParamName = "terminal";
-    return MethodDeclaration(IdentifierName(TokenStructName), Identifier(EatMethodName))
+    return MethodDeclaration(IdentifierName(TokenRecordName), Identifier(EatMethodName))
            .WithModifiers(TokenList(Token(SyntaxKind.PrivateKeyword)))
            .WithParameterList(ParameterList(SingletonSeparatedList(Parameter(Identifier(terminalParamName))
                                                                      .WithType(PredefinedType(Token(SyntaxKind.IntKeyword))))))
@@ -200,7 +205,7 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
                                                                                  InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                                                                    IdentifierName(ScannerFieldName),
                                                                                    IdentifierName(ScannerPeekMethodName))),
-                                                                                 IdentifierName(TokenStructTypePropertyName)))))),
+                                                                                 IdentifierName(ParseNodeKindPropertyName)))))),
                                                                              InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                                                                  IdentifierName(ScannerFieldName),
                                                                                  IdentifierName(ScannerNameOfMethodName)))

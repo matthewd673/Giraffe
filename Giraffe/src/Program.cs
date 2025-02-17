@@ -21,10 +21,12 @@ public class Program {
         {"e", new("e")},
       },
       [
-        new("S", ["A", "B", "C", "D", "E"]),
+        new("S", ["A", "B", "C", "D", "E"],
+            semanticAction: new(Before: "Console.WriteLine(\"Semantic action!\");",
+                                After: "Console.WriteLine(\"Done :D\");")),
         new("A", ["a"]), new("A", []),
         new("B", ["b"]), new("B", []),
-        new("C", ["c"]),
+        new("C", ["c"], semanticAction: new(Before: "Console.WriteLine(\"See C\");")),
         new("D", ["d"]), new("D", []),
         new("E", ["e"]), new("E", []),
       ],
@@ -40,7 +42,6 @@ public class Program {
     CSharpSourceFilesGenerator sourceFilesGenerator = new(sets) { Namespace = "ExampleRecognizer.Generated" };
     List<CSharpSourceFile> sourceFiles = sourceFilesGenerator.GenerateSourceFiles();
 
-    Console.WriteLine("Writing to {0}", outputDirectory);
     if (!Directory.Exists(outputDirectory)) {
       Directory.CreateDirectory(outputDirectory);
     }

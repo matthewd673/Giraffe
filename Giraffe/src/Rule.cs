@@ -6,18 +6,18 @@ public record Rule {
   public string Name { get; init; }
   public ImmutableList<string> Symbols { get; init; }
   public ImmutableList<string> Parameters { get; init; }
-  public string? SemanticAction { get; init; }
+  public SemanticAction SemanticAction { get; init; }
 
   public bool IsEpsilon => Symbols.Count == 0;
 
   public Rule(string name,
               ImmutableList<string> symbols,
               ImmutableList<string>? parameters = null,
-              string? semanticAction = null) {
+              SemanticAction? semanticAction = null) {
     Name = name;
     Symbols = symbols;
     Parameters = parameters ?? [];
-    SemanticAction = semanticAction;
+    SemanticAction = semanticAction ?? new();
   }
 
   public override int GetHashCode() =>
@@ -31,5 +31,5 @@ public record Rule {
     Name.Equals(other.Name) &&
     Symbols.SequenceEqual(other.Symbols) &&
     Parameters.SequenceEqual(other.Parameters) &&
-    string.Equals(SemanticAction, other.SemanticAction);
+    Equals(SemanticAction, other.SemanticAction);
 }

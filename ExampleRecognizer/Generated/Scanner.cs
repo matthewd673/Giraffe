@@ -1,29 +1,23 @@
 using System.Text.RegularExpressions;
 
 namespace ExampleRecognizer.Generated;
-public class Scanner
+public class Scanner(string input)
 {
     private readonly Regex[] tokenDef = [new("a"), new("b"), new("c"), new("d"), new("e")];
     private readonly string[] names = ["a", "b", "c", "d", "e", "<end of input>"];
-    private readonly string input;
     private int scanIndex;
     private Token? nextToken;
-    public Scanner(string input)
-    {
-        this.input = input;
-    }
-
     public string NameOf(int terminal) => names[terminal];
     public Token Peek()
     {
         nextToken ??= ScanNext();
-        return nextToken!.Value;
+        return nextToken;
     }
 
     public Token Eat()
     {
         nextToken ??= ScanNext();
-        Token consumed = nextToken!.Value;
+        Token consumed = nextToken;
         nextToken = ScanNext();
         return consumed;
     }
@@ -45,18 +39,18 @@ public class Scanner
             }
 
             best ??= new(t, match.Value);
-            if (match.Length > best.Value.Image.Length)
+            if (match.Length > best.Image.Length)
             {
                 best = new(t, match.Value);
             }
         }
 
-        if (!best.HasValue)
+        if (best is null)
         {
             throw new ScannerException($"Illegal character '{input[scanIndex]}' at index {scanIndex}");
         }
 
-        scanIndex += best.Value.Image.Length;
-        return best.Value;
+        scanIndex += best.Image.Length;
+        return best;
     }
 }

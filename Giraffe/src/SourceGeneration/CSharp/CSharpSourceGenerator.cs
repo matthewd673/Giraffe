@@ -6,7 +6,7 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 namespace Giraffe.SourceGeneration.CSharp;
 
 public abstract class CSharpSourceGenerator {
-  public string FileNamespace { get; set; } = "Giraffe";
+  public string FileNamespace { get; init; } = "Giraffe";
 
   public abstract CompilationUnitSyntax Generate();
 

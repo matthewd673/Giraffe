@@ -15,13 +15,14 @@ public record GrammarSets(Grammar Grammar,
   private Prediction BuildEntryNonterminalPrediction(string nonterminal) =>
     new(Grammar.GetAllRulesForNonterminal(nonterminal)
                .Aggregate(new HashSet<string>(), (acc, rule) => acc.Union(Predict[rule]).ToHashSet()),
-        [new NonterminalConsumption(nonterminal), new TerminalConsumption(Grammar.Eof)]);
+        [new NonterminalConsumption(nonterminal), new TerminalConsumption(Grammar.Eof)],
+        new()); // TODO: Support semantic actions in entry routine predictions
 
   private Routine BuildRoutine(string nonterminal) =>
     new(nonterminal, Grammar.GetAllRulesForNonterminal(nonterminal).Select(BuildPrediction).ToList());
 
   private Prediction BuildPrediction(Rule rule) =>
-    new(Predict[rule], BuildConsumptions(rule));
+    new(Predict[rule], BuildConsumptions(rule), rule.SemanticAction);
 
   private static List<Consumption> BuildConsumptions(Rule rule) =>
     rule.Symbols.Select(SymbolToConsumption).ToList();
