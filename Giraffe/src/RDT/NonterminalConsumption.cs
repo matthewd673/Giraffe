@@ -1,5 +1,3 @@
 namespace Giraffe.RDT;
 
-public record NonterminalConsumption(string Nonterminal) : Consumption {
-  // Empty
-}
+public record NonterminalConsumption(string Nonterminal) : Consumption;

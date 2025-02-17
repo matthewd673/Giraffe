@@ -1,5 +1,3 @@
 namespace Giraffe.RDT;
 
-public record EntryRoutine(List<Prediction> Predictions) : Node {
-  // Empty
-}
+public record EntryRoutine(List<Prediction> Predictions) : Node;

@@ -1,5 +1,3 @@
 namespace Giraffe.RDT;
 
-public record TerminalConsumption(string Terminal) : Consumption {
-  // Empty
-}
+public record TerminalConsumption(string Terminal) : Consumption;

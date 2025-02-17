@@ -9,8 +9,7 @@ public class LeftFactoringPass(Grammar grammar) : Pass(grammar) {
   public override void Run() {
     bool changed = true;
     while (changed) {
-      changed = Grammar.Nonterminals.Aggregate(false,
-                                               (acc, nt) => acc | LeftFactorNonterminalRules(nt));
+      changed = Grammar.Nonterminals.Aggregate(false, (acc, nt) => acc | LeftFactorNonterminalRules(nt));
     }
   }
 
