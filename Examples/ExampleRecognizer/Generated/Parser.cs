@@ -18,9 +18,7 @@ public class Parser(Scanner scanner)
     {
         if (See(0, 1, 2))
         {
-            Console.WriteLine("Semantic action!");
             ParseNode[] c = [ParseA(), ParseB(), ParseC(), ParseD(), ParseE()];
-            Console.WriteLine("Done :D");
             return new(0, c);
         }
 
@@ -65,7 +63,6 @@ public class Parser(Scanner scanner)
     {
         if (See(2))
         {
-            Console.WriteLine("See C");
             ParseNode[] c = [Eat(2)];
             return new(3, c);
         }
