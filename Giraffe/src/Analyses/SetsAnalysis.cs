@@ -15,7 +15,7 @@ public class SetsAnalysis(Grammar grammar) : Analysis<GrammarSets>(grammar) {
     }
 
     foreach (string nonterminal in Grammar.Nonterminals) {
-      GetFollow(nonterminal);
+      GetFollow(nonterminal, []);
     }
 
     foreach (Rule rule in Grammar.Rules) {
@@ -26,6 +26,10 @@ public class SetsAnalysis(Grammar grammar) : Analysis<GrammarSets>(grammar) {
   }
 
   private HashSet<string> GetFirst(string symbol) {
+    if (Grammar.IsTerminal(symbol)) {
+      return [symbol];
+    }
+
     if (first.TryGetValue(symbol, out HashSet<string>? set)) {
       return set;
     }
@@ -50,12 +54,12 @@ public class SetsAnalysis(Grammar grammar) : Analysis<GrammarSets>(grammar) {
     return firstSet;
   }
 
-  private HashSet<string> GetFollow(string symbol) {
+  private HashSet<string> GetFollow(string symbol, HashSet<string> seen) {
     if (follow.TryGetValue(symbol, out HashSet<string>? set)) {
       return set;
     }
 
-    follow[symbol] = ComputeFollow(symbol);
+    follow[symbol] = ComputeFollow(symbol, seen);
     return follow[symbol];
   }
 
@@ -75,7 +79,7 @@ public class SetsAnalysis(Grammar grammar) : Analysis<GrammarSets>(grammar) {
                .Aggregate(new HashSet<string>(),
                           (acc, rule) => acc.Union(GetFirst(rule)).ToHashSet());
 
-  private HashSet<string> ComputeFollow(string symbol) {
+  private HashSet<string> ComputeFollow(string symbol, HashSet<string> seen) {
     if (Grammar.IsTerminal(symbol)) {
       throw new($"Cannot compute follow set for terminal \"{symbol}\"");
     }
@@ -105,8 +109,8 @@ public class SetsAnalysis(Grammar grammar) : Analysis<GrammarSets>(grammar) {
           searchIndex += 1;
         }
 
-        if (searchIndex == rule.Symbols.Count) {
-          followSet.UnionWith(GetFollow(rule.Name));
+        if (searchIndex == rule.Symbols.Count && !seen.Contains(rule.Name)) {
+          followSet.UnionWith(GetFollow(rule.Name, seen.Union([rule.Name]).ToHashSet()));
         }
       }
     }
@@ -120,7 +124,7 @@ public class SetsAnalysis(Grammar grammar) : Analysis<GrammarSets>(grammar) {
     // If this rule is epsilon, or if every item within it can be epsilon,
     // then the PREDICT set also includes the FOLLOW set.
     if (rule.IsEpsilon || rule.Symbols.All(HasEpsilon)) {
-      predictSet.UnionWith(GetFollow(rule.Name));
+      predictSet.UnionWith(GetFollow(rule.Name, []));
     }
 
     return predictSet;
