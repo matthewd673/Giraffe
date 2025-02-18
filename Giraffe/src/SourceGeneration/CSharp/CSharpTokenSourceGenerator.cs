@@ -6,8 +6,9 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 namespace Giraffe.SourceGeneration.CSharp;
 
 public class CSharpTokenSourceGenerator : CSharpSourceGenerator {
-  public required string TokenRecordName { get; init; }
   public required string ParseNodeRecordName { get; init; }
+  public required string TokenRecordName { get; init; }
+  public required string TokenKindEnumName { get; init; }
   public required string KindPropertyName { get; init; }
   public required string ImagePropertyName { get; init; }
 
@@ -22,12 +23,11 @@ public class CSharpTokenSourceGenerator : CSharpSourceGenerator {
       .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
       .WithParameterList(ParameterList(SeparatedList<ParameterSyntax>(new SyntaxNodeOrToken[] {
         Parameter(Identifier(KindPropertyName))
-          .WithType(PredefinedType(Token(SyntaxKind.IntKeyword))),
+          .WithType(IdentifierName(TokenKindEnumName)),
         Token(SyntaxKind.CommaToken),
         Parameter(Identifier(ImagePropertyName))
           .WithType(PredefinedType(Token(SyntaxKind.StringKeyword))),
       })))
-      .WithBaseList(BaseList(SingletonSeparatedList<BaseTypeSyntax>(PrimaryConstructorBaseType(IdentifierName(ParseNodeRecordName))
-                                                                      .WithArgumentList(ArgumentList(SingletonSeparatedList(Argument(IdentifierName(KindPropertyName))))))))
+      .WithBaseList(BaseList(SingletonSeparatedList<BaseTypeSyntax>(SimpleBaseType(IdentifierName(ParseNodeRecordName)))))
       .WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
 }

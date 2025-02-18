@@ -5,7 +5,7 @@ namespace Giraffe;
 public record Grammar(Dictionary<string, Regex> terminalDefs,
                      HashSet<Rule> Rules,
                      HashSet<string> EntryNonterminals) {
-  public const string Eof = "$$";
+  public const string Eof = "_eof";
 
   public HashSet<string> Terminals { get; } = [..terminalDefs.Keys, Eof];
 

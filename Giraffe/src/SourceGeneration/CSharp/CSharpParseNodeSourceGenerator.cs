@@ -7,7 +7,6 @@ namespace Giraffe.SourceGeneration.CSharp;
 
 public class CSharpParseNodeSourceGenerator : CSharpSourceGenerator {
   public required string ParseNodeRecordName { get; init; }
-  public required string KindPropertyName { get; init; }
 
   public override CompilationUnitSyntax Generate() =>
     CompilationUnit()
@@ -18,7 +17,5 @@ public class CSharpParseNodeSourceGenerator : CSharpSourceGenerator {
   private RecordDeclarationSyntax GenerateParseNodeRecord() =>
     RecordDeclaration(SyntaxKind.RecordDeclaration, Token(SyntaxKind.RecordKeyword), Identifier(ParseNodeRecordName))
       .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
-      .WithParameterList(ParameterList(SingletonSeparatedList(Parameter(Identifier(KindPropertyName))
-                                                                .WithType(PredefinedType(Token(SyntaxKind.IntKeyword))))))
       .WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
 }

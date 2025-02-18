@@ -16,13 +16,20 @@ public class CSharpSourceFilesGenerator(GrammarSets grammarSets) {
   public string ParserExceptionClassName { get; init; } = "ParserException";
 
   public string ParseNodeRecordName { get; init; } = "ParseNode";
-  public string ParseNodeKindPropertyName { get; init; } = "Kind";
 
   public string TokenRecordName { get; init; } = "Token";
+  public string TokenKindPropertyName { get; init; } = "Kind";
   public string TokenImagePropertyName { get; init; } = "Image";
 
   public string NonterminalRecordName { get; init; } = "Nonterminal";
+  public string NonterminalKindPropertyName { get; init; } = "Kind";
   public string NonterminalChildrenPropertyName { get; init; } = "Children";
+
+  public string ParseTreeRecordName { get; init; } = "ParseTree";
+  public string ParseTreeChildrenPropertyName { get; init; } = "Children";
+
+  public string NonterminalKindEnumName { get; init; } = "NtKind";
+  public string TokenKindEnumName { get; init; } = "TokenKind";
 
   public List<CSharpSourceFile> GenerateSourceFiles() {
     List<string> terminalsOrdering = grammarSets.Grammar.Terminals.ToList();
@@ -41,6 +48,7 @@ public class CSharpSourceFilesGenerator(GrammarSets grammarSets) {
       EatMethodName = ScannerEatMethodName,
       ScanNextMethodName = ScannerScanNextMethodName,
       TerminalsOrdering = terminalsOrdering,
+      TokenKindEnumName = TokenKindEnumName,
     };
     sourceFiles.Add(new(GetFileName(ScannerClassName), scannerSourceGenerator.Generate()));
 
@@ -51,14 +59,15 @@ public class CSharpSourceFilesGenerator(GrammarSets grammarSets) {
       ParserExceptionClassName = ParserExceptionClassName,
       ParseNodeRecordName = ParseNodeRecordName,
       TokenRecordName = TokenRecordName,
+      TokenKindEnumName = TokenKindEnumName,
       NonterminalRecordName = NonterminalRecordName,
-      ParseNodeKindPropertyName = ParseNodeKindPropertyName,
+      TokenKindPropertyName = TokenKindPropertyName,
       ScannerPeekMethodName = ScannerPeekMethodName,
       ScannerEatMethodName = ScannerEatMethodName,
       ScannerNameOfMethodName = ScannerNameOfMethodName,
       EntryMethodName = ParserEntryMethodName,
-      TerminalsOrdering = terminalsOrdering,
-      NonterminalsOrdering = nonterminalsOrdering,
+      NonterminalKindEnumName = NonterminalKindEnumName,
+      ParseTreeRecordName = ParseTreeRecordName,
     };
     sourceFiles.Add(new(GetFileName(ParserClassName), parserSourceGenerator.Generate()));
 
@@ -75,15 +84,15 @@ public class CSharpSourceFilesGenerator(GrammarSets grammarSets) {
     CSharpParseNodeSourceGenerator parseNodeSourceGenerator = new() {
       FileNamespace = Namespace,
       ParseNodeRecordName = ParseNodeRecordName,
-      KindPropertyName = ParseNodeKindPropertyName,
     };
     sourceFiles.Add(new(GetFileName(ParseNodeRecordName), parseNodeSourceGenerator.Generate()));
 
     CSharpTokenSourceGenerator tokenSourceGenerator = new() {
       FileNamespace = Namespace,
-      TokenRecordName = TokenRecordName,
-      KindPropertyName = ParseNodeKindPropertyName,
       ParseNodeRecordName = ParseNodeRecordName,
+      TokenRecordName = TokenRecordName,
+      TokenKindEnumName = TokenKindEnumName,
+      KindPropertyName = TokenKindPropertyName,
       ImagePropertyName = TokenImagePropertyName,
     };
     sourceFiles.Add(new(GetFileName(TokenRecordName), tokenSourceGenerator.Generate()));
@@ -92,10 +101,33 @@ public class CSharpSourceFilesGenerator(GrammarSets grammarSets) {
       FileNamespace = Namespace,
       ParseNodeRecordName = ParseNodeRecordName,
       NonterminalRecordName = NonterminalRecordName,
-      KindPropertyName = ParseNodeKindPropertyName,
+      NonterminalKindEnumName = NonterminalKindEnumName,
+      KindPropertyName = NonterminalKindPropertyName,
       ChildrenPropertyName = NonterminalChildrenPropertyName,
     };
     sourceFiles.Add(new(GetFileName(NonterminalRecordName), nonterminalSourceGenerator.Generate()));
+
+    CSharpParseTreeSourceGenerator parseTreeSourceGenerator = new() {
+      FileNamespace = Namespace,
+      ParseNodeRecordName = ParseNodeRecordName,
+      ParseTreeRecordName = ParseTreeRecordName,
+      ChildrenPropertyName = ParseTreeChildrenPropertyName,
+    };
+    sourceFiles.Add(new(GetFileName(ParseTreeRecordName), parseTreeSourceGenerator.Generate()));
+
+    CSharpEnumSourceGenerator nonterminalKindSourceGenerator = new() {
+      FileNamespace = Namespace,
+      EnumName = NonterminalKindEnumName,
+      EnumMembers = nonterminalsOrdering,
+    };
+    sourceFiles.Add(new(GetFileName(NonterminalKindEnumName), nonterminalKindSourceGenerator.Generate()));
+
+    CSharpEnumSourceGenerator tokenKindSourceGenerator = new() {
+      FileNamespace = Namespace,
+      EnumName = TokenKindEnumName,
+      EnumMembers = terminalsOrdering,
+    };
+    sourceFiles.Add(new(GetFileName(TokenKindEnumName), tokenKindSourceGenerator.Generate()));
 
     return sourceFiles;
   }

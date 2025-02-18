@@ -10,32 +10,28 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
   public required string ParserClassName { get; init; }
   public required string ScannerClassName { get; init; }
   public required string ParserExceptionClassName { get; init; }
+  public required string ParseTreeRecordName { get; init; }
   public required string ParseNodeRecordName { get; init; }
+  public required string TokenKindEnumName { get; init; }
+  public required string NonterminalKindEnumName { get; init; }
   public required string TokenRecordName { get; init; }
+  public required string TokenKindPropertyName { get; init; }
   public required string NonterminalRecordName { get; init; }
-  public required string ParseNodeKindPropertyName { get; init; }
   public required string ScannerPeekMethodName { get; init; }
   public required string ScannerEatMethodName { get; init; }
   public required string ScannerNameOfMethodName { get; init; }
   public required string EntryMethodName { get; init; }
-
-  public required List<string> TerminalsOrdering { get; init; }
-  public required List<string> NonterminalsOrdering { get; init; }
 
   private const string SeeMethodName = "See";
   private const string EatMethodName = "Eat";
   private const string ScannerFieldName = "scanner";
   private const string ChildrenVariableName = "c";
 
-  public override CompilationUnitSyntax Generate() {
-    TopLevel topLevel = grammarSets.BuildRDT();
-
-    return CompilationUnit()
-      .WithUsings(List<UsingDirectiveSyntax>([]))
+  public override CompilationUnitSyntax Generate() =>
+    CompilationUnit()
       .WithMembers(List<MemberDeclarationSyntax>([GenerateNamespaceDeclaration(FileNamespace),
-                                                  GenerateParserClass(topLevel)]))
+                                                  GenerateParserClass(grammarSets.BuildRDT())]))
       .NormalizeWhitespace();
-  }
 
   private ClassDeclarationSyntax GenerateParserClass(TopLevel topLevel) =>
     ClassDeclaration(ParserClassName)
@@ -51,11 +47,20 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
     routines.Select(GenerateRoutine);
 
   private MethodDeclarationSyntax GenerateEntryRoutine(EntryRoutine entryRoutine) =>
-    MethodDeclaration(IdentifierName(NonterminalRecordName),
-                      Identifier(EntryMethodName))
+    MethodDeclaration(IdentifierName(ParseTreeRecordName), Identifier(EntryMethodName))
       .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
-      .WithBody(Block((IEnumerable<StatementSyntax>)[..GeneratePredictions(entryRoutine.Predictions, ""), // TODO: Proper nonterminal for entry method
+      .WithBody(Block((IEnumerable<StatementSyntax>)[..GenerateEntryPredictions(entryRoutine.Predictions),
                                                      GenerateExceptionThrowStatement(ParserExceptionClassName, GetParseEntryRoutineExceptionMessage(entryRoutine))]));
+
+  private IEnumerable<IfStatementSyntax> GenerateEntryPredictions(IEnumerable<Prediction> predictions) =>
+    predictions.Select(GenerateEntryPrediction);
+
+  private IfStatementSyntax GenerateEntryPrediction(Prediction prediction) =>
+    IfStatement(GeneratePeekCall(prediction.PredictSet),
+                Block((IEnumerable<StatementSyntax>)[..GenerateSemanticAction(prediction.SemanticAction.Before),
+                                                     GenerateConsumptions(prediction.Consumptions),
+                                                     ..GenerateSemanticAction(prediction.SemanticAction.After),
+                                                     GenerateParseTreeReturnStatement()]));
 
   private MethodDeclarationSyntax GenerateRoutine(Routine routine) =>
     MethodDeclaration(IdentifierName(NonterminalRecordName),
@@ -76,7 +81,7 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
 
   private InvocationExpressionSyntax GeneratePeekCall(HashSet<string> predictSet) =>
     InvocationExpression(IdentifierName(SeeMethodName))
-      .WithArgumentList(ArgumentList(SeparatedList<ArgumentSyntax>(GenerateCommaSeparatedList(predictSet, TerminalToIntArgument))));
+      .WithArgumentList(ArgumentList(SeparatedList<ArgumentSyntax>(GenerateCommaSeparatedList(predictSet, TerminalToTokenKindArgument))));
 
   private LocalDeclarationStatementSyntax GenerateConsumptions(IEnumerable<Consumption> consumptions) =>
     LocalDeclarationStatement(VariableDeclaration(ArrayType(IdentifierName(ParseNodeRecordName))
@@ -93,7 +98,7 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
 
   private InvocationExpressionSyntax GenerateTerminalConsumption(TerminalConsumption terminalConsumption) =>
     InvocationExpression(IdentifierName(EatMethodName))
-                          .WithArgumentList(ArgumentList(SingletonSeparatedList(TerminalToIntArgument(terminalConsumption.Terminal))));
+                          .WithArgumentList(ArgumentList(SingletonSeparatedList(TerminalToTokenKindArgument(terminalConsumption.Terminal))));
 
   private static InvocationExpressionSyntax GenerateNonterminalConsumption(NonterminalConsumption nonterminalConsumption) =>
     InvocationExpression(IdentifierName(GetParseMethodName(nonterminalConsumption.Nonterminal)))
@@ -105,20 +110,28 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
   private ReturnStatementSyntax GenerateNonterminalReturnStatement(string nonterminal) =>
     ReturnStatement(ImplicitObjectCreationExpression()
                       .WithArgumentList(ArgumentList(SeparatedList<ArgumentSyntax>(new SyntaxNodeOrToken[] {
-                        Argument(LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(GetNonterminalIndex(nonterminal)))),
+                        NonterminalToNonterminalKindArgument(nonterminal),
                         Token(SyntaxKind.CommaToken),
                         Argument(IdentifierName(ChildrenVariableName)),
                       }))));
 
-  private ArgumentSyntax TerminalToIntArgument(string terminal) =>
-    Argument(LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(GetTerminalIndex(terminal))));
+  private ReturnStatementSyntax GenerateParseTreeReturnStatement() =>
+    ReturnStatement(ImplicitObjectCreationExpression()
+                      .WithArgumentList(ArgumentList(SeparatedList<ArgumentSyntax>(new SyntaxNodeOrToken[] {
+                        Argument(IdentifierName(ChildrenVariableName)),
+                      }))));
 
+  private ArgumentSyntax TerminalToTokenKindArgument(string terminal) =>
+    Argument(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                                    IdentifierName(TokenKindEnumName),
+                                    IdentifierName(terminal)));
+
+  private ArgumentSyntax NonterminalToNonterminalKindArgument(string nonterminal) =>
+    Argument(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                                    IdentifierName(NonterminalKindEnumName),
+                                    IdentifierName(nonterminal)));
 
   private static string GetParseMethodName(string nonterminal) => $"Parse{SanitizeMethodName(nonterminal)}";
-
-  private int GetTerminalIndex(string terminal) => TerminalsOrdering.IndexOf(terminal);
-
-  private int GetNonterminalIndex(string nonterminal) => NonterminalsOrdering.IndexOf(nonterminal);
 
   private InterpolatedStringExpressionSyntax GetParseEntryRoutineExceptionMessage(EntryRoutine entryRoutine) {
     string[] textTokens = ["Cannot parse {{" +
@@ -144,7 +157,7 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
                                                                                  InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                                                                    IdentifierName(ScannerFieldName),
                                                                                    IdentifierName(ScannerPeekMethodName))),
-                                                                                 IdentifierName(ParseNodeKindPropertyName))))))),
+                                                                                 IdentifierName(TokenKindPropertyName))))))),
         InterpolatedStringText()
           .WithTextToken(Token(TriviaList(), SyntaxKind.InterpolatedStringTextToken, textTokens[1], textTokens[1],
                                TriviaList())),
@@ -171,24 +184,22 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
                                                                                       InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                                                                                 IdentifierName(ScannerFieldName),
                                                                                                 IdentifierName(ScannerPeekMethodName))),
-                                                                                      IdentifierName(ParseNodeKindPropertyName))))))),
+                                                                                      IdentifierName(TokenKindPropertyName))))))),
         InterpolatedStringText()
           .WithTextToken(Token(TriviaList(), SyntaxKind.InterpolatedStringTextToken, textTokens[1], textTokens[1], TriviaList())),
       }));
   }
 
-  // Generates: `private bool See(params int[] terminals) => terminals.Contains(scanner.Peek().Type);`
+  // Generates: `private bool See(params TokenKind[] terminals) => terminals.Contains(scanner.Peek().Type);`
   private MethodDeclarationSyntax GenerateSeeMethod() {
     const string terminalsParamName = "terminals";
     return MethodDeclaration(PredefinedType(Token(SyntaxKind.BoolKeyword)), Identifier(SeeMethodName))
            .WithModifiers(TokenList(Token(SyntaxKind.PrivateKeyword)))
            .WithParameterList(ParameterList(SingletonSeparatedList(Parameter(Identifier(terminalsParamName))
-                                                                   .WithModifiers(TokenList(Token(SyntaxKind
-                                                                     .ParamsKeyword)))
-                                                                   .WithType(ArrayType(PredefinedType(Token(SyntaxKind
-                                                                                 .IntKeyword)))
-                                                                               .WithRankSpecifiers(SingletonList(ArrayRankSpecifier(SingletonSeparatedList
-                                                                                 <ExpressionSyntax>(OmittedArraySizeExpression()))))))))
+                                                                   .WithModifiers(TokenList(Token(SyntaxKind.ParamsKeyword)))
+                                                                   .WithType(ArrayType(IdentifierName(TokenKindEnumName))
+                                                                               .WithRankSpecifiers(SingletonList(ArrayRankSpecifier(
+                                                                                SingletonSeparatedList<ExpressionSyntax>(OmittedArraySizeExpression()))))))))
            .WithExpressionBody(ArrowExpressionClause(InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                                                             IdentifierName(terminalsParamName),
                                                                             IdentifierName("Contains")))
@@ -196,7 +207,7 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
                                                                            InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                                                              IdentifierName(ScannerFieldName),
                                                                              IdentifierName(ScannerPeekMethodName))),
-                                                                           IdentifierName(ParseNodeKindPropertyName))))))))
+                                                                           IdentifierName(TokenKindPropertyName))))))))
            .WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
   }
 
@@ -206,7 +217,7 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
     return MethodDeclaration(IdentifierName(TokenRecordName), Identifier(EatMethodName))
            .WithModifiers(TokenList(Token(SyntaxKind.PrivateKeyword)))
            .WithParameterList(ParameterList(SingletonSeparatedList(Parameter(Identifier(terminalParamName))
-                                                                     .WithType(PredefinedType(Token(SyntaxKind.IntKeyword))))))
+                                                                     .WithType(IdentifierName(TokenKindEnumName)))))
            .WithExpressionBody(ArrowExpressionClause(ConditionalExpression(InvocationExpression(IdentifierName(SeeMethodName))
                                                                              .WithArgumentList(ArgumentList(SingletonSeparatedList(Argument(IdentifierName(terminalParamName))))),
                                                                            InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
@@ -222,7 +233,7 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
                                                                                  InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                                                                    IdentifierName(ScannerFieldName),
                                                                                    IdentifierName(ScannerPeekMethodName))),
-                                                                                 IdentifierName(ParseNodeKindPropertyName)))))),
+                                                                                 IdentifierName(TokenKindPropertyName)))))),
                                                                              InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                                                                  IdentifierName(ScannerFieldName),
                                                                                  IdentifierName(ScannerNameOfMethodName)))
