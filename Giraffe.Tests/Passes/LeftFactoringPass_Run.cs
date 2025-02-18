@@ -19,7 +19,7 @@ public class LeftFactoringPass_Run {
     LeftFactoringPass leftFactoringPass = new(grammar);
     leftFactoringPass.Run();
 
-    Assert.Equal(["a", "b", "$$"], grammar.Terminals);
+    Assert.Equal(["a", "b", Grammar.Eof], grammar.Terminals);
     Assert.Equal(["S", "A", "B"], grammar.Nonterminals);
 
     Assert.Equal(rules, grammar.Rules);
@@ -43,7 +43,7 @@ public class LeftFactoringPass_Run {
     LeftFactoringPass leftFactoringPass = new(grammar);
     leftFactoringPass.Run();
 
-    Assert.Equal(["a", "b", "c", "$$"], grammar.Terminals);
+    Assert.Equal(["a", "b", "c", Grammar.Eof], grammar.Terminals);
     Assert.Equal(["S", "S-a#tail", "A", "B"], grammar.Nonterminals);
 
     Assert.Equal(
@@ -75,7 +75,7 @@ public class LeftFactoringPass_Run {
     LeftFactoringPass leftFactoringPass = new(grammar);
     leftFactoringPass.Run();
 
-    Assert.Equal(["a", "b", "c", "$$"], grammar.Terminals);
+    Assert.Equal(["a", "b", "c", Grammar.Eof], grammar.Terminals);
     Assert.Equal(["S", "A", "A-a#tail", "A-a#tail-B#tail", "A-a#tail-B#tail-c#tail", "B"], grammar.Nonterminals);
 
     Assert.Equal(

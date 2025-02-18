@@ -21,7 +21,7 @@ public class UnitRuleElimination_Run {
     UnitRuleEliminationPass unitRuleEliminationPass = new(grammar);
     unitRuleEliminationPass.Run();
 
-    Assert.Equal(["a", "aa", "$$"], grammar.Terminals);
+    Assert.Equal(["a", "aa", Grammar.Eof], grammar.Terminals);
     Assert.Equal(["S", "A", "B"], grammar.Nonterminals);
 
     Assert.Equal(
@@ -54,7 +54,7 @@ public class UnitRuleElimination_Run {
     UnitRuleEliminationPass unitRuleEliminationPass = new(grammar);
     unitRuleEliminationPass.Run();
 
-    Assert.Equal(["d", "$$"], grammar.Terminals);
+    Assert.Equal(["d", Grammar.Eof], grammar.Terminals);
     Assert.Equal(["S", "A", "B", "C", "D"], grammar.Nonterminals);
 
     Assert.Equal(
@@ -81,7 +81,7 @@ public class UnitRuleElimination_Run {
     UnitRuleEliminationPass unitRuleEliminationPass = new(grammar);
     unitRuleEliminationPass.Run();
 
-    Assert.Equal(["$$"], grammar.Terminals);
+    Assert.Equal([Grammar.Eof], grammar.Terminals);
     Assert.Equal(["S"], grammar.Nonterminals);
 
     Assert.Equal(

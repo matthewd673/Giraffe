@@ -34,7 +34,7 @@ public class SetsAnalysis_Analyze {
       { rules[1], ["a"] },
       { rules[2], ["b"] },
       { rules[3], ["b"] },
-    }, sets.Predict); // TODO
+    }, sets.Predict);
   }
 
   [Fact]

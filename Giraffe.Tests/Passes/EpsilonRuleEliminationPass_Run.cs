@@ -21,7 +21,7 @@ public class EpsilonRuleEliminationPass_Run {
     EpsilonRuleEliminationPass epsilonRuleEliminationPass = new(grammar);
     epsilonRuleEliminationPass.Run();
 
-    Assert.Equal(["a", "$$"], grammar.Terminals);
+    Assert.Equal(["a", Grammar.Eof], grammar.Terminals);
     Assert.Equal(["S", "L", "M", "L'", "M'"], grammar.Nonterminals);
 
     Assert.Equal(

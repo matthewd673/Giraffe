@@ -20,7 +20,7 @@ public class DirectLeftRecursionEliminationPass_Run {
     DirectLeftRecursionEliminationPass directLeftRecursionEliminationPass = new(grammar);
     directLeftRecursionEliminationPass.Run();
 
-    Assert.Equal(["a", "b", "c", "$$"], grammar.Terminals);
+    Assert.Equal(["a", "b", "c", Grammar.Eof], grammar.Terminals);
     Assert.Equal(["S", "A", "A#tail", "A#tails", "A#head"], grammar.Nonterminals);
 
     Assert.Equal([
@@ -37,7 +37,7 @@ public class DirectLeftRecursionEliminationPass_Run {
 
   [Fact]
   public void GivenGrammarWithIndirectLeftRecursion_WhenRunCalled_ThenGrammarNotChanged() {
-    HashSet<Rule> rules = [new("S", ["A", "$$"]),
+    HashSet<Rule> rules = [new("S", ["A", Grammar.Eof]),
                            new("A", ["B"]),
                            new("B", ["A"])];
     Grammar grammar = new(new(), rules, ["S"]);
@@ -45,7 +45,7 @@ public class DirectLeftRecursionEliminationPass_Run {
     DirectLeftRecursionEliminationPass directLeftRecursionEliminationPass = new(grammar);
     directLeftRecursionEliminationPass.Run();
 
-    Assert.Equal(["$$"], grammar.Terminals);
+    Assert.Equal([Grammar.Eof], grammar.Terminals);
     Assert.Equal(["S", "A", "B"], grammar.Nonterminals);
 
     Assert.Equal(rules, grammar.Rules);
