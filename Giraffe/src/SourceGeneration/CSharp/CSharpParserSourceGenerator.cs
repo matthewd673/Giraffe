@@ -30,7 +30,7 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
   public override CompilationUnitSyntax Generate() =>
     CompilationUnit()
       .WithMembers(List<MemberDeclarationSyntax>([GenerateNamespaceDeclaration(FileNamespace),
-                                                  GenerateParserClass(grammarSets.BuildRDT())]))
+                                                  GenerateParserClass(grammarSets.BuildRdt())]))
       .NormalizeWhitespace();
 
   private ClassDeclarationSyntax GenerateParserClass(TopLevel topLevel) =>
@@ -38,10 +38,13 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
       .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
       .WithParameterList(ParameterList(SingletonSeparatedList(Parameter(Identifier(ScannerFieldName))
                                                                 .WithType(IdentifierName(ScannerClassName)))))
-      .WithMembers(List([GenerateEntryRoutine(topLevel.EntryRoutine),
+      .WithMembers(List([..GenerateMemberDeclarations(topLevel.MemberDeclarations.Before),
+                         GenerateEntryRoutine(topLevel.EntryRoutine),
                          GenerateSeeMethod(),
                          GenerateEatMethod(),
-                         ..GenerateRoutines(topLevel.Routines)]));
+                         ..GenerateRoutines(topLevel.Routines),
+                         ..GenerateMemberDeclarations(topLevel.MemberDeclarations.After),
+                        ]));
 
   private IEnumerable<MemberDeclarationSyntax> GenerateRoutines(IEnumerable<Routine> routines) =>
     routines.Select(GenerateRoutine);
@@ -106,6 +109,10 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
 
   private static List<StatementSyntax> GenerateSemanticAction(string? semanticAction) =>
     semanticAction is null ? [] : [ParseStatement(semanticAction)];
+
+  private static List<MemberDeclarationSyntax> GenerateMemberDeclarations(string? memberDeclarations) =>
+    memberDeclarations is null ? [] : [ParseMemberDeclaration(memberDeclarations)
+                                       ?? throw new CSharpSourceGeneratorException("Cannot parse member declarations")];
 
   private ReturnStatementSyntax GenerateNonterminalReturnStatement(string nonterminal) =>
     ReturnStatement(ImplicitObjectCreationExpression()

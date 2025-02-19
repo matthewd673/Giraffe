@@ -2,16 +2,31 @@ using System.Text.RegularExpressions;
 
 namespace Giraffe;
 
-public record Grammar(Dictionary<string, Regex> terminalDefs,
-                     HashSet<Rule> Rules,
-                     HashSet<string> EntryNonterminals) {
+public record Grammar {
   public const string Eof = "_eof";
 
-  public HashSet<string> Terminals { get; } = [..terminalDefs.Keys, Eof];
+  public HashSet<string> Terminals { get; }
 
   public HashSet<string> Nonterminals => Rules.Select(p => p.Name).ToHashSet();
 
   public Dictionary<string, string> DisplayNames { get; } = new();
+  public HashSet<Rule> Rules { get; init; }
+  public HashSet<string> EntryNonterminals { get; init; }
+  public SemanticAction MemberDeclarations { get; init; }
+
+  private Dictionary<string, Regex> terminalDefs;
+
+  public Grammar(Dictionary<string, Regex> terminalDefs,
+                 HashSet<Rule> rules,
+                 HashSet<string> entryNonterminals,
+                 SemanticAction? memberDeclarations = null) {
+    this.terminalDefs = terminalDefs;
+    Rules = rules;
+    EntryNonterminals = entryNonterminals;
+    MemberDeclarations = memberDeclarations ?? new();
+
+    Terminals = [..terminalDefs.Keys, Eof];
+  }
 
   public Regex GetTerminalRule(string terminal) => terminalDefs[terminal];
 
@@ -30,4 +45,9 @@ public record Grammar(Dictionary<string, Regex> terminalDefs,
   }
 
   public static bool IsTerminal(string name) => char.IsLower(name[0]) || name.Equals(Eof);
+  public void Deconstruct(out Dictionary<string, Regex> terminalDefs, out HashSet<Rule> Rules, out HashSet<string> EntryNonterminals) {
+    terminalDefs = this.terminalDefs;
+    Rules = this.Rules;
+    EntryNonterminals = this.EntryNonterminals;
+  }
 }

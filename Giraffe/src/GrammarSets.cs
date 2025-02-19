@@ -6,8 +6,8 @@ public record GrammarSets(Grammar Grammar,
                           Dictionary<string, HashSet<string>> First,
                           Dictionary<string, HashSet<string>> Follow,
                           Dictionary<Rule, HashSet<string>> Predict) {
-  public TopLevel BuildRDT() =>
-    new(BuildEntryRoutine(), Grammar.Nonterminals.Select(BuildRoutine).ToList());
+  public TopLevel BuildRdt() =>
+    new(BuildEntryRoutine(), Grammar.Nonterminals.Select(BuildRoutine).ToList(), Grammar.MemberDeclarations);
 
   private EntryRoutine BuildEntryRoutine() =>
     new(Grammar.EntryNonterminals.Select(BuildEntryNonterminalPrediction).ToList());
