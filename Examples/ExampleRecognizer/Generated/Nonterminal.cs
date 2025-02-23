@@ -1,2 +1,2 @@
 namespace ExampleRecognizer.Generated;
-public record Nonterminal(int Kind, ParseNode[] Children) : ParseNode(Kind);
+public record Nonterminal(NtKind Kind, ParseNode[] Children) : ParseNode;

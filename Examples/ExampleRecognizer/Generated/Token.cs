@@ -1,2 +1,2 @@
 namespace ExampleRecognizer.Generated;
-public record Token(int Kind, string Image) : ParseNode(Kind);
+public record Token(TokenKind Kind, string Image) : ParseNode;

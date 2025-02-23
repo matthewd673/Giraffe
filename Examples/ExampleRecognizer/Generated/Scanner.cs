@@ -7,7 +7,7 @@ public class Scanner(string input)
     private readonly string[] names = ["a", "b", "c", "d", "e", "<end of input>"];
     private int scanIndex;
     private Token? nextToken;
-    public string NameOf(int terminal) => names[terminal];
+    public string NameOf(TokenKind terminal) => names[(int)terminal];
     public Token Peek()
     {
         nextToken ??= ScanNext();
@@ -26,7 +26,7 @@ public class Scanner(string input)
     {
         if (scanIndex >= input.Length)
         {
-            return new(tokenDef.Length, "");
+            return new(TokenKind._eof, "");
         }
 
         Token? best = null;
@@ -38,10 +38,10 @@ public class Scanner(string input)
                 continue;
             }
 
-            best ??= new(t, match.Value);
+            best ??= new((TokenKind)t, match.Value);
             if (match.Length > best.Image.Length)
             {
-                best = new(t, match.Value);
+                best = new((TokenKind)t, match.Value);
             }
         }
 

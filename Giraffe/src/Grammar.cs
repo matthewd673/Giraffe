@@ -6,24 +6,36 @@ public record Grammar {
   public const string Eof = "_eof";
 
   public HashSet<string> Terminals { get; }
-
   public HashSet<string> Nonterminals => Rules.Select(p => p.Name).ToHashSet();
+  public HashSet<Rule> Rules { get; }
+  public HashSet<string> EntryNonterminals { get; }
 
+  /// <summary>
+  /// A mapping of the name of a symbol to its display name.
+  /// </summary>
   public Dictionary<string, string> DisplayNames { get; } = new();
-  public HashSet<Rule> Rules { get; init; }
-  public HashSet<string> EntryNonterminals { get; init; }
+  /// <summary>
+  /// A SemanticAction containing the member declarations to be added to the generated parser class.
+  /// </summary>
   public SemanticAction MemberDeclarations { get; init; }
+  /// <summary>
+  /// A mapping of the name of a nonterminal to the names of its parameters. If no mapping exists for a nonterminal,
+  /// it is assumed to have no parameters.
+  /// </summary>
+  public Dictionary<string, List<string>> NonterminalParameters { get; init; }
 
   private Dictionary<string, Regex> terminalDefs;
 
   public Grammar(Dictionary<string, Regex> terminalDefs,
                  HashSet<Rule> rules,
                  HashSet<string> entryNonterminals,
-                 SemanticAction? memberDeclarations = null) {
+                 SemanticAction? memberDeclarations = null,
+                 Dictionary<string, List<string>>? nonterminalParameters = null) {
     this.terminalDefs = terminalDefs;
     Rules = rules;
     EntryNonterminals = entryNonterminals;
     MemberDeclarations = memberDeclarations ?? new();
+    NonterminalParameters = nonterminalParameters ?? new();
 
     Terminals = [..terminalDefs.Keys, Eof];
   }
@@ -45,9 +57,6 @@ public record Grammar {
   }
 
   public static bool IsTerminal(string name) => char.IsLower(name[0]) || name.Equals(Eof);
-  public void Deconstruct(out Dictionary<string, Regex> terminalDefs, out HashSet<Rule> Rules, out HashSet<string> EntryNonterminals) {
-    terminalDefs = this.terminalDefs;
-    Rules = this.Rules;
-    EntryNonterminals = this.EntryNonterminals;
-  }
+
+  public static bool IsParameter(string name) => name.StartsWith('$');
 }

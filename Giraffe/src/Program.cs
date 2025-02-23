@@ -23,15 +23,20 @@ public class Program {
       [
         new("S", ["A", "B", "C", "D", "E"],
             semanticAction: new(Before: "Console.WriteLine(\"Semantic action!\");",
-                                After: "Console.WriteLine(\"Done :D\");")),
+                                After: "Console.WriteLine(\"Done :D\");"),
+            symbolArguments: new() { {2, ["A", "B"]}}),
         new("A", ["a"]), new("A", []),
         new("B", ["b"]), new("B", []),
-        new("C", ["c"], semanticAction: new(Before: "Console.WriteLine(\"See C\");")),
+        new("C", ["c"],
+            semanticAction: new(Before: "Console.WriteLine(\"See C\");"),
+            output: ["$a_param", "c", "$b_param"]),
         new("D", ["d"]), new("D", []),
         new("E", ["e"]), new("E", []),
       ],
       ["S"]
     );
+
+    grammar.NonterminalParameters.Add("C", ["$a_param", "$b_param"]);
 
     grammar.DisplayNames.Add(Grammar.Eof, "<end of input>");
     grammar.DisplayNames.Add("S", "Start");

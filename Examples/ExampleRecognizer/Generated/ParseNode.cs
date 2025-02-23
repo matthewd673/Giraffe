@@ -1,2 +1,2 @@
 namespace ExampleRecognizer.Generated;
-public record ParseNode(int Kind);
+public record ParseNode;

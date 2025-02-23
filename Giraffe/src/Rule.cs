@@ -1,35 +1,39 @@
 using System.Collections.Immutable;
+using Giraffe.RDT;
 
 namespace Giraffe;
 
 public record Rule {
   public string Name { get; init; }
   public ImmutableList<string> Symbols { get; init; }
-  public ImmutableList<string> Parameters { get; init; }
   public SemanticAction SemanticAction { get; init; }
+  public Dictionary<int, List<string>> SymbolArguments { get; init; }
+  public List<string> Output { get; init; }
 
   public bool IsEpsilon => Symbols.Count == 0;
 
   public Rule(string name,
               ImmutableList<string> symbols,
-              ImmutableList<string>? parameters = null,
-              SemanticAction? semanticAction = null) {
+              SemanticAction? semanticAction = null,
+              Dictionary<int, List<string>>? symbolArguments = null,
+              List<string>? output = null) {
     Name = name;
     Symbols = symbols;
-    Parameters = parameters ?? [];
     SemanticAction = semanticAction ?? new();
+    SymbolArguments = symbolArguments ?? new();
+    Output = output ?? [..symbols]; // If no output is provided, default to a flat structure of all symbols in order
   }
 
   public override int GetHashCode() =>
     HashCode.Combine(Name,
                      Utils.GetCollectionHashCode(Symbols),
-                     Utils.GetCollectionHashCode(Parameters),
-                     SemanticAction);
+                     SemanticAction,
+                     Utils.GetCollectionHashCode(SymbolArguments));
 
   public virtual bool Equals(Rule? other) =>
     other is not null &&
     Name.Equals(other.Name) &&
     Symbols.SequenceEqual(other.Symbols) &&
-    Parameters.SequenceEqual(other.Parameters) &&
-    Equals(SemanticAction, other.SemanticAction);
+    SemanticAction.Equals(other.SemanticAction) &&
+    SymbolArguments.SequenceEqual(other.SymbolArguments);
 }
