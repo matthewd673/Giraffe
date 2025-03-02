@@ -31,6 +31,9 @@ public class CSharpSourceFilesGenerator(GrammarSets grammarSets) {
   public string NonterminalKindEnumName { get; init; } = "NtKind";
   public string TokenKindEnumName { get; init; } = "TokenKind";
 
+  public string VisitorInterfaceName { get; init; } = "IVisitor";
+  public string VisitorVisitMethodName { get; init; } = "Visit";
+
   public List<CSharpSourceFile> GenerateSourceFiles() {
     List<string> terminalsOrdering = grammarSets.Grammar.Terminals.ToList();
     List<string> nonterminalsOrdering = grammarSets.Grammar.Nonterminals.ToList();
@@ -128,6 +131,23 @@ public class CSharpSourceFilesGenerator(GrammarSets grammarSets) {
       EnumMembers = terminalsOrdering,
     };
     sourceFiles.Add(new(GetFileName(TokenKindEnumName), tokenKindSourceGenerator.Generate()));
+
+    CSharpIVisitorSourceGenerator visitorSourceGenerator = new(grammarSets.Grammar) {
+      FileNamespace = Namespace,
+      VisitorInterfaceName = VisitorInterfaceName,
+      VisitMethodName = VisitorVisitMethodName,
+      ParseTreeRecordName = ParseTreeRecordName,
+      ParseNodeRecordName = ParseNodeRecordName,
+      NonterminalRecordName = NonterminalRecordName,
+      NonterminalKindPropertyName = NonterminalKindPropertyName,
+      NonterminalChildrenPropertyName = NonterminalChildrenPropertyName,
+      TokenRecordName = TokenRecordName,
+      TokenKindPropertyName = TokenKindPropertyName,
+      TokenImagePropertyName = TokenImagePropertyName,
+      NonterminalKindEnumName = NonterminalKindEnumName,
+      TokenKindEnumName = TokenKindEnumName,
+    };
+    sourceFiles.Add(new(GetFileName(VisitorInterfaceName), visitorSourceGenerator.Generate()));
 
     return sourceFiles;
   }
