@@ -1,4 +1,5 @@
-﻿using Giraffe.Analyses;
+﻿using static Giraffe.GrammarFactory;
+using Giraffe.Analyses;
 using Giraffe.Passes;
 using Giraffe.SourceGeneration;
 using Giraffe.SourceGeneration.CSharp;
@@ -12,16 +13,20 @@ public class Program {
     const string outputDirectory = "/Users/matth/Documents/cs/Giraffe/Examples/ExampleRecognizer/Generated";
 
     Rule[] rules = [
-      new(new("S"), ["A", "B", "C", "D", "E"],
-          semanticAction: new(Before: "Console.WriteLine(\"Semantic action!\");",
-                              After: "Console.WriteLine(\"Done :D\");"),
-          symbolArguments: new() { { 2, ["A", "B"] } }),
-      new(new("A"), ["a"]), new(new("A")),
-      new(new("B"), ["b"]), new(new("B")),
-      new(new("C"), ["c"],
-          semanticAction: new(Before: "Console.WriteLine(\"See C\");")),
-      new(new("D"), ["d"]), new(new("D")),
-      new(new("E"), ["e"]), new(new("E")),
+      R("S", [Nt("A"), Nt("B"), Nt("C"), Nt("D"), Nt("E")]) with {
+        SemanticAction = new(Before: "Console.WriteLine(\"Semantic action!\");",
+                             After: "Console.WriteLine(\"Done :D\");"),
+        SymbolArguments = new() { { 2, ["A", "B"] } },
+      },
+      R("A", [T("a")]),
+      R("A", []),
+      R("B", [T("b")]),
+      R("B", []),
+      R("C", [T("c")]) with { SemanticAction = new(Before: "Console.WriteLine(\"See C\");") },
+      R("D", [T("d")]),
+      R("D", []),
+      R("E", [T("e")]),
+      R("E", []),
     ];
 
     // TEMP: Generate a Parser

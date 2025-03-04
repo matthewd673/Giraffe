@@ -21,24 +21,6 @@ public record Rule {
     SymbolArguments = symbolArguments ?? new();
   }
 
-  public Rule(Nonterminal nonterminal,
-              ImmutableList<string> symbols,
-              SemanticAction? semanticAction = null,
-              Dictionary<int, List<string>>? symbolArguments = null)
-  : this(nonterminal,
-         ImmutableList.CreateRange(GrammarUtils.StringShorthandToSymbols(symbols)),
-         semanticAction,
-         symbolArguments) {
-    // Empty
-  }
-
-  public Rule(Nonterminal nonterminal,
-              SemanticAction? semanticAction = null,
-              Dictionary<int, List<string>>? symbolArguments = null)
-  : this(nonterminal, ImmutableList.Create<Symbol>(), semanticAction, symbolArguments) {
-    // Empty
-  }
-
   public override int GetHashCode() =>
     HashCode.Combine(Nonterminal,
                      CollectionUtils.GetHashCode(Symbols),

@@ -13,9 +13,9 @@ public class DirectLeftRecursionEliminationPass(Grammar grammar) : Pass(grammar)
   }
 
   private void EliminateDirectLeftRecursionForNonterminal(Nonterminal nt) {
-    string tailName = $"{nt}#tail";
-    string tailsName = $"{nt}#tails";
-    string headName = $"{nt}#head";
+    string tailName = $"{nt.Value}#tail";
+    string tailsName = $"{nt.Value}#tails";
+    string headName = $"{nt.Value}#head";
 
     HashSet<Rule> nonterminalRules = Grammar.GetAllRulesForNonterminal(nt).ToHashSet();
     HashSet<Rule> directLeftRecursive = nonterminalRules.Where(IsDirectLeftRecursive).ToHashSet();
@@ -37,10 +37,10 @@ public class DirectLeftRecursionEliminationPass(Grammar grammar) : Pass(grammar)
 
     Grammar.Rules.RemoveWhere(r => r.Nonterminal.Equals(nt));
 
-    Grammar.Rules.Add(new(new(tailsName), [tailName, tailsName]));
-    Grammar.Rules.Add(new(new(tailsName), [tailName]));
-    Grammar.Rules.Add(new(nt, [headName, tailsName]));
-    Grammar.Rules.Add(new(nt, [headName]));
+    Grammar.Rules.Add(new(new(tailsName), [new Nonterminal(tailName), new Nonterminal(tailsName)]));
+    Grammar.Rules.Add(new(new(tailsName), [new Nonterminal(tailName)]));
+    Grammar.Rules.Add(new(nt, [new Nonterminal(headName), new Nonterminal(tailsName)]));
+    Grammar.Rules.Add(new(nt, [new Nonterminal(headName)]));
   }
 
   private static bool IsDirectLeftRecursive(Rule rule) =>
