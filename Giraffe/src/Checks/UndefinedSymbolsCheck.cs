@@ -8,8 +8,8 @@ public class UndefinedSymbolsCheck(Grammar grammar) : Check(grammar) {
   public override CheckResult Evaluate() {
     List<Symbol> undefined = Grammar.Rules
                                     .SelectMany(r => r.Symbols
-                                                      .Where(s => (s.IsTerminal && !Grammar.Terminals.Contains(s.Value)) ||
-                                                                  (!s.IsTerminal && !Grammar.Nonterminals.Contains(s.Value))))
+                                                      .Where(s => (s is Terminal && !Grammar.Terminals.Contains(s)) ||
+                                                                  (s is Nonterminal && !Grammar.Nonterminals.Contains(s))))
                                     .ToList();
 
     return undefined.Count == 0

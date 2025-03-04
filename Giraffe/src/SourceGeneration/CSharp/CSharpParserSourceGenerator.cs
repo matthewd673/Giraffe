@@ -76,17 +76,17 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
       .WithBody(Block((IEnumerable<StatementSyntax>)[..GeneratePredictions(routine.Predictions, routine.Nonterminal),
                                                      GenerateExceptionThrowStatement(ParserExceptionClassName, GetParseRoutineExceptionMessage(routine))]));
 
-  private IEnumerable<IfStatementSyntax> GeneratePredictions(IEnumerable<Prediction> predictions, string nonterminal) =>
-    predictions.Select(p => GeneratePrediction(p, nonterminal));
+  private IEnumerable<IfStatementSyntax> GeneratePredictions(IEnumerable<Prediction> predictions, Nonterminal nt) =>
+    predictions.Select(p => GeneratePrediction(p, nt));
 
-  private IfStatementSyntax GeneratePrediction(Prediction prediction, string nonterminal) =>
+  private IfStatementSyntax GeneratePrediction(Prediction prediction, Nonterminal nt) =>
     IfStatement(GeneratePeekCall(prediction.PredictSet),
                 Block((IEnumerable<StatementSyntax>)[..GenerateSemanticAction(prediction.SemanticAction.Before),
                                                      ..GenerateConsumptions(prediction.Consumptions),
                                                      ..GenerateSemanticAction(prediction.SemanticAction.After),
-                                                     GeneratePredictionOutputReturnStatement(nonterminal, prediction.Output)]));
+                                                     GeneratePredictionOutputReturnStatement(nt, prediction.Output)]));
 
-  private InvocationExpressionSyntax GeneratePeekCall(HashSet<string> predictSet) =>
+  private InvocationExpressionSyntax GeneratePeekCall(HashSet<Terminal> predictSet) =>
     InvocationExpression(IdentifierName(SeeMethodName))
       .WithArgumentList(ArgumentList(SeparatedList<ArgumentSyntax>(GenerateCommaSeparatedList(predictSet, TerminalToTokenKindArgument))));
 
@@ -124,10 +124,10 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
     memberDeclarations is null ? [] : [ParseMemberDeclaration(memberDeclarations)
                                        ?? throw new CSharpSourceGeneratorException("Cannot parse member declarations")];
 
-  private ReturnStatementSyntax GeneratePredictionOutputReturnStatement(string nonterminal, List<RDT.Index> output) =>
+  private ReturnStatementSyntax GeneratePredictionOutputReturnStatement(Nonterminal nt, List<RDT.Index> output) =>
     ReturnStatement(ImplicitObjectCreationExpression()
                       .WithArgumentList(ArgumentList(SeparatedList<ArgumentSyntax>(new SyntaxNodeOrToken[] {
-                        NonterminalToNonterminalKindArgument(nonterminal),
+                        NonterminalToNonterminalKindArgument(nt),
                         Token(SyntaxKind.CommaToken),
                         Argument(GeneratePredictionOutputCollection(output)),
                       }))));
@@ -142,15 +142,15 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
     CollectionExpression(SeparatedList<CollectionElementSyntax>(GenerateCommaSeparatedList(output,
                                                                   i => ExpressionElement(IdentifierName(GetSymbolOrArgumentId(i))))));
 
-  private ArgumentSyntax TerminalToTokenKindArgument(string terminal) =>
+  private ArgumentSyntax TerminalToTokenKindArgument(Terminal terminal) =>
     Argument(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                     IdentifierName(TokenKindEnumName),
-                                    IdentifierName(terminal)));
+                                    IdentifierName(terminal.Value)));
 
-  private ArgumentSyntax NonterminalToNonterminalKindArgument(string nonterminal) =>
+  private ArgumentSyntax NonterminalToNonterminalKindArgument(Nonterminal nt) =>
     Argument(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                     IdentifierName(NonterminalKindEnumName),
-                                    IdentifierName(nonterminal)));
+                                    IdentifierName(nt.Value)));
 
   private static string GetSymbolOrArgumentId(RDT.Index index) => index switch {
     ParameterIndex => GetArgumentId(index.Value),
@@ -162,7 +162,7 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
 
   private static string GetArgumentId(int id) => $"a{id}";
 
-  private static string GetParseMethodName(string nonterminal) => $"Parse{SanitizeMethodName(nonterminal)}";
+  private static string GetParseMethodName(Nonterminal nt) => $"Parse{SanitizeMethodName(nt.Value)}";
 
   private InterpolatedStringExpressionSyntax GetParseEntryRoutineExceptionMessage(EntryRoutine entryRoutine) {
     string[] textTokens = ["Cannot parse {{" +

@@ -35,8 +35,8 @@ public class CSharpSourceFilesGenerator(GrammarSets grammarSets) {
   public string VisitorVisitMethodName { get; init; } = "Visit";
 
   public List<CSharpSourceFile> GenerateSourceFiles() {
-    List<string> terminalsOrdering = grammarSets.Grammar.Terminals.ToList();
-    List<string> nonterminalsOrdering = grammarSets.Grammar.Nonterminals.ToList();
+    List<Terminal> terminalsOrdering = grammarSets.Grammar.Terminals.ToList();
+    List<Nonterminal> nonterminalsOrdering = grammarSets.Grammar.Nonterminals.ToList();
 
     List<CSharpSourceFile> sourceFiles = [];
 
@@ -121,14 +121,14 @@ public class CSharpSourceFilesGenerator(GrammarSets grammarSets) {
     CSharpEnumSourceGenerator nonterminalKindSourceGenerator = new() {
       FileNamespace = Namespace,
       EnumName = NonterminalKindEnumName,
-      EnumMembers = nonterminalsOrdering,
+      EnumMembers = nonterminalsOrdering.Select(nt => nt.Value).ToList(),
     };
     sourceFiles.Add(new(GetFileName(NonterminalKindEnumName), nonterminalKindSourceGenerator.Generate()));
 
     CSharpEnumSourceGenerator tokenKindSourceGenerator = new() {
       FileNamespace = Namespace,
       EnumName = TokenKindEnumName,
-      EnumMembers = terminalsOrdering,
+      EnumMembers = terminalsOrdering.Select(t => t.Value).ToList(),
     };
     sourceFiles.Add(new(GetFileName(TokenKindEnumName), tokenKindSourceGenerator.Generate()));
 

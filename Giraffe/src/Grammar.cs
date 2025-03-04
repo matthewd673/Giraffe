@@ -3,12 +3,12 @@ using System.Text.RegularExpressions;
 namespace Giraffe;
 
 public record Grammar {
-  public const string Eof = "_eof";
+  public static Terminal Eof { get; } = new Terminal("eof");
 
-  public HashSet<string> Terminals { get; }
-  public HashSet<string> Nonterminals => Rules.Select(p => p.Name).ToHashSet();
+  public HashSet<Terminal> Terminals { get; }
+  public HashSet<Nonterminal> Nonterminals => Rules.Select(p => p.Nonterminal).ToHashSet();
   public HashSet<Rule> Rules { get; }
-  public HashSet<string> EntryNonterminals { get; }
+  public HashSet<Nonterminal> EntryNonterminals { get; }
 
   /// <summary>
   /// A mapping of the name of a symbol to its display name.
@@ -22,16 +22,16 @@ public record Grammar {
   /// A mapping of the name of a nonterminal to the names of its parameters. If no mapping exists for a nonterminal,
   /// it is assumed to have no parameters.
   /// </summary>
-  public Dictionary<string, List<string>> NonterminalParameters { get; init; }
+  public Dictionary<Nonterminal, List<string>> NonterminalParameters { get; init; }
 
   private Dictionary<string, Regex> terminalDefs;
 
   public Grammar(Dictionary<string, Regex> terminalDefs,
                  HashSet<Rule> rules,
-                 HashSet<string> entryNonterminals,
+                 HashSet<Nonterminal> entryNonterminals,
                  Dictionary<string, string>? displayNames = null,
                  SemanticAction? memberDeclarations = null,
-                 Dictionary<string, List<string>>? nonterminalParameters = null) {
+                 Dictionary<Nonterminal, List<string>>? nonterminalParameters = null) {
     this.terminalDefs = terminalDefs;
     Rules = rules;
     EntryNonterminals = entryNonterminals;
@@ -39,29 +39,24 @@ public record Grammar {
     MemberDeclarations = memberDeclarations ?? new();
     NonterminalParameters = nonterminalParameters ?? new();
 
-    Terminals = [..terminalDefs.Keys, Eof];
+    Terminals = [..terminalDefs.Keys.Select(t => new Terminal(t)), Eof];
   }
 
-  public Regex GetTerminalRule(string terminal) => terminalDefs[terminal];
+  public Regex GetTerminalRule(Terminal terminal) => terminalDefs[terminal.Value];
 
-  public IEnumerable<Rule> GetAllRulesForNonterminal(string nonterminal) =>
-    Rules.Where(rule => rule.Name.Equals(nonterminal));
-
-  public IEnumerable<Rule> GetAllRulesForNonterminal(Symbol nonterminal) =>
-    GetAllRulesForNonterminal(nonterminal.Value);
+  public IEnumerable<Rule> GetAllRulesForNonterminal(Nonterminal nt) =>
+    Rules.Where(rule => rule.Nonterminal.Equals(nt));
 
   /// <summary>
   /// Remove a nonterminal from the grammar. Also remove all rules associated with the nonterminal and all rules
   /// where the nonterminal appears on the right-hand side.
   /// </summary>
   /// <param name="nonterminal">The nonterminal to remove.</param>
-  public void RemoveAllOccurrencesOfNonterminal(string nonterminal) {
+  public void RemoveAllOccurrencesOfNonterminal(Nonterminal nonterminal) {
     Nonterminals.Remove(nonterminal);
-    Rules.RemoveWhere(r => r.Name.Equals(nonterminal));
-    Rules.RemoveWhere(r => r.Symbols.Exists(s => s.Value.Equals(nonterminal)));
+    Rules.RemoveWhere(r => r.Nonterminal.Equals(nonterminal));
+    Rules.RemoveWhere(r => r.Symbols.Contains(nonterminal));
   }
-
-  public static bool IsTerminal(string name) => char.IsLower(name[0]) || name.Equals(Eof);
 
   public static bool IsParameter(string name) => name.StartsWith('$');
 }

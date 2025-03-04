@@ -12,16 +12,16 @@ public class Program {
     const string outputDirectory = "/Users/matth/Documents/cs/Giraffe/Examples/ExampleRecognizer/Generated";
 
     Rule[] rules = [
-      new("S", ["A", "B", "C", "D", "E"],
+      new(new("S"), ["A", "B", "C", "D", "E"],
           semanticAction: new(Before: "Console.WriteLine(\"Semantic action!\");",
                               After: "Console.WriteLine(\"Done :D\");"),
           symbolArguments: new() { { 2, ["A", "B"] } }),
-      new("A", ["a"]), new("A"),
-      new("B", ["b"]), new("B"),
-      new("C", ["c"],
+      new(new("A"), ["a"]), new(new("A")),
+      new(new("B"), ["b"]), new(new("B")),
+      new(new("C"), ["c"],
           semanticAction: new(Before: "Console.WriteLine(\"See C\");")),
-      new("D", ["d"]), new("D"),
-      new("E", ["e"]), new("E"),
+      new(new("D"), ["d"]), new(new("D")),
+      new(new("E"), ["e"]), new(new("E")),
     ];
 
     // TEMP: Generate a Parser
@@ -34,9 +34,9 @@ public class Program {
         {"e", new("e")},
       },
       rules.ToHashSet(),
-      ["S"],
-      nonterminalParameters: new() { {"C", ["$a_param", "$b_param"]} },
-      displayNames: new() { {Grammar.Eof, "<end of input>" }, {"S", "Start"} }
+      [new("S")],
+      nonterminalParameters: new() { {new("C"), ["$a_param", "$b_param"]} },
+      displayNames: new() { {Grammar.Eof.Value, "<end of input>" }, {"S", "Start"} }
     );
 
     SetsAnalysis setsAnalysis = new(grammar);

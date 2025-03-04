@@ -7,19 +7,19 @@ namespace Giraffe.Passes;
 /// <param name="grammar">The Grammar to run the pass on. It will be modified in place.</param>
 public class EpsilonRuleEliminationPass(Grammar grammar) : Pass(grammar) {
   public override void Run() {
-    Dictionary<string, string> ntDerivations = [];
+    Dictionary<Nonterminal, Nonterminal> ntDerivations = [];
 
     // Run until all nonterminals with epsilon productions are removed (new ones may appear along the way)
     while (true) {
       bool changed = false;
 
-      HashSet<string> ntWithEps = GetNonterminalsWithEpsilonRules();
-      foreach (string nt in ntWithEps) {
+      HashSet<Nonterminal> ntWithEps = GetNonterminalsWithEpsilonRules();
+      foreach (Nonterminal nt in ntWithEps) {
         if (ntDerivations.ContainsKey(nt)) {
           continue;
         }
 
-        string derivation = GetDerivationOfNonterminal(nt);
+        Nonterminal derivation = GetDerivationOfNonterminal(nt);
         ntDerivations.Add(nt, derivation);
         Grammar.Nonterminals.Add(derivation);
 
@@ -33,23 +33,23 @@ public class EpsilonRuleEliminationPass(Grammar grammar) : Pass(grammar) {
 
     // Copy non-epsilon rules from original nonterminals to their derivations
     // If a derivation ends up with nothing except an epsilon rule, remove all occurrences of it from the grammar.
-    foreach (string nt in ntDerivations.Keys) {
+    foreach (Nonterminal nt in ntDerivations.Keys) {
       CopyNonEpsilonRules(nt, ntDerivations[nt]);
       RemoveNonterminalIfNoRules(ntDerivations[nt]);
     }
   }
 
-  private HashSet<string> GetNonterminalsWithEpsilonRules() =>
-    Grammar.Rules.Where(p => p.IsEpsilon).Select(p => p.Name).ToHashSet();
+  private HashSet<Nonterminal> GetNonterminalsWithEpsilonRules() =>
+    Grammar.Rules.Where(p => p.IsEpsilon).Select(p => p.Nonterminal).ToHashSet();
 
-  private string GetDerivationOfNonterminal(string originalNt) => $"{originalNt}'";
+  private Nonterminal GetDerivationOfNonterminal(Nonterminal originalNt) => new($"{originalNt.Value}'");
 
-  private bool ReplaceOccurrencesOfEpsilonNonterminal(string originalNt, string newNt) {
+  private bool ReplaceOccurrencesOfEpsilonNonterminal(Nonterminal originalNt, Nonterminal newNt) {
     bool changed = false;
 
     // Find all occurrences of the original NT in the grammar
     while (true) {
-      HashSet<Rule> rulesWithNt = Grammar.Rules.Where(r => r.Symbols.Exists(s => s.Value.Equals(originalNt)))
+      HashSet<Rule> rulesWithNt = Grammar.Rules.Where(r => r.Symbols.Exists(s => s.Equals(originalNt)))
                                          .ToHashSet();
       if (rulesWithNt.Count == 0) {
         break;
@@ -60,8 +60,8 @@ public class EpsilonRuleEliminationPass(Grammar grammar) : Pass(grammar) {
       foreach (Rule r in rulesWithNt) {
         // Replace the original NT with the new version (which should have no epsilon rule)
         Grammar.Rules.Remove(r);
-        int ntInd = r.Symbols.FindIndex(s => s.Value.Equals(originalNt));
-        Grammar.Rules.Add(r with { Symbols = r.Symbols.SetItem(ntInd, new(newNt)) });
+        int ntInd = r.Symbols.FindIndex(s => s.Equals(originalNt));
+        Grammar.Rules.Add(r with { Symbols = r.Symbols.SetItem(ntInd, newNt) });
 
         // Create a copy of the production with NT removed (simulating the case where it goes to epsilon)
         Rule ruleWithoutNt = r with { Symbols = r.Symbols.RemoveAt(ntInd) };
@@ -72,17 +72,17 @@ public class EpsilonRuleEliminationPass(Grammar grammar) : Pass(grammar) {
     return changed;
   }
 
-  private void RemoveNonterminalIfNoRules(string nonterminal) {
-    if (!Grammar.Rules.Any(r => r.Name.Equals(nonterminal))) {
-      Grammar.RemoveAllOccurrencesOfNonterminal(nonterminal);
+  private void RemoveNonterminalIfNoRules(Nonterminal nt) {
+    if (!Grammar.Rules.Any(r => r.Nonterminal.Equals(nt))) {
+      Grammar.RemoveAllOccurrencesOfNonterminal(nt);
     }
   }
 
-  private void CopyNonEpsilonRules(string originalNt, string newNt) {
-    List<Rule> originalRules = Grammar.Rules.Where(r => r.Name.Equals(originalNt) && !r.IsEpsilon).ToList();
+  private void CopyNonEpsilonRules(Nonterminal originalNt, Nonterminal newNt) {
+    List<Rule> originalRules = Grammar.Rules.Where(r => r.Nonterminal.Equals(originalNt) && !r.IsEpsilon).ToList();
 
     foreach (Rule r in originalRules) {
-      Grammar.Rules.Add(r with { Name = newNt });
+      Grammar.Rules.Add(r with { Nonterminal = newNt });
     }
   }
 }

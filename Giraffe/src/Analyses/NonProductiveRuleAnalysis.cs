@@ -19,14 +19,18 @@ public class NonProductiveRuleAnalysis(Grammar grammar) : Analysis<HashSet<Rule>
     }
 
     // A rule is always productive if it is epsilon or if it contains only terminals
-    if (!rule.Symbols.Exists(s => !s.IsTerminal)) {
+    if (!rule.Symbols.Exists(s => s is Nonterminal)) {
       return true;
     }
 
     seen.Add(rule);
     bool hasNonProductive = false;
 
-    foreach (Symbol nt in rule.Symbols.Where(s => !s.IsTerminal)) {
+    foreach (Symbol symbol in rule.Symbols) {
+      if (symbol is not Nonterminal nt) {
+        continue;
+      }
+
       if (Grammar.GetAllRulesForNonterminal(nt).All(r => IsProductive(r, seen))) {
         continue;
       }

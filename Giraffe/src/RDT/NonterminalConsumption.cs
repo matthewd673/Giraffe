@@ -1,3 +1,3 @@
 namespace Giraffe.RDT;
 
-public record NonterminalConsumption(string Nonterminal, List<Index> ArgumentIndices) : Consumption;
+public record NonterminalConsumption(Nonterminal Nonterminal, List<Index> ArgumentIndices) : Consumption;

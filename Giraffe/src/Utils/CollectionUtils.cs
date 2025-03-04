@@ -1,8 +1,8 @@
-namespace Giraffe;
+namespace Giraffe.Utils;
 
-public static class Utils {
+public static class CollectionUtils {
   // Adapted from https://stackoverflow.com/a/30758270
-  public static int GetCollectionHashCode<T>(IEnumerable<T> collection) where T : notnull {
+  public static int GetHashCode<T>(IEnumerable<T> collection) where T : notnull {
     const int seed = 487;
     const int modifier = 31;
 

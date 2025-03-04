@@ -7,17 +7,17 @@ namespace Giraffe.Passes;
 /// <param name="grammar">The Grammar to run the pass on. It will be modified in place.</param>
 public class DirectLeftRecursionEliminationPass(Grammar grammar) : Pass(grammar) {
   public override void Run() {
-    foreach (string nonterminal in Grammar.Nonterminals) {
-      EliminateDirectLeftRecursionForNonterminal(nonterminal);
+    foreach (Nonterminal nt in Grammar.Nonterminals) {
+      EliminateDirectLeftRecursionForNonterminal(nt);
     }
   }
 
-  private void EliminateDirectLeftRecursionForNonterminal(string nonterminal) {
-    string tailName = $"{nonterminal}#tail";
-    string tailsName = $"{nonterminal}#tails";
-    string headName = $"{nonterminal}#head";
+  private void EliminateDirectLeftRecursionForNonterminal(Nonterminal nt) {
+    string tailName = $"{nt}#tail";
+    string tailsName = $"{nt}#tails";
+    string headName = $"{nt}#head";
 
-    HashSet<Rule> nonterminalRules = Grammar.GetAllRulesForNonterminal(nonterminal).ToHashSet();
+    HashSet<Rule> nonterminalRules = Grammar.GetAllRulesForNonterminal(nt).ToHashSet();
     HashSet<Rule> directLeftRecursive = nonterminalRules.Where(IsDirectLeftRecursive).ToHashSet();
     HashSet<Rule> others = nonterminalRules.Except(directLeftRecursive).ToHashSet();
 
@@ -27,21 +27,22 @@ public class DirectLeftRecursionEliminationPass(Grammar grammar) : Pass(grammar)
 
     // If every rule is direct left recursive, it's an infinite loop
     if (others.Count == 0) {
-      throw new($"Grammar contains loop in rule for nonterminal \"{nonterminal}\"");
+      throw new($"Grammar contains loop in rule for nonterminal \"{nt}\"");
     }
 
-    Grammar.Rules.UnionWith(others.Select(r => r with { Name = $"{r.Name}#head" }));
+    Grammar.Rules.UnionWith(others.Select(r => r with { Nonterminal = new($"{r.Nonterminal.Value}#head") }));
 
-    Grammar.Rules.UnionWith(directLeftRecursive.Select(r => new Rule($"{r.Name}#tail", r.Symbols.RemoveAt(0))));
+    Grammar.Rules.UnionWith(directLeftRecursive
+                              .Select(r => new Rule(new($"{r.Nonterminal.Value}#tail"), r.Symbols.RemoveAt(0))));
 
-    Grammar.Rules.RemoveWhere(r => r.Name.Equals(nonterminal));
+    Grammar.Rules.RemoveWhere(r => r.Nonterminal.Equals(nt));
 
-    Grammar.Rules.Add(new(tailsName, [tailName, tailsName]));
-    Grammar.Rules.Add(new(tailsName, [tailName]));
-    Grammar.Rules.Add(new(nonterminal, [headName, tailsName]));
-    Grammar.Rules.Add(new(nonterminal, [headName]));
+    Grammar.Rules.Add(new(new(tailsName), [tailName, tailsName]));
+    Grammar.Rules.Add(new(new(tailsName), [tailName]));
+    Grammar.Rules.Add(new(nt, [headName, tailsName]));
+    Grammar.Rules.Add(new(nt, [headName]));
   }
 
   private static bool IsDirectLeftRecursive(Rule rule) =>
-    !rule.IsEpsilon && rule.Name.Equals(rule.Symbols[0]);
+    !rule.IsEpsilon && rule.Nonterminal.Equals(rule.Symbols[0]);
 }

@@ -93,11 +93,11 @@ public class CSharpIVisitorSourceGenerator(Grammar grammar) : CSharpSourceGenera
                                                               Token(SyntaxKind.CommaToken),
                                                                ]))));
 
-  private SwitchExpressionArmSyntax GenerateNonterminalSwitchExpressionArm(string nonterminal,
+  private SwitchExpressionArmSyntax GenerateNonterminalSwitchExpressionArm(Nonterminal nonterminal,
                                                                            string nonterminalParameterName) =>
     SwitchExpressionArm(ConstantPattern(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                                                IdentifierName(NonterminalKindEnumName),
-                                                               IdentifierName(nonterminal))),
+                                                               IdentifierName(nonterminal.Value))),
                                         InvocationExpression(IdentifierName(GetVisitMethodName(nonterminal)))
                                           .WithArgumentList(ArgumentList(SingletonSeparatedList(
                                                                             Argument(InvocationExpression(
@@ -109,17 +109,17 @@ public class CSharpIVisitorSourceGenerator(Grammar grammar) : CSharpSourceGenera
                                                                                 .WithArgumentList(ArgumentList(SingletonSeparatedList(Argument(IdentifierName(VisitMethodName)))))
                                                                                )))));
 
-  private SwitchExpressionArmSyntax GenerateTokenSwitchExpressionArm(string token, string tokenParameterName) =>
+  private SwitchExpressionArmSyntax GenerateTokenSwitchExpressionArm(Terminal token, string tokenParameterName) =>
     SwitchExpressionArm(ConstantPattern(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                                                IdentifierName(TokenKindEnumName),
-                                                               IdentifierName(token))),
+                                                               IdentifierName(token.Value))),
                                         InvocationExpression(IdentifierName(GetVisitMethodName(token)))
                                           .WithArgumentList(ArgumentList(SingletonSeparatedList(
                                                                           Argument(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                                                                IdentifierName(tokenParameterName),
                                                                                IdentifierName(TokenImagePropertyName)))))));
 
-  private MethodDeclarationSyntax GenerateVisitNonterminalMethodStub(string nonterminal) =>
+  private MethodDeclarationSyntax GenerateVisitNonterminalMethodStub(Nonterminal nonterminal) =>
     MethodDeclaration(IdentifierName(GenericName), Identifier(GetVisitMethodName(nonterminal)))
       .WithModifiers(TokenList(Token(SyntaxKind.ProtectedKeyword)))
       .WithParameterList(ParameterList(SingletonSeparatedList(Parameter(Identifier("children"))
@@ -130,14 +130,14 @@ public class CSharpIVisitorSourceGenerator(Grammar grammar) : CSharpSourceGenera
                                                                                  IdentifierName(GenericName))))))))
       .WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
 
-  private MethodDeclarationSyntax GenerateVisitTokenMethodStub(string token) =>
+  private MethodDeclarationSyntax GenerateVisitTokenMethodStub(Terminal token) =>
     MethodDeclaration(IdentifierName(GenericName), Identifier(GetVisitMethodName(token)))
       .WithModifiers(TokenList(Token(SyntaxKind.ProtectedKeyword)))
       .WithParameterList(ParameterList(SingletonSeparatedList(Parameter(Identifier("image"))
                                                                 .WithType(PredefinedType(Token(SyntaxKind.StringKeyword))))))
       .WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
 
-  private string GetVisitMethodName(string symbol) => $"Visit{symbol}";
+  private string GetVisitMethodName(Symbol symbol) => $"Visit{symbol.Value}";
 
   private SwitchExpressionArmSyntax GenerateDefaultThrowSwitchExpressionArm() =>
     SwitchExpressionArm(DiscardPattern(), GenerateThrowArgumentOutOfRangeExceptionExpression());

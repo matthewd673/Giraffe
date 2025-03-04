@@ -17,7 +17,7 @@ public class CSharpScannerSourceGenerator(Grammar grammar) : CSharpSourceGenerat
   public required string EatMethodName { get; init; }
   public required string ScanNextMethodName { get; init; }
 
-  public required List<string> TerminalsOrdering { get; init; }
+  public required List<Terminal> TerminalsOrdering { get; init; }
 
   private const string TokenDefArrayFieldName = "tokenDef";
   private const string NamesArrayFieldName = "names";
@@ -87,7 +87,7 @@ public class CSharpScannerSourceGenerator(Grammar grammar) : CSharpSourceGenerat
   private SeparatedSyntaxList<CollectionElementSyntax> GenerateNamesElements() =>
     SeparatedList<CollectionElementSyntax>(GenerateCommaSeparatedList(TerminalsOrdering, GenerateNamesElement));
 
-  private ExpressionElementSyntax GenerateNamesElement(string name) =>
+  private ExpressionElementSyntax GenerateNamesElement(Terminal name) =>
     ExpressionElement(LiteralExpression(SyntaxKind.StringLiteralExpression,
                                         Literal(GetDisplayName(grammar, name))));
 
@@ -157,8 +157,7 @@ public class CSharpScannerSourceGenerator(Grammar grammar) : CSharpSourceGenerat
                                                                                      [] {
                                                                                          Argument(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                                                                              IdentifierName(TokenKindEnumName),
-                                                                                             IdentifierName(Grammar
-                                                                                                 .Eof))),
+                                                                                             IdentifierName(Grammar.Eof.Value))),
                                                                                          Token(SyntaxKind
                                                                                              .CommaToken),
                                                                                          Argument(LiteralExpression(SyntaxKind.StringLiteralExpression,

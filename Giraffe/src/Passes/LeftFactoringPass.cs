@@ -13,21 +13,21 @@ public class LeftFactoringPass(Grammar grammar) : Pass(grammar) {
     }
   }
 
-  private bool LeftFactorNonterminalRules(string nonterminal) {
+  private bool LeftFactorNonterminalRules(Nonterminal nt) {
     bool changed = false;
-    Dictionary<string, List<Rule>> firstSymbolMap = [];
+    Dictionary<Symbol, List<Rule>> firstSymbolMap = [];
 
-    foreach (Rule rule in Grammar.GetAllRulesForNonterminal(nonterminal).Where(r => !r.IsEpsilon)) {
+    foreach (Rule rule in Grammar.GetAllRulesForNonterminal(nt).Where(r => !r.IsEpsilon)) {
       Symbol firstSymbol = rule.Symbols[0];
-      if (firstSymbolMap.TryGetValue(firstSymbol.Value, out List<Rule>? symbolRules)) {
+      if (firstSymbolMap.TryGetValue(firstSymbol, out List<Rule>? symbolRules)) {
         symbolRules.Add(rule);
       }
       else {
-        firstSymbolMap.Add(firstSymbol.Value, [rule]);
+        firstSymbolMap.Add(firstSymbol, [rule]);
       }
     }
 
-    foreach (string firstSymbol in firstSymbolMap.Keys) {
+    foreach (Symbol firstSymbol in firstSymbolMap.Keys) {
       List<Rule> rules = firstSymbolMap[firstSymbol];
       if (rules.Count < 2) {
         continue;
@@ -35,13 +35,13 @@ public class LeftFactoringPass(Grammar grammar) : Pass(grammar) {
 
       changed = true;
 
-      string tailName = $"{nonterminal}-{firstSymbol}#tail";
-      List<Rule> tails = rules.Select(r => new Rule(tailName, r.Symbols.RemoveAt(0))).ToList();
+      Nonterminal tailNt = new($"{nt.Value}-{firstSymbol.Value}#tail");
+      List<Rule> tails = rules.Select(r => new Rule(tailNt, r.Symbols.RemoveAt(0))).ToList();
       Grammar.Rules.RemoveWhere(r => rules.Contains(r));
 
-      Rule newHead = new(nonterminal, [firstSymbol, tailName]);
+      Rule newHead = new(nt, [firstSymbol, tailNt]);
 
-      Grammar.Nonterminals.Add(tailName);
+      Grammar.Nonterminals.Add(tailNt);
       Grammar.Rules.UnionWith(tails);
       Grammar.Rules.Add(newHead);
     }

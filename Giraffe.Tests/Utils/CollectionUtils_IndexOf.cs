@@ -1,15 +1,16 @@
 using System.Collections;
+using Giraffe.Utils;
 
-namespace Giraffe.Tests;
+namespace Giraffe.Tests.Utils;
 
-public class Utils_IndexOf {
+public class CollectionUtils_IndexOf {
   [Theory]
   [ClassData(typeof(IndexOfTestData))]
   public void GivenCollectionAndValue_WhenIndexOfCalled_ThenExpectedIndexReturned<T>(IList<T> collection,
                                                                                      T value,
                                                                                      int startIndex,
                                                                                      int expectedIndex) where T : notnull =>
-    Assert.Equal(expectedIndex, Utils.IndexOf(collection, value, startIndex));
+    Assert.Equal(expectedIndex, CollectionUtils.IndexOf(collection, value, startIndex));
 
   private class IndexOfTestData : IEnumerable<object[]> {
     public IEnumerator<object[]> GetEnumerator() {

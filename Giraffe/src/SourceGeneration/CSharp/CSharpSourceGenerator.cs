@@ -46,6 +46,6 @@ public abstract class CSharpSourceGenerator {
     ObjectCreationExpression(IdentifierName(exceptionClassName))
       .WithArgumentList(ArgumentList(SingletonSeparatedList(Argument(message))));
 
-  protected static string GetDisplayName(Grammar grammar, string symbol) =>
-    grammar.DisplayNames.GetValueOrDefault(symbol, symbol);
+  protected static string GetDisplayName(Grammar grammar, Symbol symbol) =>
+    grammar.DisplayNames.GetValueOrDefault(symbol.Value, symbol.Value);
 }
