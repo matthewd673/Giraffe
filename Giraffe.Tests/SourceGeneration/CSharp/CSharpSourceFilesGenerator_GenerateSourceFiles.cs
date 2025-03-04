@@ -1,4 +1,5 @@
 using Giraffe.Analyses;
+using Giraffe.GIR;
 using Giraffe.SourceGeneration.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 

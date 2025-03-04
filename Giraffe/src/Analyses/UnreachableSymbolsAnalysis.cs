@@ -1,3 +1,5 @@
+using Giraffe.GIR;
+
 namespace Giraffe.Analyses;
 
 /// <summary>

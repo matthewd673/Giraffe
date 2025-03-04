@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
 using Giraffe.RDT;
 
-namespace Giraffe;
+namespace Giraffe.GIR;
 
 public record GrammarSets(Grammar Grammar,
                           Dictionary<Nonterminal, HashSet<Terminal>> First,

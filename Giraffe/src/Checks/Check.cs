@@ -1,3 +1,5 @@
+using Giraffe.GIR;
+
 namespace Giraffe.Checks;
 
 public abstract class Check(Grammar grammar) {

@@ -1,8 +1,9 @@
-﻿using static Giraffe.GrammarFactory;
-using Giraffe.Analyses;
+﻿using Giraffe.Analyses;
+using Giraffe.GIR;
 using Giraffe.Passes;
 using Giraffe.SourceGeneration;
 using Giraffe.SourceGeneration.CSharp;
+using static Giraffe.GIR.GrammarFactory;
 
 namespace Giraffe;
 

@@ -1,3 +1,5 @@
+using Giraffe.GIR;
+
 namespace Giraffe.Passes;
 
 /// <summary>
@@ -16,7 +18,7 @@ public class UnitRuleEliminationPass(Grammar grammar) : Pass(grammar) {
       foreach (Rule rule in currentUnitRules) {
         sawUnit = true;
 
-        // This is impossible given the above check, but it casts the symbol to a Nonterminal elegantly.
+        // This should be impossible given the above check, but it casts the symbol to a Nonterminal elegantly.
         if (rule.Symbols[0] is not Nonterminal nt) {
           throw new Exception($"Rule is not a unit rule");
         }

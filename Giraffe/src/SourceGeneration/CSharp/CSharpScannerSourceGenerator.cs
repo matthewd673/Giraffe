@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Giraffe.GIR;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;

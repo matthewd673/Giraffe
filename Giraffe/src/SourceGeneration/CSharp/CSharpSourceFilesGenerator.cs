@@ -1,3 +1,5 @@
+using Giraffe.GIR;
+
 namespace Giraffe.SourceGeneration.CSharp;
 
 public class CSharpSourceFilesGenerator(GrammarSets grammarSets) {

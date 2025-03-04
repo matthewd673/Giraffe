@@ -1,3 +1,4 @@
+using Giraffe.GIR;
 using Giraffe.RDT;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;

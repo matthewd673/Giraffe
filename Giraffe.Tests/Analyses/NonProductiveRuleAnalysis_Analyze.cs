@@ -1,5 +1,6 @@
 using Giraffe.Analyses;
-using static Giraffe.GrammarFactory;
+using Giraffe.GIR;
+using static Giraffe.GIR.GrammarFactory;
 
 namespace Giraffe.Tests.Analyses;
 

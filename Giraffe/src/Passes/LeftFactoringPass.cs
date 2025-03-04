@@ -1,3 +1,6 @@
+using Giraffe.GIR;
+using static Giraffe.GIR.GrammarFactory;
+
 namespace Giraffe.Passes;
 
 /// <summary>
@@ -35,7 +38,7 @@ public class LeftFactoringPass(Grammar grammar) : Pass(grammar) {
 
       changed = true;
 
-      Nonterminal tailNt = new($"{nt.Value}-{firstSymbol.Value}#tail");
+      Nonterminal tailNt = Nt($"{nt.Value}-{firstSymbol.Value}#tail");
       List<Rule> tails = rules.Select(r => new Rule(tailNt, r.Symbols.RemoveAt(0))).ToList();
       Grammar.Rules.RemoveWhere(r => rules.Contains(r));
 

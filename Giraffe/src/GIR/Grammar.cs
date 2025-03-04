@@ -1,9 +1,9 @@
 using System.Text.RegularExpressions;
 
-namespace Giraffe;
+namespace Giraffe.GIR;
 
 public record Grammar {
-  public static Terminal Eof { get; } = new Terminal("eof");
+  public static Terminal Eof { get; } = new("eof");
 
   public HashSet<Terminal> Terminals { get; }
   public HashSet<Nonterminal> Nonterminals => Rules.Select(p => p.Nonterminal).ToHashSet();

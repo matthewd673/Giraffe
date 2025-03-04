@@ -1,3 +1,6 @@
+using Giraffe.GIR;
+using static Giraffe.GIR.GrammarFactory;
+
 namespace Giraffe.Passes;
 
 /// <summary>
@@ -30,17 +33,17 @@ public class DirectLeftRecursionEliminationPass(Grammar grammar) : Pass(grammar)
       throw new($"Grammar contains loop in rule for nonterminal \"{nt}\"");
     }
 
-    Grammar.Rules.UnionWith(others.Select(r => r with { Nonterminal = new($"{r.Nonterminal.Value}#head") }));
+    Grammar.Rules.UnionWith(others.Select(r => r with { Nonterminal = Nt($"{r.Nonterminal.Value}#head") }));
 
     Grammar.Rules.UnionWith(directLeftRecursive
-                              .Select(r => new Rule(new($"{r.Nonterminal.Value}#tail"), r.Symbols.RemoveAt(0))));
+                              .Select(r => R(Nt($"{r.Nonterminal.Value}#tail"), r.Symbols.RemoveAt(0))));
 
     Grammar.Rules.RemoveWhere(r => r.Nonterminal.Equals(nt));
 
-    Grammar.Rules.Add(new(new(tailsName), [new Nonterminal(tailName), new Nonterminal(tailsName)]));
-    Grammar.Rules.Add(new(new(tailsName), [new Nonterminal(tailName)]));
-    Grammar.Rules.Add(new(nt, [new Nonterminal(headName), new Nonterminal(tailsName)]));
-    Grammar.Rules.Add(new(nt, [new Nonterminal(headName)]));
+    Grammar.Rules.Add(R(tailsName, [Nt(tailName), Nt(tailsName)]));
+    Grammar.Rules.Add(R(tailsName, [Nt(tailName)]));
+    Grammar.Rules.Add(R(nt, [Nt(headName), Nt(tailsName)]));
+    Grammar.Rules.Add(R(nt, [Nt(headName)]));
   }
 
   private static bool IsDirectLeftRecursive(Rule rule) =>

@@ -1,4 +1,4 @@
-namespace Giraffe;
+namespace Giraffe.GIR;
 
 public abstract record Symbol {
   public string Value { get; }

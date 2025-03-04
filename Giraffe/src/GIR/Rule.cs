@@ -1,7 +1,7 @@
 using System.Collections.Immutable;
 using Giraffe.Utils;
 
-namespace Giraffe;
+namespace Giraffe.GIR;
 
 public record Rule {
   public Nonterminal Nonterminal { get; init; }

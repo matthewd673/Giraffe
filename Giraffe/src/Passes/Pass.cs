@@ -1,3 +1,5 @@
+using Giraffe.GIR;
+
 namespace Giraffe.Passes;
 
 public abstract class Pass(Grammar grammar) {
