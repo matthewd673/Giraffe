@@ -9,7 +9,20 @@ public class Program {
   public static void Main(string[] args) {
     Console.WriteLine("Giraffe");
 
-    const string outputDirectory = "GiraffeOutput";
+    const string outputDirectory = "/Users/matth/Documents/cs/Giraffe/Examples/ExampleRecognizer/Generated";
+
+    Rule[] rules = [
+      new("S", ["A", "B", "C", "D", "E"],
+          semanticAction: new(Before: "Console.WriteLine(\"Semantic action!\");",
+                              After: "Console.WriteLine(\"Done :D\");"),
+          symbolArguments: new() { { 2, ["A", "B"] } }),
+      new("A", ["a"]), new("A"),
+      new("B", ["b"]), new("B"),
+      new("C", ["c"],
+          semanticAction: new(Before: "Console.WriteLine(\"See C\");")),
+      new("D", ["d"]), new("D"),
+      new("E", ["e"]), new("E"),
+    ];
 
     // TEMP: Generate a Parser
     Grammar grammar = new(
@@ -20,26 +33,11 @@ public class Program {
         {"d", new("d")},
         {"e", new("e")},
       },
-      [
-        new("S", ["A", "B", "C", "D", "E"],
-            semanticAction: new(Before: "Console.WriteLine(\"Semantic action!\");",
-                                After: "Console.WriteLine(\"Done :D\");"),
-            symbolArguments: new() { {2, ["A", "B"]}}),
-        new("A", ["a"]), new("A", []),
-        new("B", ["b"]), new("B", []),
-        new("C", ["c"],
-            semanticAction: new(Before: "Console.WriteLine(\"See C\");"),
-            output: ["$a_param", "c", "$b_param"]),
-        new("D", ["d"]), new("D", []),
-        new("E", ["e"]), new("E", []),
-      ],
-      ["S"]
+      rules.ToHashSet(),
+      ["S"],
+      nonterminalParameters: new() { {"C", ["$a_param", "$b_param"]} },
+      displayNames: new() { {Grammar.Eof, "<end of input>" }, {"S", "Start"} }
     );
-
-    grammar.NonterminalParameters.Add("C", ["$a_param", "$b_param"]);
-
-    grammar.DisplayNames.Add(Grammar.Eof, "<end of input>");
-    grammar.DisplayNames.Add("S", "Start");
 
     SetsAnalysis setsAnalysis = new(grammar);
     GrammarSets sets = setsAnalysis.Analyze();

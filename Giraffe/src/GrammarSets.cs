@@ -28,24 +28,26 @@ public record GrammarSets(Grammar Grammar,
   private Prediction BuildPrediction(Rule rule) =>
     new(Predict[rule],
         BuildConsumptions(rule),
-        rule.Output
-            .Select(o => GetSymbolOrParameterIndex(o,
-                                                   rule.Symbols,
-                                                   Grammar.NonterminalParameters
-                                                          .GetValueOrDefault(rule.Name, [])))
-            .ToList(),
+        [], // TODO: Output
+        // rule.Output
+        //     .Select(o => GetSymbolOrParameterIndex(o,
+        //                                            rule.Symbols,
+        //                                            Grammar.NonterminalParameters
+        //                                                   .GetValueOrDefault(rule.Name, [])))
+        //     .ToList(),
         rule.SemanticAction);
 
   private List<Consumption> BuildConsumptions(Rule rule) =>
     rule.Symbols.Select((s, i) => SymbolToConsumption(s, i, rule)).ToList();
 
-  private Consumption SymbolToConsumption(string symbol, int index, Rule sourceRule) =>
-    Grammar.IsTerminal(symbol)
-      ? new TerminalConsumption(symbol)
-      : new NonterminalConsumption(symbol, sourceRule.SymbolArguments.GetValueOrDefault(index, [])
-                                                     .Select(a => GetSymbolOrParameterIndex(a,
-                                                               sourceRule.Symbols,
-                                                               Grammar.NonterminalParameters
+  private Consumption SymbolToConsumption(Symbol symbol, int index, Rule sourceRule) =>
+    symbol.IsTerminal
+      ? new TerminalConsumption(symbol.Value)
+      : new NonterminalConsumption(symbol.Value, sourceRule.SymbolArguments.GetValueOrDefault(index, [])
+                                                           .Select(a => GetSymbolOrParameterIndex(a,
+                                                                     ImmutableList.CreateRange(
+                                                                      sourceRule.Symbols.Select(s => s.Value)),
+                                                                     Grammar.NonterminalParameters
                                                                             .GetValueOrDefault(sourceRule.Name, [])))
                                                      .ToList());
 

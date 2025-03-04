@@ -15,15 +15,16 @@ public class UnreachableSymbolsAnalysis(Grammar grammar) : Analysis<IEnumerable<
       toSee.Remove(current);
 
       if (!Grammar.IsTerminal(current)) {
-        HashSet<string> rightHandSymbols = Grammar.Rules.Where(r => r.Name.Equals(current))
-                                                        .SelectMany(r => r.Symbols).ToHashSet();
+        HashSet<Symbol> rightHandSymbols = Grammar.Rules.Where(r => r.Name.Equals(current))
+                                                  .SelectMany(r => r.Symbols).ToHashSet();
 
         // Mark any terminal on the right hand sides as seen
-        seen.UnionWith(rightHandSymbols.Where(Grammar.IsTerminal));
+        seen.UnionWith(rightHandSymbols.Where(s => s.IsTerminal).Select(s => s.Value));
 
         // Recurse on any nonterminals in the right hand sides
-        toSee.UnionWith(rightHandSymbols.Where(s => !Grammar.IsTerminal(s))
-                                        .Where(s => !seen.Contains(s)));
+        toSee.UnionWith(rightHandSymbols.Where(s => !s.IsTerminal)
+                                        .Where(s => !seen.Contains(s.Value))
+                                        .Select(s => s.Value));
       }
 
       seen.Add(current);

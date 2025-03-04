@@ -49,7 +49,8 @@ public class EpsilonRuleEliminationPass(Grammar grammar) : Pass(grammar) {
 
     // Find all occurrences of the original NT in the grammar
     while (true) {
-      HashSet<Rule> rulesWithNt = Grammar.Rules.Where(r => r.Symbols.Contains(originalNt)).ToHashSet();
+      HashSet<Rule> rulesWithNt = Grammar.Rules.Where(r => r.Symbols.Exists(s => s.Value.Equals(originalNt)))
+                                         .ToHashSet();
       if (rulesWithNt.Count == 0) {
         break;
       }
@@ -59,8 +60,8 @@ public class EpsilonRuleEliminationPass(Grammar grammar) : Pass(grammar) {
       foreach (Rule r in rulesWithNt) {
         // Replace the original NT with the new version (which should have no epsilon rule)
         Grammar.Rules.Remove(r);
-        int ntInd = r.Symbols.FindIndex(s => s.Equals(originalNt));
-        Grammar.Rules.Add(r with { Symbols = r.Symbols.SetItem(ntInd, newNt) });
+        int ntInd = r.Symbols.FindIndex(s => s.Value.Equals(originalNt));
+        Grammar.Rules.Add(r with { Symbols = r.Symbols.SetItem(ntInd, new(newNt)) });
 
         // Create a copy of the production with NT removed (simulating the case where it goes to epsilon)
         Rule ruleWithoutNt = r with { Symbols = r.Symbols.RemoveAt(ntInd) };

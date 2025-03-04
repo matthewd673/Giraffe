@@ -29,11 +29,13 @@ public record Grammar {
   public Grammar(Dictionary<string, Regex> terminalDefs,
                  HashSet<Rule> rules,
                  HashSet<string> entryNonterminals,
+                 Dictionary<string, string>? displayNames = null,
                  SemanticAction? memberDeclarations = null,
                  Dictionary<string, List<string>>? nonterminalParameters = null) {
     this.terminalDefs = terminalDefs;
     Rules = rules;
     EntryNonterminals = entryNonterminals;
+    DisplayNames = displayNames ?? new();
     MemberDeclarations = memberDeclarations ?? new();
     NonterminalParameters = nonterminalParameters ?? new();
 
@@ -45,6 +47,9 @@ public record Grammar {
   public IEnumerable<Rule> GetAllRulesForNonterminal(string nonterminal) =>
     Rules.Where(rule => rule.Name.Equals(nonterminal));
 
+  public IEnumerable<Rule> GetAllRulesForNonterminal(Symbol nonterminal) =>
+    GetAllRulesForNonterminal(nonterminal.Value);
+
   /// <summary>
   /// Remove a nonterminal from the grammar. Also remove all rules associated with the nonterminal and all rules
   /// where the nonterminal appears on the right-hand side.
@@ -53,7 +58,7 @@ public record Grammar {
   public void RemoveAllOccurrencesOfNonterminal(string nonterminal) {
     Nonterminals.Remove(nonterminal);
     Rules.RemoveWhere(r => r.Name.Equals(nonterminal));
-    Rules.RemoveWhere(r => r.Symbols.Contains(nonterminal));
+    Rules.RemoveWhere(r => r.Symbols.Exists(s => s.Value.Equals(nonterminal)));
   }
 
   public static bool IsTerminal(string name) => char.IsLower(name[0]) || name.Equals(Eof);

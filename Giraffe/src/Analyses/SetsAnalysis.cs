@@ -11,11 +11,11 @@ public class SetsAnalysis(Grammar grammar) : Analysis<GrammarSets>(grammar) {
 
   public override GrammarSets Analyze() {
     foreach (string nonterminal in Grammar.Nonterminals) {
-      GetFirst(nonterminal);
+      GetFirst(new Symbol(nonterminal));
     }
 
     foreach (string nonterminal in Grammar.Nonterminals) {
-      GetFollow(nonterminal, []);
+      GetFollow(new(nonterminal), []);
     }
 
     foreach (Rule rule in Grammar.Rules) {
@@ -25,17 +25,17 @@ public class SetsAnalysis(Grammar grammar) : Analysis<GrammarSets>(grammar) {
     return new(Grammar, first, follow, predict);
   }
 
-  private HashSet<string> GetFirst(string symbol) {
-    if (Grammar.IsTerminal(symbol)) {
-      return [symbol];
+  private HashSet<string> GetFirst(Symbol symbol) {
+    if (symbol.IsTerminal) {
+      return [symbol.Value];
     }
 
-    if (first.TryGetValue(symbol, out HashSet<string>? set)) {
+    if (first.TryGetValue(symbol.Value, out HashSet<string>? set)) {
       return set;
     }
 
-    first[symbol] = ComputeFirst(symbol);
-    return first[symbol];
+    first[symbol.Value] = ComputeFirst(symbol.Value);
+    return first[symbol.Value];
   }
 
   private HashSet<string> GetFirst(Rule rule) {
@@ -44,7 +44,7 @@ public class SetsAnalysis(Grammar grammar) : Analysis<GrammarSets>(grammar) {
     }
 
     HashSet<string> firstSet = [];
-    foreach (string s in rule.Symbols) {
+    foreach (Symbol s in rule.Symbols) {
       firstSet.UnionWith(GetFirst(s));
       if (!HasEpsilon(s)) {
         break;
@@ -54,13 +54,13 @@ public class SetsAnalysis(Grammar grammar) : Analysis<GrammarSets>(grammar) {
     return firstSet;
   }
 
-  private HashSet<string> GetFollow(string symbol, HashSet<string> seen) {
-    if (follow.TryGetValue(symbol, out HashSet<string>? set)) {
+  private HashSet<string> GetFollow(Symbol symbol, HashSet<string> seen) {
+    if (follow.TryGetValue(symbol.Value, out HashSet<string>? set)) {
       return set;
     }
 
-    follow[symbol] = ComputeFollow(symbol, seen);
-    return follow[symbol];
+    follow[symbol.Value] = ComputeFollow(symbol, seen);
+    return follow[symbol.Value];
   }
 
   private HashSet<string> GetPredict(Rule rule) {
@@ -79,13 +79,13 @@ public class SetsAnalysis(Grammar grammar) : Analysis<GrammarSets>(grammar) {
                .Aggregate(new HashSet<string>(),
                           (acc, rule) => acc.Union(GetFirst(rule)).ToHashSet());
 
-  private HashSet<string> ComputeFollow(string symbol, HashSet<string> seen) {
-    if (Grammar.IsTerminal(symbol)) {
+  private HashSet<string> ComputeFollow(Symbol symbol, HashSet<string> seen) {
+    if (symbol.IsTerminal) {
       throw new($"Cannot compute follow set for terminal \"{symbol}\"");
     }
 
     // If this is an entry nonterminal, it must have EOF in its FOLLOW set.
-    HashSet<string> followSet = Grammar.EntryNonterminals.Contains(symbol) ? [Grammar.Eof] : [];
+    HashSet<string> followSet = Grammar.EntryNonterminals.Contains(symbol.Value) ? [Grammar.Eof] : [];
     foreach (Rule rule in Grammar.Rules.Where(r => r.Symbols.Contains(symbol))) {
       int searchIndex = 0;
       while (true) {
@@ -110,7 +110,7 @@ public class SetsAnalysis(Grammar grammar) : Analysis<GrammarSets>(grammar) {
         }
 
         if (searchIndex == rule.Symbols.Count && !seen.Contains(rule.Name)) {
-          followSet.UnionWith(GetFollow(rule.Name, seen.Union([rule.Name]).ToHashSet()));
+          followSet.UnionWith(GetFollow(new(rule.Name), seen.Union([rule.Name]).ToHashSet()));
         }
       }
     }
@@ -124,12 +124,12 @@ public class SetsAnalysis(Grammar grammar) : Analysis<GrammarSets>(grammar) {
     // If this rule is epsilon, or if every item within it can be epsilon,
     // then the PREDICT set also includes the FOLLOW set.
     if (rule.IsEpsilon || rule.Symbols.All(HasEpsilon)) {
-      predictSet.UnionWith(GetFollow(rule.Name, []));
+      predictSet.UnionWith(GetFollow(new(rule.Name), []));
     }
 
     return predictSet;
   }
 
-  private bool HasEpsilon(string symbol) =>
-    !Grammar.IsTerminal(symbol) && Grammar.GetAllRulesForNonterminal(symbol).Any(r => r.IsEpsilon);
+  private bool HasEpsilon(Symbol symbol) =>
+    symbol.IsTerminal && Grammar.GetAllRulesForNonterminal(symbol).Any(r => r.IsEpsilon);
 }

@@ -18,12 +18,12 @@ public class LeftFactoringPass(Grammar grammar) : Pass(grammar) {
     Dictionary<string, List<Rule>> firstSymbolMap = [];
 
     foreach (Rule rule in Grammar.GetAllRulesForNonterminal(nonterminal).Where(r => !r.IsEpsilon)) {
-      string firstSymbol = rule.Symbols[0];
-      if (firstSymbolMap.TryGetValue(firstSymbol, out List<Rule>? symbolRules)) {
+      Symbol firstSymbol = rule.Symbols[0];
+      if (firstSymbolMap.TryGetValue(firstSymbol.Value, out List<Rule>? symbolRules)) {
         symbolRules.Add(rule);
       }
       else {
-        firstSymbolMap.Add(firstSymbol, [rule]);
+        firstSymbolMap.Add(firstSymbol.Value, [rule]);
       }
     }
 

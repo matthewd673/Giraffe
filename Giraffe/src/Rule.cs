@@ -1,27 +1,38 @@
 using System.Collections.Immutable;
-using Giraffe.RDT;
 
 namespace Giraffe;
 
 public record Rule {
   public string Name { get; init; }
-  public ImmutableList<string> Symbols { get; init; }
+  public ImmutableList<Symbol> Symbols { get; init; }
   public SemanticAction SemanticAction { get; init; }
   public Dictionary<int, List<string>> SymbolArguments { get; init; }
-  public List<string> Output { get; init; }
 
   public bool IsEpsilon => Symbols.Count == 0;
 
   public Rule(string name,
-              ImmutableList<string> symbols,
+              ImmutableList<Symbol> symbols,
               SemanticAction? semanticAction = null,
-              Dictionary<int, List<string>>? symbolArguments = null,
-              List<string>? output = null) {
+              Dictionary<int, List<string>>? symbolArguments = null) {
     Name = name;
     Symbols = symbols;
     SemanticAction = semanticAction ?? new();
     SymbolArguments = symbolArguments ?? new();
-    Output = output ?? [..symbols]; // If no output is provided, default to a flat structure of all symbols in order
+  }
+
+  public Rule(string name,
+              ImmutableList<string> symbols,
+              SemanticAction? semanticAction = null,
+              Dictionary<int, List<string>>? symbolArguments = null)
+  : this(name, ImmutableList.CreateRange(symbols.Select(s => new Symbol(s))), semanticAction, symbolArguments) {
+    // Empty
+  }
+
+  public Rule(string name,
+              SemanticAction? semanticAction = null,
+              Dictionary<int, List<string>>? symbolArguments = null)
+  : this(name, ImmutableList.Create<Symbol>(), semanticAction, symbolArguments) {
+    // Empty
   }
 
   public override int GetHashCode() =>

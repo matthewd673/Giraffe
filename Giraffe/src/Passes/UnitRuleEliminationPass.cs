@@ -12,12 +12,11 @@ public class UnitRuleEliminationPass(Grammar grammar) : Pass(grammar) {
     while (true) {
       bool sawUnit = false;
 
-      List<Rule> currentUnitRules = Grammar.Rules.Where(rule => rule.Symbols.Count == 1 &&
-                                                                !Grammar.IsTerminal(rule.Symbols[0])).ToList();
+      List<Rule> currentUnitRules = Grammar.Rules.Where(rule => rule.Symbols is [{ IsTerminal: false }]).ToList();
       foreach (Rule rule in currentUnitRules) {
         sawUnit = true;
 
-        string nonterminal = rule.Symbols[0];
+        string nonterminal = rule.Symbols[0].Value;
         // If a rule has form `A -> A`, always remove it from the grammar.
         if (rule.Name.Equals(nonterminal)) {
           Grammar.Rules.Remove(rule);

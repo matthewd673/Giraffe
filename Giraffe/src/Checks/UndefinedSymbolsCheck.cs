@@ -6,10 +6,10 @@ namespace Giraffe.Checks;
 /// <param name="grammar">The Grammar to check.</param>
 public class UndefinedSymbolsCheck(Grammar grammar) : Check(grammar) {
   public override CheckResult Evaluate() {
-    List<string> undefined = Grammar.Rules
+    List<Symbol> undefined = Grammar.Rules
                                     .SelectMany(r => r.Symbols
-                                                      .Where(s => (Grammar.IsTerminal(s) && !Grammar.Terminals.Contains(s)) ||
-                                                                  (!Grammar.IsTerminal(s) && !Grammar.Nonterminals.Contains(s))))
+                                                      .Where(s => (s.IsTerminal && !Grammar.Terminals.Contains(s.Value)) ||
+                                                                  (!s.IsTerminal && !Grammar.Nonterminals.Contains(s.Value))))
                                     .ToList();
 
     return undefined.Count == 0
