@@ -1,4 +1,5 @@
 using Giraffe.Checks;
+using static Giraffe.GrammarFactory;
 
 namespace Giraffe.Tests.Checks;
 
@@ -10,13 +11,13 @@ public class UndefinedSymbolsCheck_Evaluate {
       { "b", new("b") },
     },
     [
-      new("S", ["A", "B"]),
-      new("A", ["a"]),
-      new("B", ["A", "B"]),
-      new("B", ["b"]),
-      new("B", []),
+      R("S", [Nt("A"), Nt("B")]),
+      R("A", [T("a")]),
+      R("B", [Nt("A"), Nt("B")]),
+      R("B", [T("b")]),
+      R("B", []),
     ],
-    ["S"]);
+    [Nt("S")]);
 
     UndefinedSymbolsCheck undefinedSymbolsCheck = new(grammar);
     Assert.True(undefinedSymbolsCheck.Evaluate().Pass);
@@ -28,13 +29,13 @@ public class UndefinedSymbolsCheck_Evaluate {
       { "a", new("a") },
     },
     [
-      new("S", ["A", "B"]),
-      new("S", ["B", "C"]),
-      new("A", ["a"]),
-      new("B", ["A", "B"]),
-      new("B", []),
+      R("S", [Nt("A"), Nt("B")]),
+      R("S", [Nt("B"), Nt("C")]),
+      R("A", [T("a")]),
+      R("B", [Nt("A"), Nt("B")]),
+      R("B", []),
     ],
-    ["S"]);
+    [Nt("S")]);
 
     UndefinedSymbolsCheck undefinedSymbolsCheck = new(grammar);
     Assert.False(undefinedSymbolsCheck.Evaluate().Pass);
@@ -43,13 +44,13 @@ public class UndefinedSymbolsCheck_Evaluate {
   [Fact]
   public void GivenGrammarWithUndefinedTerminals_WhenEvaluateCalled_ThenCheckFails() {
     Grammar grammar = new(new() {
-                            { "a", new("a") },
-                          }, [
-                               new("S", ["A", "B"]),
-                               new("A", ["a"]),
-                               new("B", ["b"]),
-                             ],
-                          ["S"]);
+      { "a", new("a") },
+    }, [
+      R("S", [Nt("A"), Nt("B")]),
+      R("A", [T("a")]),
+      R("B", [T("b")]),
+    ],
+    [Nt("S")]);
 
     UndefinedSymbolsCheck undefinedSymbolsCheck = new(grammar);
     Assert.False(undefinedSymbolsCheck.Evaluate().Pass);

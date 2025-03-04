@@ -1,4 +1,5 @@
 using Giraffe.Passes;
+using static Giraffe.GrammarFactory;
 
 namespace Giraffe.Tests.Passes;
 
@@ -10,28 +11,28 @@ public class UnitRuleElimination_Run {
       { "aa", new("A") },
     },
     [
-      new("S", ["A"]),
-      new("S", ["A", "B"]),
-      new("A", ["a"]),
-      new("A", ["aa"]),
-      new("B", []),
+      R("S", [Nt("A")]),
+      R("S", [Nt("A"), Nt("B")]),
+      R("A", [T("a")]),
+      R("A", [T("aa")]),
+      R("B", []),
     ],
-    ["S"]);
+    [Nt("S")]);
 
     UnitRuleEliminationPass unitRuleEliminationPass = new(grammar);
     unitRuleEliminationPass.Run();
 
-    Assert.Equal(["a", "aa", Grammar.Eof], grammar.Terminals);
-    Assert.Equal(["S", "A", "B"], grammar.Nonterminals);
+    Assert.Equal([T("a"), T("aa"), Grammar.Eof], grammar.Terminals);
+    Assert.Equal([Nt("S"), Nt("A"), Nt("B")], grammar.Nonterminals);
 
     Assert.Equal(
       [
-        new("S", ["a"]),
-        new("S", ["aa"]),
-        new("S", ["A", "B"]),
-        new("A", ["a"]),
-        new("A", ["aa"]),
-        new("B", []),
+        R("S", [T("a")]),
+        R("S", [T("aa")]),
+        R("S", [Nt("A"), Nt("B")]),
+        R("A", [T("a")]),
+        R("A", [T("aa")]),
+        R("B", []),
       ],
       grammar.Rules);
   }
@@ -42,28 +43,28 @@ public class UnitRuleElimination_Run {
       { "d", new("d") },
     },
     [
-      new("S", ["A", "$$"]),
-      new("A", ["B"]),
-      new("A", ["C"]),
-      new("B", ["D"]),
-      new("C", ["D"]),
-      new("D", ["d"]),
+      R("S", [Nt("A"), Grammar.Eof]),
+      R("A", [Nt("B")]),
+      R("A", [Nt("C")]),
+      R("B", [Nt("D")]),
+      R("C", [Nt("D")]),
+      R("D", [T("d")]),
     ],
-    ["S"]);
+    [Nt("S")]);
 
     UnitRuleEliminationPass unitRuleEliminationPass = new(grammar);
     unitRuleEliminationPass.Run();
 
-    Assert.Equal(["d", Grammar.Eof], grammar.Terminals);
-    Assert.Equal(["S", "A", "B", "C", "D"], grammar.Nonterminals);
+    Assert.Equal([T("d"), Grammar.Eof], grammar.Terminals);
+    Assert.Equal([Nt("S"), Nt("A"), Nt("B"), Nt("C"), Nt("D")], grammar.Nonterminals);
 
     Assert.Equal(
       [
-        new("S", ["A", "$$"]),
-        new("A", ["d"]),
-        new("B", ["d"]),
-        new("C", ["d"]),
-        new("D", ["d"]),
+        R("S", [Nt("A"), Grammar.Eof]),
+        R("A", [T("d")]),
+        R("B", [T("d")]),
+        R("C", [T("d")]),
+        R("D", [T("d")]),
       ],
       grammar.Rules);
   }
@@ -73,20 +74,20 @@ public class UnitRuleElimination_Run {
     Grammar grammar = new(
       [],
       [
-        new("S", ["A", "$$"]),
-        new("A", ["A"]),
+        R("S", [Nt("A"), Grammar.Eof]),
+        R("A", [Nt("A")]),
       ],
-      ["S"]);
+      [Nt("S")]);
 
     UnitRuleEliminationPass unitRuleEliminationPass = new(grammar);
     unitRuleEliminationPass.Run();
 
     Assert.Equal([Grammar.Eof], grammar.Terminals);
-    Assert.Equal(["S"], grammar.Nonterminals);
+    Assert.Equal([Nt("S")], grammar.Nonterminals);
 
     Assert.Equal(
       [
-        new("S", ["A", "$$"]), // A is now an undefined non-terminal
+        R("S", [Nt("A"), Grammar.Eof]), // A is now an undefined non-terminal
       ],
       grammar.Rules);
   }

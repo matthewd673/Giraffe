@@ -1,4 +1,5 @@
 using Giraffe.Analyses;
+using static Giraffe.GrammarFactory;
 
 namespace Giraffe.Tests.Analyses;
 
@@ -6,13 +7,13 @@ public class NonProductiveRuleAnalysis_Analyze {
   [Fact]
   public void GivenGrammarWithNoNonProductiveRules_WhenAnalyzeCalled_ThenEmptySetReturned() {
     Grammar grammar = new(new() {
-      { "a", new("a") }
+      { "a", new("a") },
     },
     [
-      new("S", []),
-      new("S", ["A"]),
-      new("A", ["a"]),
-    ], ["S"]);
+      R("S", []),
+      R("S", [Nt("A")]),
+      R("A", [T("a")]),
+    ], [Nt("S")]);
 
     NonProductiveRuleAnalysis nonProductiveRuleAnalysis = new(grammar);
     Assert.Equal([], nonProductiveRuleAnalysis.Analyze());
@@ -24,27 +25,27 @@ public class NonProductiveRuleAnalysis_Analyze {
       { "a", new("a") },
     },
     [
-      new("S", ["A"]),
-      new("S", ["B"]),
-      new("A", ["a"]),
-      new("B", ["B"]),
+      R("S", [Nt("A")]),
+      R("S", [Nt("B")]),
+      R("A", [T("a")]),
+      R("B", [Nt("B")]),
     ], []);
 
     NonProductiveRuleAnalysis nonProductiveRuleAnalysis = new(grammar);
-    Assert.Equal([new("S", ["B"]), new("B", ["B"])], nonProductiveRuleAnalysis.Analyze());
+    Assert.Equal([R("S", [Nt("B")]), R("B", [Nt("B")])], nonProductiveRuleAnalysis.Analyze());
   }
 
   [Fact]
   public void GivenGrammarWithMutuallyRecursiveRules_WhenAnalyzeCalled_thenRulesReturned() {
     Grammar grammar = new([],
     [
-      new("S", ["A"]),
-      new("A", ["B"]),
-      new("B", ["A"]),
+      R("S", [Nt("A")]),
+      R("A", [Nt("B")]),
+      R("B", [Nt("A")]),
     ], []);
 
     NonProductiveRuleAnalysis nonProductiveRuleAnalysis = new(grammar);
-    Assert.Equal([new("S", ["A"]), new("A", ["B"]), new("B", ["A"])],
+    Assert.Equal([R("S", [Nt("A")]), R("A", [Nt("B")]), R("B", [Nt("A")])],
                  nonProductiveRuleAnalysis.Analyze());
   }
 }

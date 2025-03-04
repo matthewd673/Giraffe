@@ -1,4 +1,5 @@
 using Giraffe.Passes;
+using static Giraffe.GrammarFactory;
 
 namespace Giraffe.Tests.Passes;
 
@@ -10,38 +11,38 @@ public class EpsilonRuleEliminationPass_Run {
         { "a", new("a") },
       },
       [
-        new("S", ["L", "a", "M"]),
-        new("L", ["L", "M"]),
-        new("L", []),
-        new("M", ["M", "M"]),
-        new("M", []),
+        R("S", [Nt("L"), T("a"), Nt("M")]),
+        R("L", [Nt("L"), Nt("M")]),
+        R("L", []),
+        R("M", [Nt("M"), Nt("M")]),
+        R("M", []),
       ],
-      ["S"]);
+      [Nt("S")]);
 
     EpsilonRuleEliminationPass epsilonRuleEliminationPass = new(grammar);
     epsilonRuleEliminationPass.Run();
 
-    Assert.Equal(["a", Grammar.Eof], grammar.Terminals);
-    Assert.Equal(["S", "L", "M", "L'", "M'"], grammar.Nonterminals);
+    Assert.Equal([T("a"), Grammar.Eof], grammar.Terminals);
+    Assert.Equal([Nt("S"), Nt("L"), Nt("M"), Nt("L'"), Nt("M'")], grammar.Nonterminals);
 
     Assert.Equal(
       [
-        new("S", ["L'", "a", "M'"]),
-        new("S", ["a", "M'"]),
-        new("S", ["L'", "a"]),
-        new("S", ["a"]),
-        new("L", ["L'", "M'"]),
-        new("L", ["L'"]),
-        new("L", ["M'"]),
-        new("L", []),
-        new("M", ["M'", "M'"]),
-        new("M", ["M'"]),
-        new("M", []),
-        new("L'", ["L'", "M'"]),
-        new("L'", ["L'"]),
-        new("L'", ["M'"]),
-        new("M'", ["M'", "M'"]),
-        new("M'", ["M'"]),
+        R("S", [Nt("L'"), T("a"), Nt("M'")]),
+        R("S", [T("a"), Nt("M'")]),
+        R("S", [Nt("L'"), T("a")]),
+        R("S", [T("a")]),
+        R("L", [Nt("L'"), Nt("M'")]),
+        R("L", [Nt("L'")]),
+        R("L", [Nt("M'")]),
+        R("L", []),
+        R("M", [Nt("M'"), Nt("M'")]),
+        R("M", [Nt("M'")]),
+        R("M", []),
+        R("L'", [Nt("L'"), Nt("M'")]),
+        R("L'", [Nt("L'")]),
+        R("L'", [Nt("M'")]),
+        R("M'", [Nt("M'"), Nt("M'")]),
+        R("M'", [Nt("M'")]),
       ],
       grammar.Rules);
   }

@@ -1,4 +1,5 @@
 using Giraffe.Passes;
+using static Giraffe.GrammarFactory;
 
 namespace Giraffe.Tests.Passes;
 
@@ -11,42 +12,42 @@ public class DirectLeftRecursionEliminationPass_Run {
         { "c", new("c") },
       },
       [
-        new("S", ["A"]),
-        new("A", ["A", "a"]),
-        new("A", ["A", "b"]),
-        new("A", ["c"]),
-      ], ["S"]);
+        R("S", [Nt("A")]),
+        R("A", [Nt("A"), T("a")]),
+        R("A", [Nt("A"), T("b")]),
+        R("A", [T("c")]),
+      ], [Nt("S")]);
 
     DirectLeftRecursionEliminationPass directLeftRecursionEliminationPass = new(grammar);
     directLeftRecursionEliminationPass.Run();
 
-    Assert.Equal(["a", "b", "c", Grammar.Eof], grammar.Terminals);
-    Assert.Equal(["S", "A", "A#tail", "A#tails", "A#head"], grammar.Nonterminals);
+    Assert.Equal([T("a"), T("b"), T("c"), Grammar.Eof], grammar.Terminals);
+    Assert.Equal([Nt("S"), Nt("A"), Nt("A#tail"), Nt("A#tails"), Nt("A#head")], grammar.Nonterminals);
 
     Assert.Equal([
-      new("S", ["A"]),
-      new("A", ["A#head", "A#tails"]),
-      new("A", ["A#head"]),
-      new("A#head", ["c"]),
-      new("A#tails", ["A#tail", "A#tails"]),
-      new("A#tails", ["A#tail"]),
-      new("A#tail", ["a"]),
-      new("A#tail", ["b"]),
+      R("S", [Nt("A")]),
+      R("A", [Nt("A#head"), Nt("A#tails")]),
+      R("A", [Nt("A#head")]),
+      R("A#head", [T("c")]),
+      R("A#tails", [Nt("A#tail"), Nt("A#tails")]),
+      R("A#tails", [Nt("A#tail")]),
+      R("A#tail", [T("a")]),
+      R("A#tail", [T("b")]),
     ], grammar.Rules);
   }
 
   [Fact]
   public void GivenGrammarWithIndirectLeftRecursion_WhenRunCalled_ThenGrammarNotChanged() {
-    HashSet<Rule> rules = [new("S", ["A", Grammar.Eof]),
-                           new("A", ["B"]),
-                           new("B", ["A"])];
-    Grammar grammar = new(new(), rules, ["S"]);
+    HashSet<Rule> rules = [R("S", [Nt("A"), Grammar.Eof]),
+                           R("A", [Nt("B")]),
+                           R("B", [Nt("A")])];
+    Grammar grammar = new(new(), rules, [Nt("S")]);
 
     DirectLeftRecursionEliminationPass directLeftRecursionEliminationPass = new(grammar);
     directLeftRecursionEliminationPass.Run();
 
     Assert.Equal([Grammar.Eof], grammar.Terminals);
-    Assert.Equal(["S", "A", "B"], grammar.Nonterminals);
+    Assert.Equal([Nt("S"), Nt("A"), Nt("B")], grammar.Nonterminals);
 
     Assert.Equal(rules, grammar.Rules);
   }
@@ -58,10 +59,10 @@ public class DirectLeftRecursionEliminationPass_Run {
         { "b", new("b") },
       },
       [
-        new("S", ["A"]),
-        new("A", ["A", "a"]),
-        new("A", ["A", "b"]),
-      ], ["S"]);
+        R("S", [Nt("A")]),
+        R("A", [Nt("A"), T("a")]),
+        R("A", [Nt("A"), T("b")]),
+      ], [Nt("S")]);
 
     DirectLeftRecursionEliminationPass directLeftRecursionEliminationPass = new(grammar);
     Assert.Throws<Exception>(directLeftRecursionEliminationPass.Run);

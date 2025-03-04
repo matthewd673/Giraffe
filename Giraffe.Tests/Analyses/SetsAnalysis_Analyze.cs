@@ -1,4 +1,5 @@
 using Giraffe.Analyses;
+using static Giraffe.GrammarFactory;
 
 namespace Giraffe.Tests.Analyses;
 
@@ -6,50 +7,50 @@ public class SetsAnalysis_Analyze {
   [Fact]
   public void GivenSimpleGrammar_WhenAnalyzeCalled_ThenExpectedSetsReturned() {
     List<Rule> rules = [
-      new("S", ["A", "B"]),
-      new("A", ["a"]),
-      new("A", []),
-      new("B", ["b"]),
+      R("S", [Nt("A"), Nt("B")]),
+      R("A", [T("a")]),
+      R("A", []),
+      R("B", [T("b")]),
     ];
     Grammar grammar = new(new() {
       { "a", new("a") },
       { "b", new("b") },
-    }, rules.ToHashSet(), ["S"]);
+    }, rules.ToHashSet(), [Nt("S")]);
 
     SetsAnalysis setsAnalysis = new(grammar);
     GrammarSets sets = setsAnalysis.Analyze();
 
     Assert.Equal(new() {
-      { "S", ["a", "b"] },
-      { "A", ["a"] },
-      { "B", ["b"] },
+      { Nt("S"), [T("a"), T("b")] },
+      { Nt("A"), [T("a")] },
+      { Nt("B"), [T("b")] },
     }, sets.First);
     Assert.Equal(new() {
-      { "S", [Grammar.Eof] },
-      { "A", ["b"] },
-      { "B", [Grammar.Eof] },
+      { Nt("S"), [Grammar.Eof] },
+      { Nt("A"), [T("b")] },
+      { Nt("B"), [Grammar.Eof] },
     }, sets.Follow);
     Assert.Equal(new() {
-      { rules[0], ["a", "b"] },
-      { rules[1], ["a"] },
-      { rules[2], ["b"] },
-      { rules[3], ["b"] },
+      { rules[0], [T("a"), T("b")] },
+      { rules[1], [T("a")] },
+      { rules[2], [T("b")] },
+      { rules[3], [T("b")] },
     }, sets.Predict);
   }
 
   [Fact]
   public void GivenGrammarWithConsecutiveEpsilons_WhenAnalyzeCalled_ThenExpectedSetsReturned() {
     List<Rule> rules = [
-      new("S", ["A", "B", "C", "D", "E"]),
-      new("A", ["a"]),
-      new("A", []),
-      new("B", ["b"]),
-      new("B", []),
-      new("C", ["c"]),
-      new("D", ["d"]),
-      new("D", []),
-      new("E", ["e"]),
-      new("E", []),
+      R("S", [Nt("A"), Nt("B"), Nt("C"), Nt("D"), Nt("E")]),
+      R("A", [T("a")]),
+      R("A", []),
+      R("B", [T("b")]),
+      R("B", []),
+      R("C", [T("c")]),
+      R("D", [T("d")]),
+      R("D", []),
+      R("E", [T("e")]),
+      R("E", []),
     ];
     Grammar grammar = new(new() {
       { "a", new("a") },
@@ -57,39 +58,39 @@ public class SetsAnalysis_Analyze {
       { "c", new("c") },
       { "d", new("d") },
       { "e", new("e") },
-    }, rules.ToHashSet(), ["S"]);
+    }, rules.ToHashSet(), [Nt("S")]);
 
     SetsAnalysis setsAnalysis = new(grammar);
     GrammarSets sets = setsAnalysis.Analyze();
 
     Assert.Equal(new() {
-      { "S", ["a", "b", "c"] },
-      { "A", ["a"] },
-      { "B", ["b"] },
-      { "C", ["c"] },
-      { "D", ["d"] },
-      { "E", ["e"] },
+      { Nt("S"), [T("a"), T("b"), T("c")] },
+      { Nt("A"), [T("a")] },
+      { Nt("B"), [T("b")] },
+      { Nt("C"), [T("c")] },
+      { Nt("D"), [T("d")] },
+      { Nt("E"), [T("e")] },
     }, sets.First);
 
     Assert.Equal(new() {
-      { "S", [Grammar.Eof] },
-      { "A", ["b", "c"] },
-      { "B", ["c"] },
-      { "C", ["d", "e", Grammar.Eof] },
-      { "D", ["e", Grammar.Eof] },
-      { "E", [Grammar.Eof] },
+      { Nt("S"), [Grammar.Eof] },
+      { Nt("A"), [T("b"), T("c")] },
+      { Nt("B"), [T("c")] },
+      { Nt("C"), [T("d"), T("e"), Grammar.Eof] },
+      { Nt("D"), [T("e"), Grammar.Eof] },
+      { Nt("E"), [Grammar.Eof] },
     }, sets.Follow);
 
     Assert.Equal(new() {
-      { rules[0], ["a", "b", "c"] },
-      { rules[1], ["a"] },
-      { rules[2], ["b", "c"] },
-      { rules[3], ["b"] },
-      { rules[4], ["c"] },
-      { rules[5], ["c"] },
-      { rules[6], ["d"] },
-      { rules[7], ["e", Grammar.Eof] },
-      { rules[8], ["e"] },
+      { rules[0], [T("a"), T("b"), T("c")] },
+      { rules[1], [T("a")] },
+      { rules[2], [T("b"), T("c")] },
+      { rules[3], [T("b")] },
+      { rules[4], [T("c")] },
+      { rules[5], [T("c")] },
+      { rules[6], [T("d")] },
+      { rules[7], [T("e"), Grammar.Eof] },
+      { rules[8], [T("e")] },
       { rules[9], [Grammar.Eof] },
     }, sets.Predict);
   }
@@ -97,80 +98,80 @@ public class SetsAnalysis_Analyze {
   [Fact]
   public void GivenGrammarWithRightRecursion_WhenAnalyzeCalled_ThenExpectedSetsReturned() {
     List<Rule> rules = [
-      new("E", ["T", "TT"]),
-      new("T", ["F", "FT"]),
-      new("TT", ["add", "T", "TT"]),
-      new("TT", []),
-      new("F", ["number"]),
-      new("FT", []),
+      R("E", [Nt("T"), Nt("TT")]),
+      R("T", [Nt("F"), Nt("FT")]),
+      R("TT", [T("add"), Nt("T"), Nt("TT")]),
+      R("TT", []),
+      R("F", [T("number")]),
+      R("FT", []),
     ];
     Grammar grammar = new(new() {
       { "add", new(@"\+") },
       { "number", new("[0-9]+") },
-    }, rules.ToHashSet(), ["E"]);
+    }, rules.ToHashSet(), [Nt("E")]);
 
     SetsAnalysis setsAnalysis = new(grammar);
     GrammarSets sets = setsAnalysis.Analyze();
 
     Assert.Equal(new() {
-      { "E", ["number"] },
-      { "T", ["number"] },
-      { "TT", ["add"] },
-      { "F", ["number"] },
-      { "FT", [] },
+      { Nt("E"), [T("number")] },
+      { Nt("T"), [T("number")] },
+      { Nt("TT"), [T("add")] },
+      { Nt("F"), [T("number")] },
+      { Nt("FT"), [] },
     }, sets.First);
 
     Assert.Equal(new() {
-      { "E", [Grammar.Eof] },
-      { "T", ["add", Grammar.Eof] },
-      { "TT", [Grammar.Eof] },
-      { "F", ["add", Grammar.Eof] },
-      { "FT", ["add", Grammar.Eof] },
+      { Nt("E"), [Grammar.Eof] },
+      { Nt("T"), [T("add"), Grammar.Eof] },
+      { Nt("TT"), [Grammar.Eof] },
+      { Nt("F"), [T("add"), Grammar.Eof] },
+      { Nt("FT"), [T("add"), Grammar.Eof] },
     }, sets.Follow);
 
     Assert.Equal(new() {
-      { rules[0], ["number"] },
-      { rules[1], ["number"] },
-      { rules[2], ["add"] },
+      { rules[0], [T("number")] },
+      { rules[1], [T("number")] },
+      { rules[2], [T("add")] },
       { rules[3], [Grammar.Eof] },
-      { rules[4], ["number"] },
-      { rules[5], ["add", Grammar.Eof] },
+      { rules[4], [T("number")] },
+      { rules[5], [T("add"), Grammar.Eof] },
     }, sets.Predict);
   }
 
   [Fact]
   public void GivenGrammarWithIndirectRightRecursion_WhenAnalyzeCalled_ThenExpectedSetsReturned() {
     List<Rule> rules = [
-      new("S", ["A", "B"]),
-      new("A", ["a"]),
-      new("B", ["b", "S"]),
-      new("B", ["b"]),
+      R("S", [Nt("A"), Nt("B")]),
+      R("A", [T("a")]),
+      R("B", [T("b"), Nt("S")]),
+      R("B", [T("b")]),
     ];
     Grammar grammar = new(new() {
       { "a", new("a") },
       { "b", new("b") },
-    }, rules.ToHashSet(), ["S"]);
+    }, rules.ToHashSet(), [Nt("S")]);
 
     SetsAnalysis setsAnalysis = new(grammar);
     GrammarSets sets = setsAnalysis.Analyze();
 
     Assert.Equal(new() {
-      { "S", ["a"] },
-      { "A", ["a"] },
-      { "B", ["b"] },
+      { Nt("S"), [T("a")] },
+      { Nt("A"), [T("a")] },
+      { Nt("B"), [T("b")] },
     }, sets.First);
 
     Assert.Equal(new() {
-      { "S", [Grammar.Eof] },
-      { "A", ["b"] },
-      { "B", [Grammar.Eof] },
+      { Nt("S"), [Grammar.Eof] },
+      { Nt("A"), [T("b")] },
+      { Nt("B"), [Grammar.Eof] },
     }, sets.Follow);
 
     Assert.Equal(new() {
-      { rules[0], ["a"] },
-      { rules[1], ["a"] },
-      { rules[2], ["b"] },
-      { rules[3], ["b"] },
+      { rules[0], [T("a")] },
+      { rules[1], [T("a")] },
+      { rules[2], [T("b")] },
+      { rules[3], [T("b")] },
     }, sets.Predict);
   }
 }
