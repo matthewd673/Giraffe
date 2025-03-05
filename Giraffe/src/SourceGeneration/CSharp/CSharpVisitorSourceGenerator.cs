@@ -6,8 +6,8 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Giraffe.SourceGeneration.CSharp;
 
-public class CSharpIVisitorSourceGenerator(Grammar grammar) : CSharpSourceGenerator {
-  public required string VisitorInterfaceName { get; init; }
+public class CSharpVisitorSourceGenerator(Grammar grammar) : CSharpSourceGenerator {
+  public required string VisitorClassName { get; init; }
   public required string VisitMethodName { get; init; }
   public required string ParseTreeRecordName { get; init; }
   public required string ParseNodeRecordName { get; init; }
@@ -28,9 +28,9 @@ public class CSharpIVisitorSourceGenerator(Grammar grammar) : CSharpSourceGenera
                                                   GenerateVisitorInterface()]))
       .NormalizeWhitespace();
 
-  private InterfaceDeclarationSyntax GenerateVisitorInterface() =>
-    InterfaceDeclaration(VisitorInterfaceName)
-      .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
+  private ClassDeclarationSyntax GenerateVisitorInterface() =>
+    ClassDeclaration(VisitorClassName)
+      .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.AbstractKeyword)))
       .WithTypeParameterList(TypeParameterList(SingletonSeparatedList(TypeParameter(Identifier(GenericName)))))
       .WithMembers(List<MemberDeclarationSyntax>([GenerateVisitMethodParseTreeOverload(),
                                                   GenerateVisitMethodParseNodeOverload(),
@@ -41,7 +41,8 @@ public class CSharpIVisitorSourceGenerator(Grammar grammar) : CSharpSourceGenera
                                                  ]));
 
   private MethodDeclarationSyntax GenerateVisitMethodParseTreeOverload() =>
-    GenerateVisitMethod(ParseTreeRecordName, "parseTree");
+    GenerateVisitMethod(ParseTreeRecordName, "parseTree")
+      .AddModifiers(Token(SyntaxKind.AbstractKeyword));
 
   private MethodDeclarationSyntax GenerateVisitMethodParseNodeOverload() =>
     GenerateVisitMethod(ParseNodeRecordName, "parseNode")
@@ -101,14 +102,10 @@ public class CSharpIVisitorSourceGenerator(Grammar grammar) : CSharpSourceGenera
                                                                IdentifierName(nonterminal.Value))),
                                         InvocationExpression(IdentifierName(GetVisitMethodName(nonterminal)))
                                           .WithArgumentList(ArgumentList(SingletonSeparatedList(
-                                                                            Argument(InvocationExpression(
-                                                                               MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
-                                                                                 MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
-                                                                                   IdentifierName(nonterminalParameterName),
-                                                                                   IdentifierName(NonterminalChildrenPropertyName)),
-                                                                                  IdentifierName("Select")))
-                                                                                .WithArgumentList(ArgumentList(SingletonSeparatedList(Argument(IdentifierName(VisitMethodName)))))
-                                                                               )))));
+                                                                            Argument(
+                                                                             MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                                                                               IdentifierName(nonterminalParameterName),
+                                                                               IdentifierName(NonterminalChildrenPropertyName)))))));
 
   private SwitchExpressionArmSyntax GenerateTokenSwitchExpressionArm(Terminal token, string tokenParameterName) =>
     SwitchExpressionArm(ConstantPattern(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
@@ -122,18 +119,17 @@ public class CSharpIVisitorSourceGenerator(Grammar grammar) : CSharpSourceGenera
 
   private MethodDeclarationSyntax GenerateVisitNonterminalMethodStub(Nonterminal nonterminal) =>
     MethodDeclaration(IdentifierName(GenericName), Identifier(GetVisitMethodName(nonterminal)))
-      .WithModifiers(TokenList(Token(SyntaxKind.ProtectedKeyword)))
+      .WithModifiers(TokenList(Token(SyntaxKind.ProtectedKeyword), Token(SyntaxKind.AbstractKeyword)))
       .WithParameterList(ParameterList(SingletonSeparatedList(Parameter(Identifier("children"))
-                                                                .WithType(GenericName(Identifier("IEnumerable"))
-                                                                            .WithTypeArgumentList(
-                                                                               TypeArgumentList(
-                                                                                SingletonSeparatedList<TypeSyntax>(
-                                                                                 IdentifierName(GenericName))))))))
+                                                                .WithType(ArrayType(IdentifierName(ParseNodeRecordName))
+                                                                            .WithRankSpecifiers(SingletonList(
+                                                                             ArrayRankSpecifier(SingletonSeparatedList<ExpressionSyntax>(
+                                                                              OmittedArraySizeExpression()))))))))
       .WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
 
   private MethodDeclarationSyntax GenerateVisitTokenMethodStub(Terminal token) =>
     MethodDeclaration(IdentifierName(GenericName), Identifier(GetVisitMethodName(token)))
-      .WithModifiers(TokenList(Token(SyntaxKind.ProtectedKeyword)))
+      .WithModifiers(TokenList(Token(SyntaxKind.ProtectedKeyword), Token(SyntaxKind.AbstractKeyword)))
       .WithParameterList(ParameterList(SingletonSeparatedList(Parameter(Identifier("image"))
                                                                 .WithType(PredefinedType(Token(SyntaxKind.StringKeyword))))))
       .WithSemicolonToken(Token(SyntaxKind.SemicolonToken));

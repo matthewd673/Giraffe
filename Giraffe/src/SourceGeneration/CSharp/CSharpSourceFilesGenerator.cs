@@ -33,7 +33,7 @@ public class CSharpSourceFilesGenerator(GrammarSets grammarSets) {
   public string NonterminalKindEnumName { get; init; } = "NtKind";
   public string TokenKindEnumName { get; init; } = "TokenKind";
 
-  public string VisitorInterfaceName { get; init; } = "IVisitor";
+  public string VisitorClassName { get; init; } = "Visitor";
   public string VisitorVisitMethodName { get; init; } = "Visit";
 
   public List<CSharpSourceFile> GenerateSourceFiles() {
@@ -134,9 +134,9 @@ public class CSharpSourceFilesGenerator(GrammarSets grammarSets) {
     };
     sourceFiles.Add(new(GetFileName(TokenKindEnumName), tokenKindSourceGenerator.Generate()));
 
-    CSharpIVisitorSourceGenerator visitorSourceGenerator = new(grammarSets.Grammar) {
+    CSharpVisitorSourceGenerator visitorSourceGenerator = new(grammarSets.Grammar) {
       FileNamespace = Namespace,
-      VisitorInterfaceName = VisitorInterfaceName,
+      VisitorClassName = VisitorClassName,
       VisitMethodName = VisitorVisitMethodName,
       ParseTreeRecordName = ParseTreeRecordName,
       ParseNodeRecordName = ParseNodeRecordName,
@@ -149,7 +149,7 @@ public class CSharpSourceFilesGenerator(GrammarSets grammarSets) {
       NonterminalKindEnumName = NonterminalKindEnumName,
       TokenKindEnumName = TokenKindEnumName,
     };
-    sourceFiles.Add(new(GetFileName(VisitorInterfaceName), visitorSourceGenerator.Generate()));
+    sourceFiles.Add(new(GetFileName(VisitorClassName), visitorSourceGenerator.Generate()));
 
     return sourceFiles;
   }
