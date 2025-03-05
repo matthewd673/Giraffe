@@ -16,46 +16,23 @@ public record GrammarSets(Grammar Grammar,
   private Prediction BuildEntryNonterminalPrediction(Nonterminal nonterminal) =>
     new(Grammar.GetAllRulesForNonterminal(nonterminal)
                .Aggregate(new HashSet<Terminal>(), (acc, rule) => acc.Union(Predict[rule]).ToHashSet()),
-        [new NonterminalConsumption(nonterminal, []), new TerminalConsumption(Grammar.Eof)],
-        [new SymbolIndex(0)], // TODO: Support custom outputs in entry routine predictions
-        new()); // TODO: Support semantic actions in entry routine predictions
+        // TODO: Support symbol transformations instead of just using the default
+        [new NonterminalConsumption(nonterminal, new()), new TerminalConsumption(Grammar.Eof, new())],
+        // TODO: Support semantic actions in entry routine predictions
+        new());
 
   private Routine BuildRoutine(Nonterminal nonterminal) =>
-    new(nonterminal,
-        Grammar.GetAllRulesForNonterminal(nonterminal).Select(BuildPrediction).ToList(),
-        Grammar.NonterminalParameters.GetValueOrDefault(nonterminal, []));
+    new(nonterminal, Grammar.GetAllRulesForNonterminal(nonterminal).Select(BuildPrediction).ToList());
 
   private Prediction BuildPrediction(Rule rule) =>
-    new(Predict[rule],
-        BuildConsumptions(rule),
-        [], // TODO: Output
-        // rule.Output
-        //     .Select(o => GetSymbolOrParameterIndex(o,
-        //                                            rule.Symbols,
-        //                                            Grammar.NonterminalParameters
-        //                                                   .GetValueOrDefault(rule.Name, [])))
-        //     .ToList(),
-        rule.SemanticAction);
+    new(Predict[rule], BuildConsumptions(rule), rule.SemanticAction);
 
   private List<Consumption> BuildConsumptions(Rule rule) =>
-    rule.Symbols.Select((s, i) => SymbolToConsumption(s, i, rule)).ToList();
+    rule.Symbols.Select((s, i) => SymbolToConsumption(s)).ToList();
 
-  private Consumption SymbolToConsumption(Symbol symbol, int index, Rule sourceRule) => symbol switch {
-    Terminal t => new TerminalConsumption(t),
-    Nonterminal nt => new NonterminalConsumption(nt,
-                                                 sourceRule.SymbolArguments.GetValueOrDefault(index, [])
-                                                           .Select(a => GetSymbolOrParameterIndex(a,
-                                                                     ImmutableList.CreateRange(sourceRule.Symbols.Select(s => s.Value)),
-                                                                     Grammar.NonterminalParameters
-                                                                            .GetValueOrDefault(sourceRule.Nonterminal, [])))
-                                                           .ToList()),
+  private Consumption SymbolToConsumption(Symbol symbol) => symbol switch {
+    Terminal t => new TerminalConsumption(t, t.Transformation),
+    Nonterminal nt => new NonterminalConsumption(nt, nt.Transformation),
     _ => throw new ArgumentOutOfRangeException($"Cannot convert symbol of type {symbol.GetType()} to consumption"),
   };
-
-  private static RDT.Index GetSymbolOrParameterIndex(string symbolOrArgument,
-                                              ImmutableList<string> ruleSymbols,
-                                              List<string> ntParameters) =>
-    Grammar.IsParameter(symbolOrArgument)
-      ? new ParameterIndex(ntParameters.IndexOf(symbolOrArgument))
-      : new SymbolIndex(ruleSymbols.IndexOf(symbolOrArgument));
 }
