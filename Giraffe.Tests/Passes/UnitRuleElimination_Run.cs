@@ -8,8 +8,8 @@ public class UnitRuleElimination_Run {
   [Fact]
   public void GivenGrammarWithSimpleUnitRule_WhenRunCalled_ThenUnitRuleRemovedProperly() {
     Grammar grammar = new(new() {
-      { "a", new("a") },
-      { "aa", new("A") },
+      { T("a"), new(new("a")) },
+      { T("aa"), new(new("A")) },
     },
     [
       R("S", [Nt("A")]),
@@ -41,7 +41,7 @@ public class UnitRuleElimination_Run {
   [Fact]
   public void GivenGrammarWithMultipleUnitRulesForANonterminal_WhenRunCalled_ThenUnitRulesRemovedProperly() {
     Grammar grammar = new(new() {
-      { "d", new("d") },
+      { T("d"), new(new("d")) },
     },
     [
       R("S", [Nt("A"), Grammar.Eof]),

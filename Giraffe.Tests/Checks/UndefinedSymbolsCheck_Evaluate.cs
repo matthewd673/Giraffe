@@ -8,8 +8,8 @@ public class UndefinedSymbolsCheck_Evaluate {
   [Fact]
   public void GivenGrammarWithNoUndefinedSymbols_WhenEvaluateCalled_ThenCheckPasses() {
     Grammar grammar = new(new() {
-      { "a", new("a") },
-      { "b", new("b") },
+      { T("a"), new(new("a")) },
+      { T("b"), new(new("b")) },
     },
     [
       R("S", [Nt("A"), Nt("B")]),
@@ -27,7 +27,7 @@ public class UndefinedSymbolsCheck_Evaluate {
   [Fact]
   public void GivenGrammarWithUndefinedNonterminals_WhenEvaluateCalled_ThenCheckFails() {
     Grammar grammar = new(new() {
-      { "a", new("a") },
+      { T("a"), new(new("a")) },
     },
     [
       R("S", [Nt("A"), Nt("B")]),
@@ -45,7 +45,7 @@ public class UndefinedSymbolsCheck_Evaluate {
   [Fact]
   public void GivenGrammarWithUndefinedTerminals_WhenEvaluateCalled_ThenCheckFails() {
     Grammar grammar = new(new() {
-      { "a", new("a") },
+      { T("a"), new(new("a")) },
     }, [
       R("S", [Nt("A"), Nt("B")]),
       R("A", [T("a")]),

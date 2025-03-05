@@ -8,7 +8,7 @@ public class NonProductiveRuleAnalysis_Analyze {
   [Fact]
   public void GivenGrammarWithNoNonProductiveRules_WhenAnalyzeCalled_ThenEmptySetReturned() {
     Grammar grammar = new(new() {
-      { "a", new("a") },
+      { T("a"), new(new("a")) },
     },
     [
       R("S", []),
@@ -23,7 +23,7 @@ public class NonProductiveRuleAnalysis_Analyze {
   [Fact]
   public void GivenGrammarWithInfinitelyAmbiguousRule_WhenAnalyzeCalled_ThenRulesReturned() {
     Grammar grammar = new(new() {
-      { "a", new("a") },
+      { T("a"), new(new("a")) },
     },
     [
       R("S", [Nt("A")]),

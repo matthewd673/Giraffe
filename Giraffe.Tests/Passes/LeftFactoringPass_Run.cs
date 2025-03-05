@@ -14,8 +14,8 @@ public class LeftFactoringPass_Run {
       R("B", []),
     ];
     Grammar grammar = new(new() {
-        { "a", new("a") },
-        { "b", new("b") },
+        { T("a"), new(new("a")) },
+        { T("b"), new(new("b")) },
       }, rules, [Nt("S")]);
 
     LeftFactoringPass leftFactoringPass = new(grammar);
@@ -30,9 +30,9 @@ public class LeftFactoringPass_Run {
   [Fact]
   public void GivenGrammarWithRulesWithCommonLeftFactor_WhenRunCalled_ThenRuleLeftFactored() {
     Grammar grammar = new(new() {
-      { "a", new("a") },
-      { "b", new("b") },
-      { "c", new("c") },
+      { T("a"), new(new("a")) },
+      { T("b"), new(new("b")) },
+      { T("c"), new(new("c")) },
     },
     [
       R("S", [T("a"), Nt("A")]),
@@ -62,9 +62,9 @@ public class LeftFactoringPass_Run {
   [Fact]
   public void GivenGrammarWithRulesWithMultipleCommonLeftFactors_WhenRunCalled_ThenRuleLeftFactoredRecursively() {
     Grammar grammar = new(new() {
-      { "a", new("a") },
-      { "b", new("b") },
-      { "c", new("c") },
+      { T("a"), new(new("a")) },
+      { T("b"), new(new("b")) },
+      { T("c"), new(new("c")) },
     },
     [
       R("S", [T("a"), Nt("A")]),

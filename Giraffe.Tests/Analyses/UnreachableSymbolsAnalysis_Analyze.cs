@@ -8,8 +8,8 @@ public class FindUnreachableGrammars_Analyze {
   [Fact]
   public void GivenGrammarWithNoUnreachableSymbols_WhenAnalyzeCalled_ThenEmptySetReturned() {
     Grammar grammar = new(new() {
-      { "a", new("a") },
-      { "b", new("b") },
+      { T("a"), new(new("a")) },
+      { T("b"), new(new("b")) },
     }, [
       R("S", [Nt("A"), Nt("B"), Grammar.Eof]),
       R("A", [T("a")]),
@@ -25,8 +25,8 @@ public class FindUnreachableGrammars_Analyze {
   [Fact]
   public void GivenGrammarWithEmptyEntrySet_WhenAnalyzeCalled_ThenAllSymbolsReturned() {
     Grammar grammar = new(new() {
-      { "a", new("a") },
-      { "b", new("b") },
+      { T("a"), new(new("a")) },
+      { T("b"), new(new("b")) },
     }, [
       R("S", [Nt("A"), Nt("B"), Grammar.Eof]),
       R("A", [T("a")]),
@@ -43,9 +43,9 @@ public class FindUnreachableGrammars_Analyze {
   [Fact]
   public void GivenGrammarWithUnreachableSymbols_WhenAnalyzeCalled_ThenUnreachableSymbolsReturned() {
     Grammar grammar = new(new() {
-      { "a", new("a") },
-      { "b", new("b") },
-      { "c", new("c") },
+      { T("a"), new(new("a")) },
+      { T("b"), new(new("b")) },
+      { T("c"), new(new("c")) },
     }, [
       R("S", [Nt("A"), Nt("B"), Grammar.Eof]),
       R("A", [T("a")]),

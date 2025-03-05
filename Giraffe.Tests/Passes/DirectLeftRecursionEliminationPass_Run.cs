@@ -8,9 +8,9 @@ public class DirectLeftRecursionEliminationPass_Run {
   [Fact]
   public void GivenGrammarWithDirectLeftRecursion_WhenRunCalled_ThenDirectLeftRecursionEliminated() {
     Grammar grammar = new(new() {
-        { "a", new("a") },
-        { "b", new("b") },
-        { "c", new("c") },
+        { T("a"), new(new("a")) },
+        { T("b"), new(new("b")) },
+        { T("c"), new(new("c")) },
       },
       [
         R("S", [Nt("A")]),
@@ -56,8 +56,8 @@ public class DirectLeftRecursionEliminationPass_Run {
   [Fact]
   public void GivenGrammarWithLoop_WhenRunCalled_ThenExceptionThrown() {
     Grammar grammar = new(new() {
-        { "a", new("a") },
-        { "b", new("b") },
+        { T("a"), new(new("a")) },
+        { T("b"), new(new("b")) },
       },
       [
         R("S", [Nt("A")]),

@@ -9,7 +9,7 @@ public class EpsilonRuleEliminationPass_Run {
   // Test case from "Parsing Techniques" Fig.s 4.10-4.11
   public void GivenGrammarWithEpsilonRules_WhenRunCalled_ThenEpsilonRulesRemovedProperly() {
     Grammar grammar = new(new() {
-        { "a", new("a") },
+        { T("a"), new(new("a")) },
       },
       [
         R("S", [Nt("L"), T("a"), Nt("M")]),

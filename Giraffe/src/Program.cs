@@ -31,12 +31,12 @@ public class Program {
     // TEMP: Generate a Parser
     Grammar grammar = new(
       new() {
-        { T("number"), new(new("[0-9]+"), false) },
-        { T("add"), new(new(@"\+"), false) },
-        { T("sub"), new(new("-"), false) },
-        { T("mul"), new(new(@"\*"), false) },
-        { T("div"), new(new("/"), false) },
-        { T("ws"), new(new(" +"), true)}
+        { T("number"), new(new("[0-9]+")) },
+        { T("add"), new(new(@"\+")) },
+        { T("sub"), new(new("-")) },
+        { T("mul"), new(new(@"\*")) },
+        { T("div"), new(new("/")) },
+        { T("ws"), new(new(" +"), true) },
       },
       rules.ToHashSet(),
       [new("EXPR")],

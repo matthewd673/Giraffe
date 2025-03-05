@@ -14,8 +14,8 @@ public class SetsAnalysis_Analyze {
       R("B", [T("b")]),
     ];
     Grammar grammar = new(new() {
-      { "a", new("a") },
-      { "b", new("b") },
+      { T("a"), new(new("a")) },
+      { T("b"), new(new("b")) },
     }, rules.ToHashSet(), [Nt("S")]);
 
     SetsAnalysis setsAnalysis = new(grammar);
@@ -54,11 +54,11 @@ public class SetsAnalysis_Analyze {
       R("E", []),
     ];
     Grammar grammar = new(new() {
-      { "a", new("a") },
-      { "b", new("b") },
-      { "c", new("c") },
-      { "d", new("d") },
-      { "e", new("e") },
+      { T("a"), new(new("a")) },
+      { T("b"), new(new("b")) },
+      { T("c"), new(new("c")) },
+      { T("d"), new(new("d")) },
+      { T("e"), new(new("e")) },
     }, rules.ToHashSet(), [Nt("S")]);
 
     SetsAnalysis setsAnalysis = new(grammar);
@@ -107,8 +107,8 @@ public class SetsAnalysis_Analyze {
       R("FT", []),
     ];
     Grammar grammar = new(new() {
-      { "add", new(@"\+") },
-      { "number", new("[0-9]+") },
+      { T("add"), new(new(@"\+")) },
+      { T("number"), new(new("[0-9]+")) },
     }, rules.ToHashSet(), [Nt("E")]);
 
     SetsAnalysis setsAnalysis = new(grammar);
@@ -149,8 +149,8 @@ public class SetsAnalysis_Analyze {
       R("B", [T("b")]),
     ];
     Grammar grammar = new(new() {
-      { "a", new("a") },
-      { "b", new("b") },
+      { T("a"), new(new("a")) },
+      { T("b"), new(new("b")) },
     }, rules.ToHashSet(), [Nt("S")]);
 
     SetsAnalysis setsAnalysis = new(grammar);
