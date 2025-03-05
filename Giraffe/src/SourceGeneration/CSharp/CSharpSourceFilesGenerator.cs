@@ -9,7 +9,6 @@ public class CSharpSourceFilesGenerator(GrammarSets grammarSets) {
   public string ScannerNameOfMethodName { get; init; } = "NameOf";
   public string ScannerPeekMethodName { get; init; } = "Peek";
   public string ScannerEatMethodName { get; init; } = "Eat";
-  public string ScannerScanNextMethodName { get; init; } = "ScanNext";
 
   public string ParserClassName { get; init; } = "Parser";
   public string ParserEntryMethodName { get; init; } = "Parse";
@@ -47,11 +46,11 @@ public class CSharpSourceFilesGenerator(GrammarSets grammarSets) {
       ScannerClassName = ScannerClassName,
       ScannerExceptionClassName = ScannerExceptionClassName,
       TokenRecordName = TokenRecordName,
-      TokenRecordImagePropertyName = TokenImagePropertyName,
+      TokenImagePropertyName = TokenImagePropertyName,
+      TokenKindPropertyName = TokenKindPropertyName,
       NameOfMethodName = ScannerNameOfMethodName,
       PeekMethodName = ScannerPeekMethodName,
       EatMethodName = ScannerEatMethodName,
-      ScanNextMethodName = ScannerScanNextMethodName,
       TerminalsOrdering = terminalsOrdering,
       TokenKindEnumName = TokenKindEnumName,
     };

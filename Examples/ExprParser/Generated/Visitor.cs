@@ -27,6 +27,7 @@ public abstract class Visitor<T>
         TokenKind.sub => Visitsub(token.Image),
         TokenKind.mul => Visitmul(token.Image),
         TokenKind.div => Visitdiv(token.Image),
+        TokenKind.ws => Visitws(token.Image),
         TokenKind.eof => Visiteof(token.Image),
         _ => throw new ArgumentOutOfRangeException(),
     };
@@ -43,5 +44,6 @@ public abstract class Visitor<T>
     protected abstract T Visitsub(string image);
     protected abstract T Visitmul(string image);
     protected abstract T Visitdiv(string image);
+    protected abstract T Visitws(string image);
     protected abstract T Visiteof(string image);
 }

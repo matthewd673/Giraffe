@@ -11,44 +11,42 @@ public class Program {
   public static void Main(string[] args) {
     Console.WriteLine("Giraffe");
 
-    const string outputDirectory = "/Users/matth/Documents/cs/Giraffe/Examples/ExampleRecognizer/Generated";
+    const string outputDirectory = "/Users/matth/Documents/cs/Giraffe/Examples/ExprParser/Generated";
 
     Rule[] rules = [
-      R("S", [Nt("A"), Nt("B"), Nt("C"), Nt("D"), Nt("E")]) with {
-        SemanticAction = new(Before: "Console.WriteLine(\"Semantic action!\");",
-                             After: "Console.WriteLine(\"Done :D\");"),
-        SymbolArguments = new() { { 2, ["A", "B"] } },
-      },
-      R("A", [T("a")]),
-      R("A", []),
-      R("B", [T("b")]),
-      R("B", []),
-      R("C", [T("c")]) with { SemanticAction = new(Before: "Console.WriteLine(\"See C\");") },
-      R("D", [T("d")]),
-      R("D", []),
-      R("E", [T("e")]),
-      R("E", []),
+      R("EXPR", [Nt("E1")]),
+      R("E1", [Nt("E2"), Nt("E1T") with { Transformation = new(Expand: true) }]),
+      R("E1T", [Nt("AO"), Nt("E2"), Nt("E1T") with { Transformation = new(Expand: true) }]),
+      R("E1T", []),
+      R("E2", [Nt("E3"), Nt("E2T") with { Transformation = new(Expand: true) }]),
+      R("E2T", [Nt("MO"), Nt("E3"), Nt("E2T") with { Transformation = new(Expand: true) }]),
+      R("E2T", []),
+      R("E3", [T("number")]),
+      R("AO", [T("add")]),
+      R("AO", [T("sub")]),
+      R("MO", [T("mul")]),
+      R("MO", [T("div")]),
     ];
 
     // TEMP: Generate a Parser
     Grammar grammar = new(
       new() {
-        {"a", new("a")},
-        {"b", new("b")},
-        {"c", new("c")},
-        {"d", new("d")},
-        {"e", new("e")},
+        { T("number"), new(new("[0-9]+"), false) },
+        { T("add"), new(new(@"\+"), false) },
+        { T("sub"), new(new("-"), false) },
+        { T("mul"), new(new(@"\*"), false) },
+        { T("div"), new(new("/"), false) },
+        { T("ws"), new(new(" +"), true)}
       },
       rules.ToHashSet(),
-      [new("S")],
-      nonterminalParameters: new() { {new("C"), ["$a_param", "$b_param"]} },
-      displayNames: new() { {Grammar.Eof.Value, "<end of input>" }, {"S", "Start"} }
+      [new("EXPR")],
+      displayNames: new() { {Grammar.Eof.Value, "<end of input>" } }
     );
 
     SetsAnalysis setsAnalysis = new(grammar);
     GrammarSets sets = setsAnalysis.Analyze();
 
-    CSharpSourceFilesGenerator sourceFilesGenerator = new(sets) { Namespace = "ExampleRecognizer.Generated" };
+    CSharpSourceFilesGenerator sourceFilesGenerator = new(sets) { Namespace = "ExprParser.Generated" };
     List<CSharpSourceFile> sourceFiles = sourceFilesGenerator.GenerateSourceFiles();
 
     if (!Directory.Exists(outputDirectory)) {

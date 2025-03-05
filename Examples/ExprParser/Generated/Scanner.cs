@@ -3,23 +3,35 @@ using System.Text.RegularExpressions;
 namespace ExprParser.Generated;
 public class Scanner(string input)
 {
-    private readonly Regex[] tokenDef = [new("[0-9]+"), new("\\+"), new("-"), new("\\*"), new("/")];
-    private readonly string[] names = ["number", "add", "sub", "mul", "div", "<end of input>"];
+    private readonly Regex[] tokenDef = [new("[0-9]+"), new("\\+"), new("-"), new("\\*"), new("/"), new(" +")];
+    private readonly string[] names = ["number", "add", "sub", "mul", "div", "ws", "<end of input>"];
+    private readonly TokenKind[] ignored = [TokenKind.ws];
     private int scanIndex;
     private Token? nextToken;
     public string NameOf(TokenKind terminal) => names[(int)terminal];
     public Token Peek()
     {
-        nextToken ??= ScanNext();
+        nextToken ??= SkipIgnored();
         return nextToken;
     }
 
     public Token Eat()
     {
-        nextToken ??= ScanNext();
+        nextToken ??= SkipIgnored();
         Token consumed = nextToken;
-        nextToken = ScanNext();
+        nextToken = SkipIgnored();
         return consumed;
+    }
+
+    private Token SkipIgnored()
+    {
+        Token next;
+        do
+        {
+            next = ScanNext();
+        }
+        while (ignored.Contains(next.Kind));
+        return next;
     }
 
     private Token ScanNext()

@@ -64,6 +64,10 @@ public class ExprVisitor : Visitor<int> {
   protected override int Visitsub(string image) => '-';
   protected override int Visitmul(string image) => '*';
   protected override int Visitdiv(string image) => '/';
+
+  protected override int Visitws(string image) {
+    throw new NotImplementedException();
+  }
   protected override int Visiteof(string image) {
     throw new NotImplementedException();
   }

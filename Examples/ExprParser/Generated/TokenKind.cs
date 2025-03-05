@@ -6,5 +6,6 @@ public enum TokenKind
     sub,
     mul,
     div,
+    ws,
     eof
 }

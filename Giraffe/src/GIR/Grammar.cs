@@ -24,25 +24,27 @@ public record Grammar {
   /// </summary>
   public Dictionary<Nonterminal, List<string>> NonterminalParameters { get; init; }
 
-  private Dictionary<string, Regex> terminalDefs;
+  private Dictionary<Terminal, TerminalDefinition> terminalDefs;
 
-  public Grammar(Dictionary<string, Regex> terminalDefs,
+  public Grammar(Dictionary<Terminal, TerminalDefinition> terminalDefs,
                  HashSet<Rule> rules,
                  HashSet<Nonterminal> entryNonterminals,
                  Dictionary<string, string>? displayNames = null,
                  SemanticAction? memberDeclarations = null,
                  Dictionary<Nonterminal, List<string>>? nonterminalParameters = null) {
     this.terminalDefs = terminalDefs;
+    this.terminalDefs.Add(Eof, new());
+
     Rules = rules;
     EntryNonterminals = entryNonterminals;
     DisplayNames = displayNames ?? new();
     MemberDeclarations = memberDeclarations ?? new();
     NonterminalParameters = nonterminalParameters ?? new();
 
-    Terminals = [..terminalDefs.Keys.Select(t => new Terminal(t)), Eof];
+    Terminals = [..terminalDefs.Keys];
   }
 
-  public Regex GetTerminalRule(Terminal terminal) => terminalDefs[terminal.Value];
+  public TerminalDefinition GetTerminalDefinition(Terminal terminal) => terminalDefs[terminal];
 
   public IEnumerable<Rule> GetAllRulesForNonterminal(Nonterminal nt) =>
     Rules.Where(rule => rule.Nonterminal.Equals(nt));

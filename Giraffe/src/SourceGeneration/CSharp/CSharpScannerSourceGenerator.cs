@@ -12,19 +12,22 @@ public class CSharpScannerSourceGenerator(Grammar grammar) : CSharpSourceGenerat
   public required string ScannerExceptionClassName { get; init; }
   public required string TokenRecordName { get; init; }
   public required string TokenKindEnumName { get; init; }
-  public required string TokenRecordImagePropertyName { get; init; }
+  public required string TokenImagePropertyName { get; init; }
+  public required string TokenKindPropertyName { get; init; }
   public required string NameOfMethodName { get; init; }
   public required string PeekMethodName { get; init; }
   public required string EatMethodName { get; init; }
-  public required string ScanNextMethodName { get; init; }
 
   public required List<Terminal> TerminalsOrdering { get; init; }
 
   private const string TokenDefArrayFieldName = "tokenDef";
   private const string NamesArrayFieldName = "names";
+  private const string IgnoredArrayFieldName = "ignored";
   private const string InputFieldName = "input";
   private const string ScanIndexFieldName = "scanIndex";
   private const string NextTokenFieldName = "nextToken";
+  private const string SkipIgnoredMethodName = "SkipIgnored";
+  private const string ScanNextMethodName = "ScanNext";
 
   public override CompilationUnitSyntax Generate() => GenerateScannerFile();
 
@@ -48,11 +51,14 @@ public class CSharpScannerSourceGenerator(Grammar grammar) : CSharpSourceGenerat
                                                                 .WithType(PredefinedType(Token(SyntaxKind.StringKeyword))))))
       .WithMembers(List<MemberDeclarationSyntax>([GenerateTokenDefArrayDeclaration(),
                                                   GenerateNamesArrayDeclaration(),
+                                                  GenerateIgnoredArrayDeclaration(),
                                                   // Boilerplate...
-                                                  ..GenerateFieldBoilerplate(),
+                                                  GenerateScanIndexFieldBoilerplate(),
+                                                  GenerateNextTokenFieldBoilerplate(),
                                                   GenerateNameOfMethodBoilerplate(),
                                                   GeneratePeekMethodBoilerplate(),
                                                   GenerateEatMethodBoilerplate(),
+                                                  GenerateSkipIgnoredMethodBoilerplate(),
                                                   GenerateScanNextMethodBoilerplate(),
                                                  ]));
 
@@ -70,7 +76,7 @@ public class CSharpScannerSourceGenerator(Grammar grammar) : CSharpSourceGenerat
     SeparatedList<CollectionElementSyntax>(GenerateCommaSeparatedList(TerminalsOrdering.Where(t => !t.Equals(Grammar.Eof)),
                                                                       terminal =>
                                                                           GenerateTokenDefElement(grammar
-                                                                              .GetTerminalRule(terminal))));
+                                                                              .GetTerminalDefinition(terminal).Regex)));
 
   private ExpressionElementSyntax GenerateTokenDefElement(Regex regex) =>
     ExpressionElement(ImplicitObjectCreationExpression()
@@ -92,9 +98,24 @@ public class CSharpScannerSourceGenerator(Grammar grammar) : CSharpSourceGenerat
     ExpressionElement(LiteralExpression(SyntaxKind.StringLiteralExpression,
                                         Literal(GetDisplayName(grammar, name))));
 
-  private FieldDeclarationSyntax[] GenerateFieldBoilerplate() => [GenerateScanIndexFieldBoilerplate(),
-                                                                  GenerateNextTokenFieldBoilerplate(),
-                                                                 ];
+  private FieldDeclarationSyntax GenerateIgnoredArrayDeclaration() =>
+      FieldDeclaration(VariableDeclaration(ArrayType(IdentifierName(TokenKindEnumName))
+                                               .WithRankSpecifiers(SingletonList(
+                                                                    ArrayRankSpecifier(
+                                                                     SingletonSeparatedList<ExpressionSyntax>(
+                                                                      OmittedArraySizeExpression())))))
+                           .WithVariables(SingletonSeparatedList(VariableDeclarator(IgnoredArrayFieldName)
+                                                                     .WithInitializer(EqualsValueClause(GenerateIgnoredCollection())))))
+          .WithModifiers(TokenList(Token(SyntaxKind.PrivateKeyword), Token(SyntaxKind.ReadOnlyKeyword)));
+
+  private CollectionExpressionSyntax GenerateIgnoredCollection() =>
+      CollectionExpression()
+          .WithElements(SeparatedList<CollectionElementSyntax>(GenerateCommaSeparatedList(
+                                                                grammar.Terminals
+                                                                       .Where(t => grammar.GetTerminalDefinition(t).Ignore),
+                                                                t => ExpressionElement(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                                                                        IdentifierName(TokenKindEnumName),
+                                                                        IdentifierName(t.Value))))));
 
   private static FieldDeclarationSyntax GenerateScanIndexFieldBoilerplate() =>
       FieldDeclaration(VariableDeclaration(PredefinedType(Token(SyntaxKind.IntKeyword)))
@@ -106,8 +127,8 @@ public class CSharpScannerSourceGenerator(Grammar grammar) : CSharpSourceGenerat
                            .WithVariables(SingletonSeparatedList(VariableDeclarator(Identifier(NextTokenFieldName)))))
           .WithModifiers(TokenList(Token(SyntaxKind.PrivateKeyword)));
 
-  private GlobalStatementSyntax GenerateNameOfMethodBoilerplate() =>
-    GlobalStatement(LocalFunctionStatement(PredefinedType(Token(SyntaxKind.StringKeyword)), Identifier(NameOfMethodName))
+  private MethodDeclarationSyntax GenerateNameOfMethodBoilerplate() =>
+    MethodDeclaration(PredefinedType(Token(SyntaxKind.StringKeyword)), Identifier(NameOfMethodName))
                     .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
                     .WithParameterList(ParameterList(SingletonSeparatedList(Parameter(Identifier("terminal"))
                                                                               .WithType(IdentifierName(TokenKindEnumName)))))
@@ -115,14 +136,14 @@ public class CSharpScannerSourceGenerator(Grammar grammar) : CSharpSourceGenerat
                                                                 .WithArgumentList(BracketedArgumentList(
                                                                  SingletonSeparatedList(Argument(CastExpression(PredefinedType(Token(SyntaxKind.IntKeyword)),
                                                                    IdentifierName("terminal"))))))))
-                    .WithSemicolonToken(Token(SyntaxKind.SemicolonToken)));
+                    .WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
 
   private GlobalStatementSyntax GeneratePeekMethodBoilerplate() =>
     GlobalStatement(LocalFunctionStatement(IdentifierName(TokenRecordName), Identifier(PeekMethodName))
                     .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
                     .WithBody(Block(ExpressionStatement(AssignmentExpression(SyntaxKind.CoalesceAssignmentExpression,
                                                                              IdentifierName(NextTokenFieldName),
-                                                                             InvocationExpression(IdentifierName(ScanNextMethodName)))),
+                                                                             InvocationExpression(IdentifierName(SkipIgnoredMethodName)))),
                                     ReturnStatement(IdentifierName(NextTokenFieldName)))));
 
   private GlobalStatementSyntax GenerateEatMethodBoilerplate() =>
@@ -130,14 +151,32 @@ public class CSharpScannerSourceGenerator(Grammar grammar) : CSharpSourceGenerat
                     .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
                     .WithBody(Block(ExpressionStatement(AssignmentExpression(SyntaxKind.CoalesceAssignmentExpression,
                                                                              IdentifierName(NextTokenFieldName),
-                                                                             InvocationExpression(IdentifierName(ScanNextMethodName)))),
+                                                                             InvocationExpression(IdentifierName(SkipIgnoredMethodName)))),
                                     LocalDeclarationStatement(VariableDeclaration(IdentifierName(TokenRecordName))
                                                                 .WithVariables(SingletonSeparatedList(VariableDeclarator(Identifier("consumed"))
                                                                                  .WithInitializer(EqualsValueClause(IdentifierName(NextTokenFieldName)))))),
                                     ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression,
                                                                              IdentifierName(NextTokenFieldName),
-                                                                             InvocationExpression(IdentifierName(ScanNextMethodName)))),
+                                                                             InvocationExpression(IdentifierName(SkipIgnoredMethodName)))),
                                     ReturnStatement(IdentifierName("consumed")))));
+
+  private MethodDeclarationSyntax GenerateSkipIgnoredMethodBoilerplate() =>
+    MethodDeclaration(IdentifierName(TokenRecordName), Identifier(SkipIgnoredMethodName))
+        .WithModifiers(TokenList(Token(SyntaxKind.PrivateKeyword)))
+        .WithBody(Block(LocalDeclarationStatement(VariableDeclaration(IdentifierName(TokenRecordName))
+                                                      .WithVariables(SingletonSeparatedList(VariableDeclarator(Identifier("next"))))),
+                        DoStatement(Block(SingletonList<StatementSyntax>(ExpressionStatement(
+                                                                          AssignmentExpression(SyntaxKind.SimpleAssignmentExpression,
+                                                                              IdentifierName("next"),
+                                                                              InvocationExpression(IdentifierName(ScanNextMethodName)))))),
+                                    InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                                                             IdentifierName(IgnoredArrayFieldName),
+                                                             IdentifierName("Contains")))
+                                        .WithArgumentList(ArgumentList(SingletonSeparatedList(
+                                                                        Argument(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                                                                            IdentifierName("next"),
+                                                                            IdentifierName(TokenKindPropertyName))))))),
+                        ReturnStatement(IdentifierName("next"))));
 
   private GlobalStatementSyntax GenerateScanNextMethodBoilerplate() =>
       GlobalStatement(LocalFunctionStatement(IdentifierName(TokenRecordName), Identifier(ScanNextMethodName))
@@ -218,7 +257,7 @@ public class CSharpScannerSourceGenerator(Grammar grammar) : CSharpSourceGenerat
                                                                          MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                                                              MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                                                                  IdentifierName("best"),
-                                                                                 IdentifierName(TokenRecordImagePropertyName)),
+                                                                                 IdentifierName(TokenImagePropertyName)),
                                                                              IdentifierName("Length"))),
                                                                      Block(SingletonList<
                                                                                StatementSyntax>(ExpressionStatement(AssignmentExpression(SyntaxKind.SimpleAssignmentExpression,
@@ -260,7 +299,7 @@ public class CSharpScannerSourceGenerator(Grammar grammar) : CSharpSourceGenerat
                                                                                MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                                                                    MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                                                                        IdentifierName("best"),
-                                                                                       IdentifierName(TokenRecordImagePropertyName)),
+                                                                                       IdentifierName(TokenImagePropertyName)),
                                                                                    IdentifierName("Length")))),
                                       ReturnStatement(IdentifierName("best")))));
 
