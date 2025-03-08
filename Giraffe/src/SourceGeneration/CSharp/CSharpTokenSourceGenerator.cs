@@ -11,6 +11,7 @@ public class CSharpTokenSourceGenerator : CSharpSourceGenerator {
   public required string TokenKindEnumName { get; init; }
   public required string KindPropertyName { get; init; }
   public required string ImagePropertyName { get; init; }
+  public required string IndexPropertyName { get; init; }
 
   public override CompilationUnitSyntax Generate() =>
     CompilationUnit()
@@ -27,6 +28,9 @@ public class CSharpTokenSourceGenerator : CSharpSourceGenerator {
         Token(SyntaxKind.CommaToken),
         Parameter(Identifier(ImagePropertyName))
           .WithType(PredefinedType(Token(SyntaxKind.StringKeyword))),
+          Token(SyntaxKind.CommaToken),
+          Parameter(Identifier(IndexPropertyName))
+            .WithType(PredefinedType(Token(SyntaxKind.IntKeyword))),
       })))
       .WithBaseList(BaseList(SingletonSeparatedList<BaseTypeSyntax>(SimpleBaseType(IdentifierName(ParseNodeRecordName)))))
       .WithSemicolonToken(Token(SyntaxKind.SemicolonToken));

@@ -21,6 +21,7 @@ public class CSharpSourceFilesGenerator(GrammarSets grammarSets) {
   public string TokenRecordName { get; init; } = "Token";
   public string TokenKindPropertyName { get; init; } = "Kind";
   public string TokenImagePropertyName { get; init; } = "Image";
+  public string TokenIndexPropertyName { get; init; } = "Index";
 
   public string NonterminalRecordName { get; init; } = "Nonterminal";
   public string NonterminalKindPropertyName { get; init; } = "Kind";
@@ -98,6 +99,7 @@ public class CSharpSourceFilesGenerator(GrammarSets grammarSets) {
       TokenKindEnumName = TokenKindEnumName,
       KindPropertyName = TokenKindPropertyName,
       ImagePropertyName = TokenImagePropertyName,
+      IndexPropertyName = TokenIndexPropertyName,
     };
     sourceFiles.Add(new(GetFileName(TokenRecordName), tokenSourceGenerator.Generate()));
 

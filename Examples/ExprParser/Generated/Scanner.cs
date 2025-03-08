@@ -38,7 +38,7 @@ public class Scanner(string input)
     {
         if (scanIndex >= input.Length)
         {
-            return new(TokenKind.eof, "");
+            return new(TokenKind.eof, "", scanIndex);
         }
 
         Token? best = null;
@@ -50,10 +50,10 @@ public class Scanner(string input)
                 continue;
             }
 
-            best ??= new((TokenKind)t, match.Value);
+            best ??= new((TokenKind)t, match.Value, scanIndex);
             if (match.Length > best.Image.Length)
             {
-                best = new((TokenKind)t, match.Value);
+                best = new((TokenKind)t, match.Value, scanIndex);
             }
         }
 

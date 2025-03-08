@@ -22,13 +22,13 @@ public abstract class Visitor<T>
     };
     public T Visit(Token token) => token.Kind switch
     {
-        TokenKind.number => Visitnumber(token.Image),
-        TokenKind.add => Visitadd(token.Image),
-        TokenKind.sub => Visitsub(token.Image),
-        TokenKind.mul => Visitmul(token.Image),
-        TokenKind.div => Visitdiv(token.Image),
-        TokenKind.ws => Visitws(token.Image),
-        TokenKind.eof => Visiteof(token.Image),
+        TokenKind.number => Visitnumber(token),
+        TokenKind.add => Visitadd(token),
+        TokenKind.sub => Visitsub(token),
+        TokenKind.mul => Visitmul(token),
+        TokenKind.div => Visitdiv(token),
+        TokenKind.ws => Visitws(token),
+        TokenKind.eof => Visiteof(token),
         _ => throw new ArgumentOutOfRangeException(),
     };
     protected abstract T VisitEXPR(ParseNode[] children);
@@ -39,11 +39,11 @@ public abstract class Visitor<T>
     protected abstract T VisitE3(ParseNode[] children);
     protected abstract T VisitAO(ParseNode[] children);
     protected abstract T VisitMO(ParseNode[] children);
-    protected abstract T Visitnumber(string image);
-    protected abstract T Visitadd(string image);
-    protected abstract T Visitsub(string image);
-    protected abstract T Visitmul(string image);
-    protected abstract T Visitdiv(string image);
-    protected abstract T Visitws(string image);
-    protected abstract T Visiteof(string image);
+    protected abstract T Visitnumber(Token token);
+    protected abstract T Visitadd(Token token);
+    protected abstract T Visitsub(Token token);
+    protected abstract T Visitmul(Token token);
+    protected abstract T Visitdiv(Token token);
+    protected abstract T Visitws(Token token);
+    protected abstract T Visiteof(Token token);
 }

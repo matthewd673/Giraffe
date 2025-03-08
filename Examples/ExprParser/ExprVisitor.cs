@@ -59,16 +59,16 @@ public class ExprVisitor : Visitor<int> {
 
   protected override int VisitAO(ParseNode[] children) => Visit(children[0]);
   protected override int VisitMO(ParseNode[] children) => Visit(children[0]);
-  protected override int Visitnumber(string image) => Convert.ToInt32(image);
-  protected override int Visitadd(string image) => '+';
-  protected override int Visitsub(string image) => '-';
-  protected override int Visitmul(string image) => '*';
-  protected override int Visitdiv(string image) => '/';
+  protected override int Visitnumber(Token token) => Convert.ToInt32(token.Image);
+  protected override int Visitadd(Token token) => '+';
+  protected override int Visitsub(Token token) => '-';
+  protected override int Visitmul(Token token) => '*';
+  protected override int Visitdiv(Token token) => '/';
 
-  protected override int Visitws(string image) {
+  protected override int Visitws(Token token) {
     throw new NotImplementedException();
   }
-  protected override int Visiteof(string image) {
+  protected override int Visiteof(Token token) {
     throw new NotImplementedException();
   }
 

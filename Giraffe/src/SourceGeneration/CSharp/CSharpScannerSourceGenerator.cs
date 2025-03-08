@@ -191,17 +191,14 @@ public class CSharpScannerSourceGenerator(Grammar grammar) : CSharpSourceGenerat
                                                   Block(SingletonList<
                                                             StatementSyntax>(ReturnStatement(ImplicitObjectCreationExpression()
                                                                                  .WithArgumentList(ArgumentList(SeparatedList
-                                                                                 <
-                                                                                     ArgumentSyntax>(new
-                                                                                     SyntaxNodeOrToken
-                                                                                     [] {
+                                                                                 <ArgumentSyntax>(new SyntaxNodeOrToken[] {
                                                                                          Argument(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                                                                              IdentifierName(TokenKindEnumName),
                                                                                              IdentifierName(Grammar.Eof.Value))),
-                                                                                         Token(SyntaxKind
-                                                                                             .CommaToken),
-                                                                                         Argument(LiteralExpression(SyntaxKind.StringLiteralExpression,
-                                                                                             Literal("")))
+                                                                                         Token(SyntaxKind.CommaToken),
+                                                                                         Argument(LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(""))),
+                                                                                         Token(SyntaxKind.CommaToken),
+                                                                                         Argument(IdentifierName(ScanIndexFieldName)),
                                                                                      }))))))),
                                       LocalDeclarationStatement(VariableDeclaration(NullableType(IdentifierName(TokenRecordName)))
                                                                     .WithVariables(SingletonSeparatedList(VariableDeclarator(Identifier("best"))
@@ -221,14 +218,10 @@ public class CSharpScannerSourceGenerator(Grammar grammar) : CSharpSourceGenerat
                                                                                                 .WithArgumentList(BracketedArgumentList(SingletonSeparatedList(Argument(IdentifierName("t"))))),
                                                                                             IdentifierName("Match")))
                                                                                         .WithArgumentList(ArgumentList(SeparatedList
-                                                                                        <
-                                                                                            ArgumentSyntax>(new
-                                                                                            SyntaxNodeOrToken
-                                                                                            [] {
+                                                                                        <ArgumentSyntax>(new SyntaxNodeOrToken[] {
                                                                                                 Argument(IdentifierName(InputFieldName)),
-                                                                                                Token(SyntaxKind
-                                                                                                    .CommaToken),
-                                                                                                Argument(IdentifierName(ScanIndexFieldName))
+                                                                                                Token(SyntaxKind.CommaToken),
+                                                                                                Argument(IdentifierName(ScanIndexFieldName)),
                                                                                             })))))))),
                                                          IfStatement(BinaryExpression(SyntaxKind.LogicalOrExpression, PrefixUnaryExpression(SyntaxKind.LogicalNotExpression, MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName("match"), IdentifierName("Success"))), BinaryExpression(SyntaxKind.GreaterThanExpression, MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName("match"), IdentifierName("Index")), IdentifierName(ScanIndexFieldName))),
                                                                      Block(SingletonList<
@@ -237,17 +230,15 @@ public class CSharpScannerSourceGenerator(Grammar grammar) : CSharpSourceGenerat
                                                                                  IdentifierName("best"),
                                                                                  ImplicitObjectCreationExpression()
                                                                                      .WithArgumentList(ArgumentList(SeparatedList
-                                                                                     <
-                                                                                         ArgumentSyntax>(new
-                                                                                         SyntaxNodeOrToken
-                                                                                         [] {
+                                                                                     <ArgumentSyntax>(new SyntaxNodeOrToken[] {
                                                                                              Argument(CastExpression(IdentifierName(TokenKindEnumName),
                                                                                                  IdentifierName("t"))),
-                                                                                             Token(SyntaxKind
-                                                                                                 .CommaToken),
+                                                                                             Token(SyntaxKind.CommaToken),
                                                                                              Argument(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                                                                                  IdentifierName("match"),
-                                                                                                 IdentifierName("Value")))
+                                                                                                 IdentifierName("Value"))),
+                                                                                             Token(SyntaxKind.CommaToken),
+                                                                                             Argument(IdentifierName(ScanIndexFieldName)),
                                                                                          }))))),
                                                          IfStatement(
                                                                      BinaryExpression(SyntaxKind.GreaterThanExpression,
@@ -264,17 +255,15 @@ public class CSharpScannerSourceGenerator(Grammar grammar) : CSharpSourceGenerat
                                                                                IdentifierName("best"),
                                                                                ImplicitObjectCreationExpression()
                                                                                    .WithArgumentList(ArgumentList(SeparatedList
-                                                                                   <
-                                                                                       ArgumentSyntax>(new
-                                                                                       SyntaxNodeOrToken
-                                                                                       [] {
+                                                                                   <ArgumentSyntax>(new SyntaxNodeOrToken[] {
                                                                                            Argument(CastExpression(IdentifierName(TokenKindEnumName),
                                                                                                IdentifierName("t"))),
-                                                                                           Token(SyntaxKind
-                                                                                               .CommaToken),
+                                                                                           Token(SyntaxKind.CommaToken),
                                                                                            Argument(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                                                                                IdentifierName("match"),
-                                                                                               IdentifierName("Value")))
+                                                                                               IdentifierName("Value"))),
+                                                                                           Token(SyntaxKind.CommaToken),
+                                                                                           Argument(IdentifierName(ScanIndexFieldName)),
                                                                                        }))))))))))
                                           .WithDeclaration(VariableDeclaration(PredefinedType(Token(SyntaxKind
                                                                                    .IntKeyword)))

@@ -113,9 +113,7 @@ public class CSharpVisitorSourceGenerator(Grammar grammar) : CSharpSourceGenerat
                                                                IdentifierName(token.Value))),
                                         InvocationExpression(IdentifierName(GetVisitMethodName(token)))
                                           .WithArgumentList(ArgumentList(SingletonSeparatedList(
-                                                                          Argument(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
-                                                                               IdentifierName(tokenParameterName),
-                                                                               IdentifierName(TokenImagePropertyName)))))));
+                                                                          Argument(IdentifierName(tokenParameterName))))));
 
   private MethodDeclarationSyntax GenerateVisitNonterminalMethodStub(Nonterminal nonterminal) =>
     MethodDeclaration(IdentifierName(GenericName), Identifier(GetVisitMethodName(nonterminal)))
@@ -130,8 +128,8 @@ public class CSharpVisitorSourceGenerator(Grammar grammar) : CSharpSourceGenerat
   private MethodDeclarationSyntax GenerateVisitTokenMethodStub(Terminal token) =>
     MethodDeclaration(IdentifierName(GenericName), Identifier(GetVisitMethodName(token)))
       .WithModifiers(TokenList(Token(SyntaxKind.ProtectedKeyword), Token(SyntaxKind.AbstractKeyword)))
-      .WithParameterList(ParameterList(SingletonSeparatedList(Parameter(Identifier("image"))
-                                                                .WithType(PredefinedType(Token(SyntaxKind.StringKeyword))))))
+      .WithParameterList(ParameterList(SingletonSeparatedList(Parameter(Identifier("token"))
+                                                                .WithType(IdentifierName(TokenRecordName)))))
       .WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
 
   private string GetVisitMethodName(Symbol symbol) => $"Visit{symbol.Value}";
