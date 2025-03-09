@@ -4,7 +4,7 @@ using static Giraffe.GIR.GrammarFactory;
 
 namespace Giraffe.Tests.Passes;
 
-public class UnitRuleElimination_Run {
+public class UnitRuleEliminationTest {
   [Fact]
   public void GivenGrammarWithSimpleUnitRule_WhenRunCalled_ThenUnitRuleRemovedProperly() {
     Grammar grammar = new(new() {

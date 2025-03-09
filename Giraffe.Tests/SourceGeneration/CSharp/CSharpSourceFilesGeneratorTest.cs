@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Giraffe.Tests.SourceGeneration.CSharp;
 
-public class CSharpSourceFilesGenerator_GenerateSourceFiles {
+public class CSharpSourceFilesGeneratorTest {
   [Fact]
   public void GivenCustomNamespace_WhenGenerateSourceFilesCalled_ThenEveryFileHasTheCorrectNamespace() {
     const string testNamespace = "TestNamespace";

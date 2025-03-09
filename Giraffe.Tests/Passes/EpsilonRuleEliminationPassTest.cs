@@ -4,7 +4,7 @@ using static Giraffe.GIR.GrammarFactory;
 
 namespace Giraffe.Tests.Passes;
 
-public class EpsilonRuleEliminationPass_Run {
+public class EpsilonRuleEliminationPassTest {
   [Fact]
   // Test case from "Parsing Techniques" Fig.s 4.10-4.11
   public void GivenGrammarWithEpsilonRules_WhenRunCalled_ThenEpsilonRulesRemovedProperly() {

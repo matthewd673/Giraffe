@@ -3,7 +3,7 @@ using Giraffe.Utils;
 
 namespace Giraffe.Tests.Utils;
 
-public class CollectionUtils_IndexOf {
+public class CollectionUtilsTest {
   [Theory]
   [ClassData(typeof(IndexOfTestData))]
   public void GivenCollectionAndValue_WhenIndexOfCalled_ThenExpectedIndexReturned<T>(IList<T> collection,

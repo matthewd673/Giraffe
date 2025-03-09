@@ -4,7 +4,7 @@ using static Giraffe.GIR.GrammarFactory;
 
 namespace Giraffe.Tests.Analyses;
 
-public class NonProductiveRuleAnalysis_Analyze {
+public class NonProductiveRuleAnalysisTest {
   [Fact]
   public void GivenGrammarWithNoNonProductiveRules_WhenAnalyzeCalled_ThenEmptySetReturned() {
     Grammar grammar = new(new() {

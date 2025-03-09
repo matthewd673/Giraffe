@@ -4,7 +4,7 @@ using static Giraffe.GIR.GrammarFactory;
 
 namespace Giraffe.Tests.Passes;
 
-public class DirectLeftRecursionEliminationPass_Run {
+public class DirectLeftRecursionEliminationPassTest {
   [Fact]
   public void GivenGrammarWithDirectLeftRecursion_WhenRunCalled_ThenDirectLeftRecursionEliminated() {
     Grammar grammar = new(new() {

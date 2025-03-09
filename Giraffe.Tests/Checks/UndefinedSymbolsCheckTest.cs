@@ -4,7 +4,7 @@ using static Giraffe.GIR.GrammarFactory;
 
 namespace Giraffe.Tests.Checks;
 
-public class UndefinedSymbolsCheck_Evaluate {
+public class UndefinedSymbolsCheckTest {
   [Fact]
   public void GivenGrammarWithNoUndefinedSymbols_WhenEvaluateCalled_ThenCheckPasses() {
     Grammar grammar = new(new() {

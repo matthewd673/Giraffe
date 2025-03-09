@@ -4,7 +4,7 @@ using static Giraffe.GIR.GrammarFactory;
 
 namespace Giraffe.Tests.Analyses;
 
-public class FindUnreachableGrammars_Analyze {
+public class FindUnreachableGrammarsTest {
   [Fact]
   public void GivenGrammarWithNoUnreachableSymbols_WhenAnalyzeCalled_ThenEmptySetReturned() {
     Grammar grammar = new(new() {

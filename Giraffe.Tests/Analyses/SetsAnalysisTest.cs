@@ -4,7 +4,7 @@ using static Giraffe.GIR.GrammarFactory;
 
 namespace Giraffe.Tests.Analyses;
 
-public class SetsAnalysis_Analyze {
+public class SetsAnalysisTest {
   [Fact]
   public void GivenSimpleGrammar_WhenAnalyzeCalled_ThenExpectedSetsReturned() {
     List<Rule> rules = [

@@ -4,7 +4,7 @@ using static Giraffe.GIR.GrammarFactory;
 
 namespace Giraffe.Tests.Passes;
 
-public class LeftFactoringPass_Run {
+public class LeftFactoringPassTest {
   [Fact]
   public void GivenGrammarWithNoCommonLeftFactors_WhenRunCalled_ThenGrammarNotChanged() {
     HashSet<Rule> rules = [
