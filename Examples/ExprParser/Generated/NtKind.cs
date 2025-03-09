@@ -3,9 +3,9 @@ public enum NtKind
 {
     Expr,
     E1,
-    E1t,
+    E1T,
     E2,
-    E2t,
+    E2T,
     E3,
     Ao,
     Mo

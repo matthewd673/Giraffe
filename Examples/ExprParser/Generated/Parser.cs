@@ -31,26 +31,26 @@ public class Parser(Scanner scanner)
         if (See(TokenKind.Number))
         {
             Nonterminal s0 = ParseE2();
-            Nonterminal s1 = ParseE1t();
+            Nonterminal s1 = ParseE1T();
             return new(NtKind.E1, [s0, ..s1.Children]);
         }
 
         throw new ParserException($"Cannot parse E1, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{number}}");
     }
 
-    private Nonterminal ParseE1t()
+    private Nonterminal ParseE1T()
     {
         if (See(TokenKind.Add, TokenKind.Sub))
         {
             Nonterminal s0 = ParseAo();
             Nonterminal s1 = ParseE2();
-            Nonterminal s2 = ParseE1t();
-            return new(NtKind.E1t, [s0, s1, ..s2.Children]);
+            Nonterminal s2 = ParseE1T();
+            return new(NtKind.E1T, [s0, s1, ..s2.Children]);
         }
 
         if (See(TokenKind.Eof))
         {
-            return new(NtKind.E1t, []);
+            return new(NtKind.E1T, []);
         }
 
         throw new ParserException($"Cannot parse E1T, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{add, sub, <end of input>}}");
@@ -61,26 +61,26 @@ public class Parser(Scanner scanner)
         if (See(TokenKind.Number))
         {
             Nonterminal s0 = ParseE3();
-            Nonterminal s1 = ParseE2t();
+            Nonterminal s1 = ParseE2T();
             return new(NtKind.E2, [s0, ..s1.Children]);
         }
 
         throw new ParserException($"Cannot parse E2, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{number}}");
     }
 
-    private Nonterminal ParseE2t()
+    private Nonterminal ParseE2T()
     {
         if (See(TokenKind.Mul, TokenKind.Div))
         {
             Nonterminal s0 = ParseMo();
             Nonterminal s1 = ParseE3();
-            Nonterminal s2 = ParseE2t();
-            return new(NtKind.E2t, [s0, s1, ..s2.Children]);
+            Nonterminal s2 = ParseE2T();
+            return new(NtKind.E2T, [s0, s1, ..s2.Children]);
         }
 
         if (See(TokenKind.Add, TokenKind.Sub, TokenKind.Eof))
         {
-            return new(NtKind.E2t, []);
+            return new(NtKind.E2T, []);
         }
 
         throw new ParserException($"Cannot parse E2T, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{mul, div, add, sub, <end of input>}}");

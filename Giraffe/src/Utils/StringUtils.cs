@@ -42,6 +42,10 @@ public static class StringUtils {
       else if (char.IsLetter(c) && !capitalize) {
         builder.Append(char.ToLower(c));
       }
+      else if (char.IsNumber(c)) {
+        capitalize = true;
+        builder.Append(c);
+      }
       else if (c == '_') {
         capitalize = true;
       }

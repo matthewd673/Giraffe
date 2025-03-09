@@ -28,7 +28,7 @@ public class ExprVisitor : Visitor<int> {
 
     return sum;
   }
-  protected override int VisitE1t(ParseNode[] children) {
+  protected override int VisitE1T(ParseNode[] children) {
     throw new NotImplementedException();
   }
   protected override int VisitE2(ParseNode[] children) {
@@ -49,7 +49,7 @@ public class ExprVisitor : Visitor<int> {
 
     return product;
   }
-  protected override int VisitE2t(ParseNode[] children) {
+  protected override int VisitE2T(ParseNode[] children) {
     throw new NotImplementedException();
   }
   protected override int VisitE3(ParseNode[] children) => children switch {

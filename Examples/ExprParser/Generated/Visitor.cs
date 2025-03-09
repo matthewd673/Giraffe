@@ -12,9 +12,9 @@ public abstract class Visitor<T>
     {
         NtKind.Expr => VisitExpr(nonterminal.Children),
         NtKind.E1 => VisitE1(nonterminal.Children),
-        NtKind.E1t => VisitE1t(nonterminal.Children),
+        NtKind.E1T => VisitE1T(nonterminal.Children),
         NtKind.E2 => VisitE2(nonterminal.Children),
-        NtKind.E2t => VisitE2t(nonterminal.Children),
+        NtKind.E2T => VisitE2T(nonterminal.Children),
         NtKind.E3 => VisitE3(nonterminal.Children),
         NtKind.Ao => VisitAo(nonterminal.Children),
         NtKind.Mo => VisitMo(nonterminal.Children),
@@ -33,9 +33,9 @@ public abstract class Visitor<T>
     };
     protected abstract T VisitExpr(ParseNode[] children);
     protected abstract T VisitE1(ParseNode[] children);
-    protected abstract T VisitE1t(ParseNode[] children);
+    protected abstract T VisitE1T(ParseNode[] children);
     protected abstract T VisitE2(ParseNode[] children);
-    protected abstract T VisitE2t(ParseNode[] children);
+    protected abstract T VisitE2T(ParseNode[] children);
     protected abstract T VisitE3(ParseNode[] children);
     protected abstract T VisitAo(ParseNode[] children);
     protected abstract T VisitMo(ParseNode[] children);

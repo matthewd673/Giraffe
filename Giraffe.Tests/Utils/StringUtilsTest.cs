@@ -19,6 +19,7 @@ public class StringUtilsTest {
   [InlineData("with_1number", "with1Number")]
   [InlineData("many___consecutive________underscores", "manyConsecutiveUnderscores")]
   [InlineData("random#other.characters", "random#other.characters")]
+  [InlineData("separated1by2numbers", "separated1By2Numbers")]
   public void GivenStringInSnakeCase_WhenStringToCamelCaseCalled_ThenCamelCaseStringReturned(string input, string expected) {
     Assert.Equal(expected, StringUtils.SnakeCaseToCamelCase(input));
   }
