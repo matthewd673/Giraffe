@@ -5,7 +5,7 @@ namespace ExprParser;
 public class ExprVisitor : Visitor<int> {
   public override int Visit(ParseTree parseTree) => Visit(parseTree.Children[0]);
 
-  protected override int VisitEXPR(ParseNode[] children) => children switch {
+  protected override int VisitExpr(ParseNode[] children) => children switch {
     [Nonterminal { Kind: NtKind.E1 } e1] => Visit(e1),
     _ => throw new("Unexpected children in EXPR"),
   };
@@ -18,7 +18,7 @@ public class ExprVisitor : Visitor<int> {
       if (n is Nonterminal { Kind: NtKind.E2 } operand) {
         sum = ApplyOperator(sum, Visit(operand), nextOp);
       }
-      else if (n is Nonterminal { Kind: NtKind.AO } op) {
+      else if (n is Nonterminal { Kind: NtKind.Ao } op) {
         nextOp = (char)Visit(op);
       }
       else {
@@ -28,7 +28,7 @@ public class ExprVisitor : Visitor<int> {
 
     return sum;
   }
-  protected override int VisitE1T(ParseNode[] children) {
+  protected override int VisitE1t(ParseNode[] children) {
     throw new NotImplementedException();
   }
   protected override int VisitE2(ParseNode[] children) {
@@ -39,7 +39,7 @@ public class ExprVisitor : Visitor<int> {
       if (n is Nonterminal { Kind: NtKind.E3 } operand) {
         product = ApplyOperator(product, Visit(operand), nextOp);
       }
-      else if (n is Nonterminal { Kind: NtKind.MO } op) {
+      else if (n is Nonterminal { Kind: NtKind.Mo } op) {
         nextOp = (char)Visit(op);
       }
       else {
@@ -49,26 +49,26 @@ public class ExprVisitor : Visitor<int> {
 
     return product;
   }
-  protected override int VisitE2T(ParseNode[] children) {
+  protected override int VisitE2t(ParseNode[] children) {
     throw new NotImplementedException();
   }
   protected override int VisitE3(ParseNode[] children) => children switch {
-    [Token {Kind: TokenKind.number} t] => Visit(t),
+    [Token {Kind: TokenKind.Number} t] => Visit(t),
     _ => throw new("Unexpected children in E3"),
   };
 
-  protected override int VisitAO(ParseNode[] children) => Visit(children[0]);
-  protected override int VisitMO(ParseNode[] children) => Visit(children[0]);
-  protected override int Visitnumber(Token token) => Convert.ToInt32(token.Image);
-  protected override int Visitadd(Token token) => '+';
-  protected override int Visitsub(Token token) => '-';
-  protected override int Visitmul(Token token) => '*';
-  protected override int Visitdiv(Token token) => '/';
+  protected override int VisitAo(ParseNode[] children) => Visit(children[0]);
+  protected override int VisitMo(ParseNode[] children) => Visit(children[0]);
+  protected override int VisitNumber(Token token) => Convert.ToInt32(token.Image);
+  protected override int VisitAdd(Token token) => '+';
+  protected override int VisitSub(Token token) => '-';
+  protected override int VisitMul(Token token) => '*';
+  protected override int VisitDiv(Token token) => '/';
 
-  protected override int Visitws(Token token) {
+  protected override int VisitWs(Token token) {
     throw new NotImplementedException();
   }
-  protected override int Visiteof(Token token) {
+  protected override int VisitEof(Token token) {
     throw new NotImplementedException();
   }
 

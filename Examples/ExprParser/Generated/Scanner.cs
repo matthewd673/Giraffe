@@ -5,7 +5,7 @@ public class Scanner(string input)
 {
     private readonly Regex[] tokenDef = [new("[0-9]+"), new("\\+"), new("-"), new("\\*"), new("/"), new(" +")];
     private readonly string[] names = ["number", "add", "sub", "mul", "div", "ws", "<end of input>"];
-    private readonly TokenKind[] ignored = [TokenKind.ws];
+    private readonly TokenKind[] ignored = [TokenKind.Ws];
     private int scanIndex;
     private Token? nextToken;
     public string NameOf(TokenKind terminal) => names[(int)terminal];
@@ -38,7 +38,7 @@ public class Scanner(string input)
     {
         if (scanIndex >= input.Length)
         {
-            return new(TokenKind.eof, "", scanIndex);
+            return new(TokenKind.Eof, "", scanIndex);
         }
 
         Token? best = null;

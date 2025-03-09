@@ -159,16 +159,16 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
   private ArgumentSyntax TerminalToTokenKindArgument(Terminal terminal) =>
     Argument(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                     IdentifierName(TokenKindEnumName),
-                                    IdentifierName(terminal.Value)));
+                                    IdentifierName(StringToCSharpFormat(terminal.Value))));
 
   private ArgumentSyntax NonterminalToNonterminalKindArgument(Nonterminal nt) =>
     Argument(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                     IdentifierName(NonterminalKindEnumName),
-                                    IdentifierName(nt.Value)));
+                                    IdentifierName(StringToCSharpFormat(nt.Value))));
 
   private static string GetSymbolIdFromIndex(int id) => $"s{id}";
 
-  private static string GetParseMethodName(Nonterminal nt) => $"Parse{SanitizeMethodName(nt.Value)}";
+  private static string GetParseMethodName(Nonterminal nt) => $"Parse{StringToCSharpFormat(nt.Value)}";
 
   private InterpolatedStringExpressionSyntax GetParseEntryRoutineExceptionMessage(EntryRoutine entryRoutine) {
     string[] textTokens = ["Cannot parse {{" +

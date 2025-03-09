@@ -115,7 +115,7 @@ public class CSharpScannerSourceGenerator(Grammar grammar) : CSharpSourceGenerat
                                                                        .Where(t => grammar.GetTerminalDefinition(t).Ignore),
                                                                 t => ExpressionElement(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                                                         IdentifierName(TokenKindEnumName),
-                                                                        IdentifierName(t.Value))))));
+                                                                        IdentifierName(StringToCSharpFormat(t.Value)))))));
 
   private static FieldDeclarationSyntax GenerateScanIndexFieldBoilerplate() =>
       FieldDeclaration(VariableDeclaration(PredefinedType(Token(SyntaxKind.IntKeyword)))
@@ -194,7 +194,7 @@ public class CSharpScannerSourceGenerator(Grammar grammar) : CSharpSourceGenerat
                                                                                  <ArgumentSyntax>(new SyntaxNodeOrToken[] {
                                                                                          Argument(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                                                                              IdentifierName(TokenKindEnumName),
-                                                                                             IdentifierName(Grammar.Eof.Value))),
+                                                                                             IdentifierName(StringToCSharpFormat(Grammar.Eof.Value)))),
                                                                                          Token(SyntaxKind.CommaToken),
                                                                                          Argument(LiteralExpression(SyntaxKind.StringLiteralExpression, Literal(""))),
                                                                                          Token(SyntaxKind.CommaToken),

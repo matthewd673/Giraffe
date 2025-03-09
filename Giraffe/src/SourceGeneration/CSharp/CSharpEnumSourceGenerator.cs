@@ -24,5 +24,5 @@ public class CSharpEnumSourceGenerator : CSharpSourceGenerator {
     SeparatedList<EnumMemberDeclarationSyntax>(GenerateCommaSeparatedList(EnumMembers, GenerateEnumMember));
 
   private static EnumMemberDeclarationSyntax GenerateEnumMember(string member) =>
-    EnumMemberDeclaration(Identifier(member));
+    EnumMemberDeclaration(Identifier(StringToCSharpFormat(member)));
 }

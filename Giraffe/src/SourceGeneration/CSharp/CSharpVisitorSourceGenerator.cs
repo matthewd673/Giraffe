@@ -99,7 +99,7 @@ public class CSharpVisitorSourceGenerator(Grammar grammar) : CSharpSourceGenerat
                                                                            string nonterminalParameterName) =>
     SwitchExpressionArm(ConstantPattern(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                                                IdentifierName(NonterminalKindEnumName),
-                                                               IdentifierName(nonterminal.Value))),
+                                                               IdentifierName(StringToCSharpFormat(nonterminal.Value)))),
                                         InvocationExpression(IdentifierName(GetVisitMethodName(nonterminal)))
                                           .WithArgumentList(ArgumentList(SingletonSeparatedList(
                                                                             Argument(
@@ -110,7 +110,7 @@ public class CSharpVisitorSourceGenerator(Grammar grammar) : CSharpSourceGenerat
   private SwitchExpressionArmSyntax GenerateTokenSwitchExpressionArm(Terminal token, string tokenParameterName) =>
     SwitchExpressionArm(ConstantPattern(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                                                IdentifierName(TokenKindEnumName),
-                                                               IdentifierName(token.Value))),
+                                                               IdentifierName(StringToCSharpFormat(token.Value)))),
                                         InvocationExpression(IdentifierName(GetVisitMethodName(token)))
                                           .WithArgumentList(ArgumentList(SingletonSeparatedList(
                                                                           Argument(IdentifierName(tokenParameterName))))));
@@ -132,7 +132,7 @@ public class CSharpVisitorSourceGenerator(Grammar grammar) : CSharpSourceGenerat
                                                                 .WithType(IdentifierName(TokenRecordName)))))
       .WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
 
-  private string GetVisitMethodName(Symbol symbol) => $"Visit{symbol.Value}";
+  private static string GetVisitMethodName(Symbol symbol) => $"Visit{StringToCSharpFormat(symbol.Value)}";
 
   private SwitchExpressionArmSyntax GenerateDefaultThrowSwitchExpressionArm() =>
     SwitchExpressionArm(DiscardPattern(), GenerateThrowArgumentOutOfRangeExceptionExpression());

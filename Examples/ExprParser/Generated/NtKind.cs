@@ -1,12 +1,12 @@
 namespace ExprParser.Generated;
 public enum NtKind
 {
-    EXPR,
+    Expr,
     E1,
-    E1T,
+    E1t,
     E2,
-    E2T,
+    E2t,
     E3,
-    AO,
-    MO
+    Ao,
+    Mo
 }

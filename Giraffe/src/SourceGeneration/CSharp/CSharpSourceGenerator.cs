@@ -1,4 +1,5 @@
 using Giraffe.GIR;
+using Giraffe.Utils;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -37,7 +38,11 @@ public abstract class CSharpSourceGenerator {
     return FileScopedNamespaceDeclaration(nameSyntax);
   }
 
-  protected static string SanitizeMethodName(string name) => name; // TODO
+  protected static string StringToCSharpFormat(string name) =>
+    StringUtils.Capitalize(StringUtils.SnakeCaseToCamelCase(StringUtils.SanitizeNonWordCharacters(name)));
+
+  protected static string GetDisplayName(Grammar grammar, Symbol symbol) =>
+    grammar.DisplayNames.GetValueOrDefault(symbol.Value, symbol.Value);
 
   private static ObjectCreationExpressionSyntax GenerateExceptionObjectCreation(string exceptionClassName, string message) =>
     ObjectCreationExpression(IdentifierName(exceptionClassName))
@@ -47,6 +52,4 @@ public abstract class CSharpSourceGenerator {
     ObjectCreationExpression(IdentifierName(exceptionClassName))
       .WithArgumentList(ArgumentList(SingletonSeparatedList(Argument(message))));
 
-  protected static string GetDisplayName(Grammar grammar, Symbol symbol) =>
-    grammar.DisplayNames.GetValueOrDefault(symbol.Value, symbol.Value);
 }
