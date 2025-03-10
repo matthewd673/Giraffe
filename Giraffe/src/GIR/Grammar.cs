@@ -5,10 +5,12 @@ namespace Giraffe.GIR;
 public record Grammar {
   public static Terminal Eof { get; } = new("eof");
 
-  public HashSet<Terminal> Terminals { get; }
+  public Dictionary<Terminal, TerminalDefinition> TerminalDefinitions { get; init; }
+  public HashSet<Rule> Rules { get; init; }
+  public HashSet<Nonterminal> EntryNonterminals { get; init; }
+
+  public HashSet<Terminal> Terminals => TerminalDefinitions.Keys.ToHashSet();
   public HashSet<Nonterminal> Nonterminals => Rules.Select(p => p.Nonterminal).ToHashSet();
-  public HashSet<Rule> Rules { get; }
-  public HashSet<Nonterminal> EntryNonterminals { get; }
 
   /// <summary>
   /// A mapping of the name of a symbol to its display name.
@@ -24,27 +26,32 @@ public record Grammar {
   /// </summary>
   public Dictionary<Nonterminal, List<string>> NonterminalParameters { get; init; }
 
-  private Dictionary<Terminal, TerminalDefinition> terminalDefs;
+  public Grammar() {
+    TerminalDefinitions = [];
+    Rules = [];
+    EntryNonterminals = [];
+    DisplayNames = [];
+    MemberDeclarations = new();
+    NonterminalParameters = [];
+  }
 
-  public Grammar(Dictionary<Terminal, TerminalDefinition> terminalDefs,
+  public Grammar(Dictionary<Terminal, TerminalDefinition> terminalDefinitions,
                  HashSet<Rule> rules,
                  HashSet<Nonterminal> entryNonterminals,
                  Dictionary<string, string>? displayNames = null,
                  SemanticAction? memberDeclarations = null,
                  Dictionary<Nonterminal, List<string>>? nonterminalParameters = null) {
-    this.terminalDefs = terminalDefs;
-    this.terminalDefs.Add(Eof, new());
+    TerminalDefinitions = terminalDefinitions;
+    TerminalDefinitions.Add(Eof, new());
 
     Rules = rules;
     EntryNonterminals = entryNonterminals;
     DisplayNames = displayNames ?? new();
     MemberDeclarations = memberDeclarations ?? new();
     NonterminalParameters = nonterminalParameters ?? new();
-
-    Terminals = [..terminalDefs.Keys];
   }
 
-  public TerminalDefinition GetTerminalDefinition(Terminal terminal) => terminalDefs[terminal];
+  public TerminalDefinition GetTerminalDefinition(Terminal terminal) => TerminalDefinitions[terminal];
 
   public IEnumerable<Rule> GetAllRulesForNonterminal(Nonterminal nt) =>
     Rules.Where(rule => rule.Nonterminal.Equals(nt));
