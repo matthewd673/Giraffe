@@ -1,4 +1,6 @@
 ﻿using Giraffe.Analyses;
+using Giraffe.AST;
+using Giraffe.Frontend;
 using Giraffe.GIR;
 using Giraffe.Passes;
 using Giraffe.SourceGeneration;
@@ -9,44 +11,74 @@ namespace Giraffe;
 
 public class Program {
   public static void Main(string[] args) {
-    Console.WriteLine("Giraffe");
+    if (args.Length != 3) {
+      Console.WriteLine("usage: giraffe <grammar file> <output directory> <namespace>");
+      return;
+    }
+    string grammarFilename = args[0];
+    string outputDirectory = args[1];
+    string @namespace = args[2];
 
-    const string outputDirectory = "/Users/matth/Documents/cs/Giraffe/Examples/ExprParser/Generated";
+    // Load the grammar file
+    string grammarText;
+    try {
+      grammarText = File.ReadAllText(grammarFilename);
+    }
+    catch (Exception e) {
+      Console.WriteLine("Failed to read file \"{0}\"", grammarFilename);
+      return;
+    }
 
-    Rule[] rules = [
-      R("EXPR", [Nt("E1")]),
-      R("E1", [Nt("E2"), Nt("E1T") with { Transformation = new(Expand: true) }]),
-      R("E1T", [Nt("AO"), Nt("E2"), Nt("E1T") with { Transformation = new(Expand: true) }]),
-      R("E1T", []),
-      R("E2", [Nt("E3"), Nt("E2T") with { Transformation = new(Expand: true) }]),
-      R("E2T", [Nt("MO"), Nt("E3"), Nt("E2T") with { Transformation = new(Expand: true) }]),
-      R("E2T", []),
-      R("E3", [T("number")]),
-      R("AO", [T("add")]),
-      R("AO", [T("sub")]),
-      R("MO", [T("mul")]),
-      R("MO", [T("div")]),
-    ];
+    // Parse the grammar definition
+    Scanner scanner = new(grammarText);
+    Parser parser = new(scanner);
 
-    // TEMP: Generate a Parser
-    Grammar grammar = new(
-      new() {
-        { T("number"), new(new("[0-9]+")) },
-        { T("add"), new(new(@"\+")) },
-        { T("sub"), new(new("-")) },
-        { T("mul"), new(new(@"\*")) },
-        { T("div"), new(new("/")) },
-        { T("ws"), new(new(" +"), true) },
-      },
-      rules.ToHashSet(),
-      [new("EXPR")],
-      displayNames: new() { {Grammar.Eof.Value, "<end of input>" } }
-    );
+    ParseTree parseTree;
+    try {
+      parseTree = parser.Parse();
+    }
+    catch (ScannerException e) {
+      Console.WriteLine("A ScannerException occurred: {0}", e.Message);
+      return;
+    }
+    catch (ParserException e) {
+      Console.WriteLine("A ParserException occurred: {0}", e.Message);
+      return;
+    }
 
+    Console.WriteLine("That is a valid grammar definition, walking...");
+
+    // Walk the definition
+    GrammarVisitor visitor = new();
+
+    GrammarDefinition grammarDefinition;
+    try {
+      grammarDefinition = visitor.Visit(parseTree);
+    }
+    catch (VisitorException e) {
+      Console.WriteLine("A VisitorException occurred: {0}", e.Message);
+      return;
+    }
+
+    // Convert AST to Grammar
+    GrammarBuilder builder = new(grammarDefinition);
+    Grammar grammar = builder.GrammarOfAST();
+
+    try {
+      ProcessGrammarAndGenerateSourceFiles(grammar, outputDirectory, @namespace);
+    }
+    catch (Exception e) {
+      Console.WriteLine("An error occurred while processing the grammar and generating the parser: {0}", e.Message);
+    }
+
+    Console.WriteLine("Done");
+  }
+
+  private static void ProcessGrammarAndGenerateSourceFiles(Grammar grammar, string outputDirectory, string @namespace) {
     SetsAnalysis setsAnalysis = new(grammar);
-    GrammarSets sets = setsAnalysis.Analyze();
+    GrammarSets grammarSets = setsAnalysis.Analyze();
 
-    CSharpSourceFilesGenerator sourceFilesGenerator = new(sets) { Namespace = "ExprParser.Generated" };
+    CSharpSourceFilesGenerator sourceFilesGenerator = new(grammarSets) { Namespace = @namespace };
     List<CSharpSourceFile> sourceFiles = sourceFilesGenerator.GenerateSourceFiles();
 
     if (!Directory.Exists(outputDirectory)) {
@@ -55,7 +87,8 @@ public class Program {
     WriteSourceFiles(sourceFiles, outputDirectory);
   }
 
-  private static void WriteSourceFiles<T>(IEnumerable<SourceFile<T>> sourceFiles, string outputDirectory) where T : notnull {
+  private static void WriteSourceFiles<T>(IEnumerable<SourceFile<T>> sourceFiles,
+                                          string outputDirectory) where T : notnull {
     foreach (SourceFile<T> file in sourceFiles) {
       string filePath = Path.Combine(outputDirectory, file.Filename);
       Console.WriteLine("Writing \"{0}\"", filePath);

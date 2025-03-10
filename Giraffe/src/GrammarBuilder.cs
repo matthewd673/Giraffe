@@ -19,7 +19,7 @@ public class GrammarBuilder(GrammarDefinition grammarDefinition) {
         }
       }
       else if (symbolDef is TerminalDefinition termDef) {
-        terminalDefinitions.Add(T(termDef.Name), GetGIRTerminalDefinition(termDef.TerminalRhs));
+        terminalDefinitions.Add(T(termDef.Name), GetGIRTerminalDefinition(termDef.TerminalRhs, termDef.Ignore));
       }
     }
 
@@ -33,6 +33,6 @@ public class GrammarBuilder(GrammarDefinition grammarDefinition) {
       _ => throw new ArgumentOutOfRangeException(),
     }));
 
-  private static GIR.TerminalDefinition GetGIRTerminalDefinition(TerminalRhs terminalRhs) =>
-    new(terminalRhs.Regex, ignore: terminalRhs.Ignore);
+  private static GIR.TerminalDefinition GetGIRTerminalDefinition(TerminalRhs terminalRhs, bool ignore) =>
+    new(terminalRhs.Regex, ignore);
 }

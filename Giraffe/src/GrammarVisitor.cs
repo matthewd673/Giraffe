@@ -44,19 +44,19 @@ public sealed class GrammarVisitor : Visitor<ASTNode> {
 
   protected override TerminalDefinition VisitTermDef(ParseNode[] children) {
     if (children is [Token { Kind: TokenKind.TermName } termName,
+                     Nonterminal { Kind: NtKind.OptDiscard } optDiscard,
                      Token { Kind: TokenKind.Arrow } _,
                      Nonterminal { Kind: NtKind.TermRhs } termRhs,
                      Token { Kind: TokenKind.End } _,
                     ]) {
-      return new(termName.Image, (TerminalRhs)Visit(termRhs));
+      return new(termName.Image, (TerminalRhs)Visit(termRhs), optDiscard.Children.Length > 0);
     }
 
     throw new VisitorException("Cannot visit TermDef, unexpected children");
   }
 
   protected override TerminalRhs VisitTermRhs(ParseNode[] children) => children switch {
-    [Token { Kind: TokenKind.Discard } _, Token { Kind: TokenKind.Regex } regex] => new(new(regex.Image), Ignore: true),
-    [Token { Kind: TokenKind.Regex } regex] => new(new(regex.Image), Ignore: false),
+    [Token { Kind: TokenKind.Regex } regex] => new(new(CleanRegex(regex.Image))),
     _ => throw new VisitorException("Cannot visit TermRhs, unexpected children"),
   };
 
@@ -154,5 +154,11 @@ public sealed class GrammarVisitor : Visitor<ASTNode> {
 
   protected override ASTNode VisitEof(Token token) {
     throw new NotImplementedException();
+  }
+
+  private static string CleanRegex(string input) {
+    string trimmed = input[1..^1]; // Trim '/' at start and end
+    string unEscaped = trimmed.Replace("\\/", "/"); // Un-sanitize escaped '/'
+    return unEscaped;
   }
 }

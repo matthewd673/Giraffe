@@ -58,7 +58,7 @@ public class Parser(Scanner scanner)
             return new(NtKind.AnyDefT, []);
         }
 
-        throw new ParserException($"Cannot parse ANY_DEF_T, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{term_name, nonterm_name, <end of input>}}");
+        throw new ParserException($"Cannot parse ANY_DEF_T, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{term_name, nonterm_name, eof}}");
     }
 
     private Nonterminal ParseTermDef()
@@ -66,10 +66,11 @@ public class Parser(Scanner scanner)
         if (See(TokenKind.TermName))
         {
             Token s0 = Eat(TokenKind.TermName);
-            Token s1 = Eat(TokenKind.Arrow);
-            Nonterminal s2 = ParseTermRhs();
-            Token s3 = Eat(TokenKind.End);
-            return new(NtKind.TermDef, [s0, s1, s2, s3]);
+            Nonterminal s1 = ParseOptDiscard();
+            Token s2 = Eat(TokenKind.Arrow);
+            Nonterminal s3 = ParseTermRhs();
+            Token s4 = Eat(TokenKind.End);
+            return new(NtKind.TermDef, [s0, s1, s2, s3, s4]);
         }
 
         throw new ParserException($"Cannot parse TERM_DEF, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{term_name}}");
@@ -77,14 +78,13 @@ public class Parser(Scanner scanner)
 
     private Nonterminal ParseTermRhs()
     {
-        if (See(TokenKind.Discard, TokenKind.Regex))
+        if (See(TokenKind.Regex))
         {
-            Nonterminal s0 = ParseOptDiscard();
-            Token s1 = Eat(TokenKind.Regex);
-            return new(NtKind.TermRhs, [..s0.Children, s1]);
+            Token s0 = Eat(TokenKind.Regex);
+            return new(NtKind.TermRhs, [s0]);
         }
 
-        throw new ParserException($"Cannot parse TERM_RHS, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{discard, regex}}");
+        throw new ParserException($"Cannot parse TERM_RHS, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{regex}}");
     }
 
     private Nonterminal ParseNontermDef()
@@ -206,11 +206,11 @@ public class Parser(Scanner scanner)
             return new(NtKind.OptDiscard, [s0]);
         }
 
-        if (See(TokenKind.Regex))
+        if (See(TokenKind.Arrow))
         {
             return new(NtKind.OptDiscard, []);
         }
 
-        throw new ParserException($"Cannot parse OPT_DISCARD, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{discard, regex}}");
+        throw new ParserException($"Cannot parse OPT_DISCARD, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{discard, arrow}}");
     }
 }

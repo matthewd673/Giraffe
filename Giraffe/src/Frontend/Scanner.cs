@@ -4,7 +4,7 @@ namespace Giraffe.Frontend;
 public class Scanner(string input)
 {
     private readonly Regex[] tokenDef = [new("[a-z][a-z0-9_]*"), new("[A-Z][A-Z0-9_]*"), new("->"), new(";"), new("/(\\\\/|[^/])+/"), new("\\*"), new("\\.\\."), new("_"), new("\\s+")];
-    private readonly string[] names = ["term_name", "nonterm_name", "arrow", "end", "regex", "star", "expand", "discard", "ws", "<end of input>"];
+    private readonly string[] names = ["term_name", "nonterm_name", "arrow", "end", "regex", "star", "expand", "discard", "ws", "eof"];
     private readonly TokenKind[] ignored = [TokenKind.Ws];
     private int scanIndex;
     private Token? nextToken;
