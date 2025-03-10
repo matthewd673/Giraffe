@@ -160,7 +160,7 @@ public class Parser(Scanner scanner)
         {
             Nonterminal s0 = ParseOptExpand();
             Token s1 = Eat(TokenKind.NontermName);
-            return new(NtKind.Symbol, [..s0.Children, s1]);
+            return new(NtKind.Symbol, [s0, s1]);
         }
 
         throw new ParserException($"Cannot parse SYMBOL, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{term_name, expand, nonterm_name}}");

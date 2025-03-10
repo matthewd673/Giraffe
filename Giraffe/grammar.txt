@@ -22,7 +22,7 @@ RULE_T -> ;
 SYMBOLS -> SYMBOL ..SYMBOLS ;
 SYMBOLS -> ;
 SYMBOL -> term_name ;
-SYMBOL -> ..OPT_EXPAND nonterm_name ;
+SYMBOL -> OPT_EXPAND nonterm_name ;
 OPT_STAR -> star ;
 OPT_STAR -> ;
 OPT_EXPAND -> expand ;

@@ -97,9 +97,8 @@ public sealed class GrammarVisitor : Visitor<ASTNode> {
   }
 
   protected override SymbolUsage VisitSymbol(ParseNode[] children) => children switch {
-    [Token { Kind: TokenKind.Expand } _, Token { Kind: TokenKind.NontermName } nontermName] =>
-      new NonterminalUsage(nontermName.Image, true),
-    [Token { Kind: TokenKind.NontermName } nontermName] => new NonterminalUsage(nontermName.Image, false),
+    [Nonterminal { Kind: NtKind.OptExpand } optExpand, Token { Kind: TokenKind.NontermName } nontermName] =>
+      new NonterminalUsage(nontermName.Image, optExpand.Children.Length > 0),
     [Token { Kind: TokenKind.TermName } termName] => new TerminalUsage(termName.Image),
     _ => throw new VisitorException("Cannot visit Symbol, unexpected children"),
   };
