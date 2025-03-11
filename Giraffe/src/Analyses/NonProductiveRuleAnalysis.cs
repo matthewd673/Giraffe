@@ -8,9 +8,7 @@ namespace Giraffe.Analyses;
 /// </summary>
 /// <param name="grammar">The Grammar to analyze.</param>
 public class NonProductiveRuleAnalysis(Grammar grammar) : Analysis<HashSet<Rule>>(grammar) {
-  public override HashSet<Rule> Analyze() {
-    return Grammar.Rules.Where(r => !IsProductive(r)).ToHashSet();
-  }
+  public override HashSet<Rule> Analyze() => Grammar.Rules.Where(r => !IsProductive(r)).ToHashSet();
 
   private bool IsProductive(Rule rule) => IsProductive(rule, []);
 

@@ -9,4 +9,9 @@ public static class GrammarFactory {
     new(nt, ImmutableList.CreateRange(symbols));
   public static Rule R(string nt, IEnumerable<Symbol> symbols) =>
     R(Nt(nt), symbols);
+
+  public static Grammar G(Dictionary<Terminal, TerminalDefinition> terminalDefinitions,
+                          HashSet<Rule> rules,
+                          HashSet<Nonterminal> entryNonterminals) =>
+    new(terminalDefinitions, rules, entryNonterminals);
 }
