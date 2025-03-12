@@ -45,9 +45,7 @@ public sealed class GrammarVisitor : Visitor<ASTNode> {
   protected override TerminalDefinition VisitTermDef(ParseNode[] children) {
     if (children is [Token { Kind: TokenKind.TermName } termName,
                      Nonterminal { Kind: NtKind.OptDiscard } optDiscard,
-                     Token { Kind: TokenKind.Arrow } _,
                      Nonterminal { Kind: NtKind.TermRhs } termRhs,
-                     Token { Kind: TokenKind.End } _,
                     ]) {
       return new(termName.Image, (TerminalRhs)Visit(termRhs), optDiscard.Children.Length > 0);
     }
@@ -72,10 +70,6 @@ public sealed class GrammarVisitor : Visitor<ASTNode> {
     }
 
     for (int i = 2; i < children.Length; i++) {
-      if (children[i] is Token { Kind: TokenKind.End }) {
-        break;
-      }
-
       ruleDefinitions.Add((RuleDefinition)Visit(children[i]));
     }
 
@@ -83,7 +77,7 @@ public sealed class GrammarVisitor : Visitor<ASTNode> {
   }
 
   protected override RuleDefinition VisitRule(ParseNode[] children) => children switch {
-    [Token { Kind: TokenKind.Arrow} _, Nonterminal { Kind: NtKind.Symbols } symbols] =>
+    [Nonterminal { Kind: NtKind.Symbols } symbols] =>
       new(symbols.Children.Select(s => (SymbolUsage)Visit(s)).ToList()),
     _ => throw new VisitorException("Cannot visit Rule, unexpected children"),
   };
@@ -97,9 +91,13 @@ public sealed class GrammarVisitor : Visitor<ASTNode> {
   }
 
   protected override SymbolUsage VisitSymbol(ParseNode[] children) => children switch {
-    [Nonterminal { Kind: NtKind.OptExpand } optExpand, Token { Kind: TokenKind.NontermName } nontermName] =>
-      new NonterminalUsage(nontermName.Image, optExpand.Children.Length > 0),
-    [Token { Kind: TokenKind.TermName } termName] => new TerminalUsage(termName.Image),
+    [Nonterminal { Kind: NtKind.OptDiscard } optDiscard,
+     Nonterminal { Kind: NtKind.OptExpand } optExpand,
+     Token { Kind: TokenKind.NontermName } nontermName] =>
+      new NonterminalUsage(nontermName.Image, optDiscard.Children.Length > 0, optExpand.Children.Length > 0),
+    [Nonterminal { Kind: NtKind.OptDiscard } optDiscard,
+     Token { Kind: TokenKind.TermName } termName] =>
+      new TerminalUsage(termName.Image, optDiscard.Children.Length > 0),
     _ => throw new VisitorException("Cannot visit Symbol, unexpected children"),
   };
 
@@ -144,10 +142,6 @@ public sealed class GrammarVisitor : Visitor<ASTNode> {
   }
 
   protected override ASTNode VisitDiscard(Token token) {
-    throw new NotImplementedException();
-  }
-
-  protected override ASTNode VisitWs(Token token) {
     throw new NotImplementedException();
   }
 

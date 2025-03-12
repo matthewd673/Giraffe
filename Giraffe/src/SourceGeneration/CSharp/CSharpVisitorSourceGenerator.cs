@@ -6,7 +6,8 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Giraffe.SourceGeneration.CSharp;
 
-public class CSharpVisitorSourceGenerator(Grammar grammar) : CSharpSourceGenerator {
+public class CSharpVisitorSourceGenerator(List<Terminal> relevantTerminals,
+                                          List<Nonterminal> relevantNonterminals) : CSharpSourceGenerator {
   public required string VisitorClassName { get; init; }
   public required string VisitMethodName { get; init; }
   public required string ParseTreeRecordName { get; init; }
@@ -16,7 +17,6 @@ public class CSharpVisitorSourceGenerator(Grammar grammar) : CSharpSourceGenerat
   public required string NonterminalChildrenPropertyName { get; init; }
   public required string TokenRecordName { get; init; }
   public required string TokenKindPropertyName { get; init; }
-  public required string TokenImagePropertyName { get; init; }
   public required string NonterminalKindEnumName { get; init; }
   public required string TokenKindEnumName { get; init; }
 
@@ -36,8 +36,8 @@ public class CSharpVisitorSourceGenerator(Grammar grammar) : CSharpSourceGenerat
                                                   GenerateVisitMethodParseNodeOverload(),
                                                   GenerateVisitMethodNonterminalOverload(),
                                                   GenerateVisitMethodTokenOverload(),
-                                                  ..grammar.Nonterminals.Select(GenerateVisitNonterminalMethodStub),
-                                                  ..grammar.Terminals.Select(GenerateVisitTokenMethodStub),
+                                                  ..relevantNonterminals.Select(GenerateVisitNonterminalMethodStub),
+                                                  ..relevantTerminals.Select(GenerateVisitTokenMethodStub),
                                                  ]));
 
   private MethodDeclarationSyntax GenerateVisitMethodParseTreeOverload() =>
@@ -71,9 +71,9 @@ public class CSharpVisitorSourceGenerator(Grammar grammar) : CSharpSourceGenerat
                                                                       IdentifierName("nonterminal"),
                                                                       IdentifierName(NonterminalKindPropertyName)))
                                                   .WithArms(SeparatedList<SwitchExpressionArmSyntax>(
-                                                             [..GenerateCommaSeparatedList(grammar.Nonterminals,
+                                                             [..GenerateCommaSeparatedList(relevantNonterminals,
                                                                nt => GenerateNonterminalSwitchExpressionArm(nt, "nonterminal")),
-                                                              ..grammar.Nonterminals.Count == 0 // No comma before default arm if there are no other arms
+                                                              ..relevantNonterminals.Count == 0 // No comma before default arm if there are no other arms
                                                                   ? new List<SyntaxNodeOrToken>()
                                                                   : [Token(SyntaxKind.CommaToken)],
                                                               GenerateDefaultThrowSwitchExpressionArm(),
@@ -86,9 +86,9 @@ public class CSharpVisitorSourceGenerator(Grammar grammar) : CSharpSourceGenerat
                                                                       IdentifierName("token"),
                                                                       IdentifierName(TokenKindPropertyName)))
                                                   .WithArms(SeparatedList<SwitchExpressionArmSyntax>(
-                                                             [..GenerateCommaSeparatedList(grammar.Terminals,
+                                                             [..GenerateCommaSeparatedList(relevantTerminals,
                                                                t => GenerateTokenSwitchExpressionArm(t, "token")),
-                                                              ..grammar.Terminals.Count == 0 // No comma before default arm if there are no other arms
+                                                              ..relevantTerminals.Count == 0 // No comma before default arm if there are no other arms
                                                                   ? new List<SyntaxNodeOrToken>()
                                                                   : [Token(SyntaxKind.CommaToken)],
                                                               GenerateDefaultThrowSwitchExpressionArm(),

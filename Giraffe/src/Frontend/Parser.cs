@@ -70,7 +70,7 @@ public class Parser(Scanner scanner)
             Token s2 = Eat(TokenKind.Arrow);
             Nonterminal s3 = ParseTermRhs();
             Token s4 = Eat(TokenKind.End);
-            return new(NtKind.TermDef, [s0, s1, s2, s3, s4]);
+            return new(NtKind.TermDef, [s0, s1, s3]);
         }
 
         throw new ParserException($"Cannot parse TERM_DEF, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{term_name}}");
@@ -96,7 +96,7 @@ public class Parser(Scanner scanner)
             Nonterminal s2 = ParseRule();
             Nonterminal s3 = ParseRuleT();
             Token s4 = Eat(TokenKind.End);
-            return new(NtKind.NontermDef, [s0, s1, s2, ..s3.Children, s4]);
+            return new(NtKind.NontermDef, [s0, s1, s2, ..s3.Children]);
         }
 
         throw new ParserException($"Cannot parse NONTERM_DEF, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{nonterm_name}}");
@@ -108,7 +108,7 @@ public class Parser(Scanner scanner)
         {
             Token s0 = Eat(TokenKind.Arrow);
             Nonterminal s1 = ParseSymbols();
-            return new(NtKind.Rule, [s0, s1]);
+            return new(NtKind.Rule, [s1]);
         }
 
         throw new ParserException($"Cannot parse RULE, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{arrow}}");
@@ -133,7 +133,7 @@ public class Parser(Scanner scanner)
 
     private Nonterminal ParseSymbols()
     {
-        if (See(TokenKind.TermName, TokenKind.Expand, TokenKind.NontermName))
+        if (See(TokenKind.Discard, TokenKind.TermName, TokenKind.Expand, TokenKind.NontermName))
         {
             Nonterminal s0 = ParseSymbol();
             Nonterminal s1 = ParseSymbols();
@@ -145,25 +145,27 @@ public class Parser(Scanner scanner)
             return new(NtKind.Symbols, []);
         }
 
-        throw new ParserException($"Cannot parse SYMBOLS, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{term_name, expand, nonterm_name, arrow, end}}");
+        throw new ParserException($"Cannot parse SYMBOLS, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{discard, term_name, expand, nonterm_name, arrow, end}}");
     }
 
     private Nonterminal ParseSymbol()
     {
-        if (See(TokenKind.TermName))
+        if (See(TokenKind.Discard, TokenKind.TermName))
         {
-            Token s0 = Eat(TokenKind.TermName);
-            return new(NtKind.Symbol, [s0]);
-        }
-
-        if (See(TokenKind.Expand, TokenKind.NontermName))
-        {
-            Nonterminal s0 = ParseOptExpand();
-            Token s1 = Eat(TokenKind.NontermName);
+            Nonterminal s0 = ParseOptDiscard();
+            Token s1 = Eat(TokenKind.TermName);
             return new(NtKind.Symbol, [s0, s1]);
         }
 
-        throw new ParserException($"Cannot parse SYMBOL, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{term_name, expand, nonterm_name}}");
+        if (See(TokenKind.Discard, TokenKind.Expand, TokenKind.NontermName))
+        {
+            Nonterminal s0 = ParseOptDiscard();
+            Nonterminal s1 = ParseOptExpand();
+            Token s2 = Eat(TokenKind.NontermName);
+            return new(NtKind.Symbol, [s0, s1, s2]);
+        }
+
+        throw new ParserException($"Cannot parse SYMBOL, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{discard, term_name, discard, expand, nonterm_name}}");
     }
 
     private Nonterminal ParseOptStar()
@@ -206,11 +208,11 @@ public class Parser(Scanner scanner)
             return new(NtKind.OptDiscard, [s0]);
         }
 
-        if (See(TokenKind.Arrow))
+        if (See(TokenKind.Arrow, TokenKind.TermName, TokenKind.Expand, TokenKind.NontermName))
         {
             return new(NtKind.OptDiscard, []);
         }
 
-        throw new ParserException($"Cannot parse OPT_DISCARD, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{discard, arrow}}");
+        throw new ParserException($"Cannot parse OPT_DISCARD, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{discard, arrow, term_name, expand, nonterm_name}}");
     }
 }

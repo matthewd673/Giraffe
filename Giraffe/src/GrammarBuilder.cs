@@ -28,8 +28,10 @@ public class GrammarBuilder(GrammarDefinition grammarDefinition) {
 
   private static Rule GetRuleDefinition(string nonterminalName, RuleDefinition ruleDefinition) =>
     R(Nt(nonterminalName), ruleDefinition.SymbolUsages.Select(u => u switch {
-      TerminalUsage tU => (Symbol)T(tU.Name),
-      NonterminalUsage ntU => (Symbol)Nt(ntU.Name) with { Transformation = new(Expand: ntU.Expand) },
+      TerminalUsage tU =>
+        (Symbol)T(tU.Name) with { Transformation = new(Discard: tU.Discard) }, // Terminals cannot Expand
+      NonterminalUsage ntU =>
+        (Symbol)Nt(ntU.Name) with { Transformation = new(Discard: ntU.Discard, Expand: ntU.Expand) },
       _ => throw new ArgumentOutOfRangeException(),
     }));
 

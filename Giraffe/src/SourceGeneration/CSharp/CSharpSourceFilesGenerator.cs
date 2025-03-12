@@ -135,7 +135,14 @@ public class CSharpSourceFilesGenerator(GrammarSets grammarSets) {
     };
     sourceFiles.Add(new(GetFileName(TokenKindEnumName), tokenKindSourceGenerator.Generate()));
 
-    CSharpVisitorSourceGenerator visitorSourceGenerator = new(grammarSets.Grammar) {
+    // Filter out irrelevant terminals and nonterminals for the Visitor class
+    List<Terminal> relevantTerminals = terminalsOrdering
+                                       // Don't generate methods for ignored terminals
+                                       .Where(t => !grammarSets.Grammar.TerminalDefinitions[t].Ignore)
+                                       .ToList();
+    List<Nonterminal> relevantNonterminals = nonterminalsOrdering;
+
+    CSharpVisitorSourceGenerator visitorSourceGenerator = new(relevantTerminals, relevantNonterminals) {
       FileNamespace = Namespace,
       VisitorClassName = VisitorClassName,
       VisitMethodName = VisitorVisitMethodName,
@@ -146,7 +153,6 @@ public class CSharpSourceFilesGenerator(GrammarSets grammarSets) {
       NonterminalChildrenPropertyName = NonterminalChildrenPropertyName,
       TokenRecordName = TokenRecordName,
       TokenKindPropertyName = TokenKindPropertyName,
-      TokenImagePropertyName = TokenImagePropertyName,
       NonterminalKindEnumName = NonterminalKindEnumName,
       TokenKindEnumName = TokenKindEnumName,
     };

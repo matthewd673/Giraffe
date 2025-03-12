@@ -35,7 +35,6 @@ public abstract class Visitor<T>
         TokenKind.Star => VisitStar(token),
         TokenKind.Expand => VisitExpand(token),
         TokenKind.Discard => VisitDiscard(token),
-        TokenKind.Ws => VisitWs(token),
         TokenKind.Eof => VisitEof(token),
         _ => throw new ArgumentOutOfRangeException(),
     };
@@ -60,6 +59,5 @@ public abstract class Visitor<T>
     protected abstract T VisitStar(Token token);
     protected abstract T VisitExpand(Token token);
     protected abstract T VisitDiscard(Token token);
-    protected abstract T VisitWs(Token token);
     protected abstract T VisitEof(Token token);
 }

@@ -9,23 +9,23 @@ discard -> /_/ ;
 ws _ -> /\s+/ ;
 
 GRAMMAR * -> ANY_DEF ..ANY_DEF_T ;
-ANY_DEF -> TERM_DEF ;
-ANY_DEF -> NONTERM_DEF ;
-ANY_DEF_T -> ANY_DEF ..ANY_DEF_T ;
-ANY_DEF_T -> ;
-TERM_DEF -> term_name OPT_DISCARD arrow TERM_RHS end ;
+ANY_DEF -> TERM_DEF
+        -> NONTERM_DEF ;
+ANY_DEF_T -> ANY_DEF ..ANY_DEF_T
+          -> ;
+TERM_DEF -> term_name OPT_DISCARD _arrow TERM_RHS _end ;
 TERM_RHS -> regex ;
-NONTERM_DEF -> nonterm_name OPT_STAR RULE ..RULE_T end ;
-RULE -> arrow SYMBOLS ;
-RULE_T -> RULE ..RULE_T ;
-RULE_T -> ;
-SYMBOLS -> SYMBOL ..SYMBOLS ;
-SYMBOLS -> ;
-SYMBOL -> term_name ;
-SYMBOL -> OPT_EXPAND nonterm_name ;
-OPT_STAR -> star ;
-OPT_STAR -> ;
-OPT_EXPAND -> expand ;
-OPT_EXPAND -> ;
-OPT_DISCARD -> discard ;
-OPT_DISCARD -> ;
+NONTERM_DEF -> nonterm_name OPT_STAR RULE ..RULE_T _end ;
+RULE -> _arrow SYMBOLS ;
+RULE_T -> RULE ..RULE_T
+       -> ;
+SYMBOLS -> SYMBOL ..SYMBOLS
+        -> ;
+SYMBOL -> OPT_DISCARD term_name
+       -> OPT_DISCARD OPT_EXPAND nonterm_name ;
+OPT_STAR -> star
+         -> ;
+OPT_EXPAND -> expand
+           -> ;
+OPT_DISCARD -> discard
+            -> ;
