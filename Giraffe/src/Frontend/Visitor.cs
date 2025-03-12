@@ -12,12 +12,10 @@ public abstract class Visitor<T>
     {
         NtKind.Grammar => VisitGrammar(nonterminal.Children),
         NtKind.AnyDef => VisitAnyDef(nonterminal.Children),
-        NtKind.AnyDefT => VisitAnyDefT(nonterminal.Children),
         NtKind.TermDef => VisitTermDef(nonterminal.Children),
         NtKind.TermRhs => VisitTermRhs(nonterminal.Children),
         NtKind.NontermDef => VisitNontermDef(nonterminal.Children),
         NtKind.Rule => VisitRule(nonterminal.Children),
-        NtKind.RuleT => VisitRuleT(nonterminal.Children),
         NtKind.Symbols => VisitSymbols(nonterminal.Children),
         NtKind.Symbol => VisitSymbol(nonterminal.Children),
         NtKind.OptStar => VisitOptStar(nonterminal.Children),
@@ -38,12 +36,10 @@ public abstract class Visitor<T>
     };
     protected abstract T VisitGrammar(ParseNode[] children);
     protected abstract T VisitAnyDef(ParseNode[] children);
-    protected abstract T VisitAnyDefT(ParseNode[] children);
     protected abstract T VisitTermDef(ParseNode[] children);
     protected abstract T VisitTermRhs(ParseNode[] children);
     protected abstract T VisitNontermDef(ParseNode[] children);
     protected abstract T VisitRule(ParseNode[] children);
-    protected abstract T VisitRuleT(ParseNode[] children);
     protected abstract T VisitSymbols(ParseNode[] children);
     protected abstract T VisitSymbol(ParseNode[] children);
     protected abstract T VisitOptStar(ParseNode[] children);

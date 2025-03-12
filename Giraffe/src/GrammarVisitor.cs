@@ -37,11 +37,6 @@ public sealed class GrammarVisitor : Visitor<ASTNode> {
     _ => throw new VisitorException("Cannot visit AnyDef, unexpected children"),
   };
 
-  // NOTE: This nonterminal is always extended so will never be produced
-  protected override ASTNode VisitAnyDefT(ParseNode[] children) {
-    throw new NotImplementedException();
-  }
-
   protected override TerminalDefinition VisitTermDef(ParseNode[] children) {
     if (children is [Token { Kind: TokenKind.TermName } termName,
                      Nonterminal { Kind: NtKind.OptDiscard } optDiscard,
@@ -81,10 +76,6 @@ public sealed class GrammarVisitor : Visitor<ASTNode> {
       new(symbols.Children.Select(s => (SymbolUsage)Visit(s)).ToList()),
     _ => throw new VisitorException("Cannot visit Rule, unexpected children"),
   };
-
-  protected override ASTNode VisitRuleT(ParseNode[] children) {
-    throw new NotImplementedException();
-  }
 
   protected override ASTNode VisitSymbols(ParseNode[] children) {
     throw new NotImplementedException();

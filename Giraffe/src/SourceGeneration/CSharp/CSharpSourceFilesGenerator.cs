@@ -139,6 +139,8 @@ public class CSharpSourceFilesGenerator(GrammarSets grammarSets) {
     // Filter out irrelevant terminals and nonterminals for the Visitor class
     DiscardedSymbolAnalysis discardedSymbolAnalysis = new(grammarSets.Grammar);
     HashSet<Symbol> discardedSymbols = discardedSymbolAnalysis.Analyze();
+    ExpandedNonterminalAnalysis expandedNonterminalAnalysis = new(grammarSets.Grammar);
+    HashSet<Nonterminal> expandedNonterminals = expandedNonterminalAnalysis.Analyze();
 
     List<Terminal> relevantTerminals = terminalsOrdering
                                        // Don't generate methods for ignored terminals
@@ -147,6 +149,9 @@ public class CSharpSourceFilesGenerator(GrammarSets grammarSets) {
                                        .ToList();
     List<Nonterminal> relevantNonterminals = nonterminalsOrdering
                                              .Where(nt => !discardedSymbols.Contains(nt))
+                                             .Where(nt => !expandedNonterminals.Contains(nt))
+                                             // Entry nonterminals are always relevant for the Visitor class
+                                             .Union(grammarSets.Grammar.EntryNonterminals)
                                              .ToList();
 
     CSharpVisitorSourceGenerator visitorSourceGenerator = new(relevantTerminals, relevantNonterminals) {
