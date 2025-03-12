@@ -16,7 +16,7 @@ ANY_DEF_T -> ANY_DEF ..ANY_DEF_T
 TERM_DEF -> term_name OPT_DISCARD _arrow TERM_RHS _end ;
 TERM_RHS -> regex ;
 NONTERM_DEF -> nonterm_name OPT_STAR RULE ..RULE_T _end ;
-RULE -> _arrow SYMBOLS ;
+RULE -> _arrow ..SYMBOLS ;
 RULE_T -> RULE ..RULE_T
        -> ;
 SYMBOLS -> SYMBOL ..SYMBOLS

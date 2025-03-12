@@ -108,7 +108,7 @@ public class Parser(Scanner scanner)
         {
             Token s0 = Eat(TokenKind.Arrow);
             Nonterminal s1 = ParseSymbols();
-            return new(NtKind.Rule, [s1]);
+            return new(NtKind.Rule, [..s1.Children]);
         }
 
         throw new ParserException($"Cannot parse RULE, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{arrow}}");

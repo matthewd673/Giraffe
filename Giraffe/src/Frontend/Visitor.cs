@@ -16,7 +16,6 @@ public abstract class Visitor<T>
         NtKind.TermRhs => VisitTermRhs(nonterminal.Children),
         NtKind.NontermDef => VisitNontermDef(nonterminal.Children),
         NtKind.Rule => VisitRule(nonterminal.Children),
-        NtKind.Symbols => VisitSymbols(nonterminal.Children),
         NtKind.Symbol => VisitSymbol(nonterminal.Children),
         NtKind.OptStar => VisitOptStar(nonterminal.Children),
         NtKind.OptExpand => VisitOptExpand(nonterminal.Children),
@@ -40,7 +39,6 @@ public abstract class Visitor<T>
     protected abstract T VisitTermRhs(ParseNode[] children);
     protected abstract T VisitNontermDef(ParseNode[] children);
     protected abstract T VisitRule(ParseNode[] children);
-    protected abstract T VisitSymbols(ParseNode[] children);
     protected abstract T VisitSymbol(ParseNode[] children);
     protected abstract T VisitOptStar(ParseNode[] children);
     protected abstract T VisitOptExpand(ParseNode[] children);

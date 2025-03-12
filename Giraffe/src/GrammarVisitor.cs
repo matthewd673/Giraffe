@@ -71,15 +71,8 @@ public sealed class GrammarVisitor : Visitor<ASTNode> {
     return new(nontermName.Image, ruleDefinitions, optStar.Children.Length > 0);
   }
 
-  protected override RuleDefinition VisitRule(ParseNode[] children) => children switch {
-    [Nonterminal { Kind: NtKind.Symbols } symbols] =>
-      new(symbols.Children.Select(s => (SymbolUsage)Visit(s)).ToList()),
-    _ => throw new VisitorException("Cannot visit Rule, unexpected children"),
-  };
-
-  protected override ASTNode VisitSymbols(ParseNode[] children) {
-    throw new NotImplementedException();
-  }
+  protected override RuleDefinition VisitRule(ParseNode[] children) =>
+    new(children.Select(s => (SymbolUsage)Visit(s)).ToList());
 
   protected override SymbolUsage VisitSymbol(ParseNode[] children) => children switch {
     [Nonterminal { Kind: NtKind.OptDiscard } optDiscard,
@@ -92,45 +85,16 @@ public sealed class GrammarVisitor : Visitor<ASTNode> {
     _ => throw new VisitorException("Cannot visit Symbol, unexpected children"),
   };
 
-  protected override ASTNode VisitOptStar(ParseNode[] children) {
-    throw new NotImplementedException();
-  }
-
-  protected override ASTNode VisitOptExpand(ParseNode[] children) {
-    throw new NotImplementedException();
-  }
-
-  protected override ASTNode VisitOptDiscard(ParseNode[] children) {
-    throw new NotImplementedException();
-  }
-
-  protected override ASTNode VisitTermName(Token token) {
-    throw new NotImplementedException();
-  }
-
-  protected override ASTNode VisitNontermName(Token token) {
-    throw new NotImplementedException();
-  }
-
-  protected override ASTNode VisitRegex(Token token) {
-    throw new NotImplementedException();
-  }
-
-  protected override ASTNode VisitStar(Token token) {
-    throw new NotImplementedException();
-  }
-
-  protected override ASTNode VisitExpand(Token token) {
-    throw new NotImplementedException();
-  }
-
-  protected override ASTNode VisitDiscard(Token token) {
-    throw new NotImplementedException();
-  }
-
-  protected override ASTNode VisitEof(Token token) {
-    throw new NotImplementedException();
-  }
+  protected override ASTNode VisitOptStar(ParseNode[] children) => throw new NotImplementedException();
+  protected override ASTNode VisitOptExpand(ParseNode[] children) => throw new NotImplementedException();
+  protected override ASTNode VisitOptDiscard(ParseNode[] children) => throw new NotImplementedException();
+  protected override ASTNode VisitTermName(Token token) => throw new NotImplementedException();
+  protected override ASTNode VisitNontermName(Token token) => throw new NotImplementedException();
+  protected override ASTNode VisitRegex(Token token) => throw new NotImplementedException();
+  protected override ASTNode VisitStar(Token token) => throw new NotImplementedException();
+  protected override ASTNode VisitExpand(Token token) => throw new NotImplementedException();
+  protected override ASTNode VisitDiscard(Token token) => throw new NotImplementedException();
+  protected override ASTNode VisitEof(Token token) => throw new NotImplementedException();
 
   private static string CleanRegex(string input) {
     string trimmed = input[1..^1]; // Trim '/' at start and end
