@@ -29,8 +29,6 @@ public abstract class Visitor<T>
     {
         TokenKind.TermName => VisitTermName(token),
         TokenKind.NontermName => VisitNontermName(token),
-        TokenKind.Arrow => VisitArrow(token),
-        TokenKind.End => VisitEnd(token),
         TokenKind.Regex => VisitRegex(token),
         TokenKind.Star => VisitStar(token),
         TokenKind.Expand => VisitExpand(token),
@@ -53,8 +51,6 @@ public abstract class Visitor<T>
     protected abstract T VisitOptDiscard(ParseNode[] children);
     protected abstract T VisitTermName(Token token);
     protected abstract T VisitNontermName(Token token);
-    protected abstract T VisitArrow(Token token);
-    protected abstract T VisitEnd(Token token);
     protected abstract T VisitRegex(Token token);
     protected abstract T VisitStar(Token token);
     protected abstract T VisitExpand(Token token);

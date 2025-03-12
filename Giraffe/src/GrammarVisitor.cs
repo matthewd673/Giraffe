@@ -121,14 +121,6 @@ public sealed class GrammarVisitor : Visitor<ASTNode> {
     throw new NotImplementedException();
   }
 
-  protected override ASTNode VisitArrow(Token token) {
-    throw new NotImplementedException();
-  }
-
-  protected override ASTNode VisitEnd(Token token) {
-    throw new NotImplementedException();
-  }
-
   protected override ASTNode VisitRegex(Token token) {
     throw new NotImplementedException();
   }

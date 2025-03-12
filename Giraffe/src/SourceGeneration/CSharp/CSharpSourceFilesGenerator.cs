@@ -1,3 +1,4 @@
+using Giraffe.Analyses;
 using Giraffe.GIR;
 
 namespace Giraffe.SourceGeneration.CSharp;
@@ -136,11 +137,17 @@ public class CSharpSourceFilesGenerator(GrammarSets grammarSets) {
     sourceFiles.Add(new(GetFileName(TokenKindEnumName), tokenKindSourceGenerator.Generate()));
 
     // Filter out irrelevant terminals and nonterminals for the Visitor class
+    DiscardedSymbolAnalysis discardedSymbolAnalysis = new(grammarSets.Grammar);
+    HashSet<Symbol> discardedSymbols = discardedSymbolAnalysis.Analyze();
+
     List<Terminal> relevantTerminals = terminalsOrdering
                                        // Don't generate methods for ignored terminals
                                        .Where(t => !grammarSets.Grammar.TerminalDefinitions[t].Ignore)
+                                       .Where(t => !discardedSymbols.Contains(t))
                                        .ToList();
-    List<Nonterminal> relevantNonterminals = nonterminalsOrdering;
+    List<Nonterminal> relevantNonterminals = nonterminalsOrdering
+                                             .Where(nt => !discardedSymbols.Contains(nt))
+                                             .ToList();
 
     CSharpVisitorSourceGenerator visitorSourceGenerator = new(relevantTerminals, relevantNonterminals) {
       FileNamespace = Namespace,
