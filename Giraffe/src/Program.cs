@@ -38,15 +38,13 @@ public class Program {
       parseTree = parser.Parse();
     }
     catch (ScannerException e) {
-      Console.WriteLine("A ScannerException occurred: {0}", e.Message);
+      Console.WriteLine("A ScannerException occurred at ({0},{1}): {2}", e.Row, e.Column, e.Message);
       return;
     }
     catch (ParserException e) {
-      Console.WriteLine("A ParserException occurred: {0}", e.Message);
+      Console.WriteLine("A ParserException occurred at ({0},{1}): {2}", e.Row, e.Column, e.Message);
       return;
     }
-
-    Console.WriteLine("That is a valid grammar definition, walking...");
 
     // Walk the definition
     GrammarVisitor visitor = new();
@@ -59,6 +57,8 @@ public class Program {
       Console.WriteLine("A VisitorException occurred: {0}", e.Message);
       return;
     }
+
+    Console.WriteLine("Generating grammar...");
 
     // Convert AST to Grammar
     GrammarBuilder builder = new(grammarDefinition);
