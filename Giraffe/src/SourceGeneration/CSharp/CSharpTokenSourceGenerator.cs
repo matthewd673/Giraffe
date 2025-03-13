@@ -12,6 +12,8 @@ public class CSharpTokenSourceGenerator : CSharpSourceGenerator {
   public required string KindPropertyName { get; init; }
   public required string ImagePropertyName { get; init; }
   public required string IndexPropertyName { get; init; }
+  public required string RowPropertyName { get; init; }
+  public required string ColumnPropertyName { get; init; }
 
   public override CompilationUnitSyntax Generate() =>
     CompilationUnit()
@@ -30,6 +32,12 @@ public class CSharpTokenSourceGenerator : CSharpSourceGenerator {
           .WithType(PredefinedType(Token(SyntaxKind.StringKeyword))),
           Token(SyntaxKind.CommaToken),
           Parameter(Identifier(IndexPropertyName))
+            .WithType(PredefinedType(Token(SyntaxKind.IntKeyword))),
+          Token(SyntaxKind.CommaToken),
+          Parameter(Identifier(RowPropertyName))
+            .WithType(PredefinedType(Token(SyntaxKind.IntKeyword))),
+          Token(SyntaxKind.CommaToken),
+          Parameter(Identifier(ColumnPropertyName))
             .WithType(PredefinedType(Token(SyntaxKind.IntKeyword))),
       })))
       .WithBaseList(BaseList(SingletonSeparatedList<BaseTypeSyntax>(SimpleBaseType(IdentifierName(ParseNodeRecordName)))))

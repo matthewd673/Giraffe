@@ -7,6 +7,8 @@ public class Scanner(string input)
     private readonly string[] names = ["term_name", "nonterm_name", "arrow", "end", "regex", "star", "expand", "discard", "ws", "eof"];
     private readonly TokenKind[] ignored = [TokenKind.Ws];
     private int scanIndex;
+    private int row;
+    private int column;
     private Token? nextToken;
     public string NameOf(TokenKind terminal) => names[(int)terminal];
     public Token Peek()
@@ -38,7 +40,7 @@ public class Scanner(string input)
     {
         if (scanIndex >= input.Length)
         {
-            return new(TokenKind.Eof, "", scanIndex);
+            return new(TokenKind.Eof, "", scanIndex, row, column);
         }
 
         Token? best = null;
@@ -50,19 +52,32 @@ public class Scanner(string input)
                 continue;
             }
 
-            best ??= new((TokenKind)t, match.Value, scanIndex);
+            best ??= new((TokenKind)t, match.Value, scanIndex, row, column);
             if (match.Length > best.Image.Length)
             {
-                best = new((TokenKind)t, match.Value, scanIndex);
+                best = new((TokenKind)t, match.Value, scanIndex, row, column);
             }
         }
 
         if (best is null)
         {
-            throw new ScannerException($"Illegal character '{input[scanIndex]}' at index {scanIndex}");
+            throw new ScannerException($"Illegal character '{input[scanIndex]}' at {row + 1}:{column + 1}");
         }
 
         scanIndex += best.Image.Length;
+        foreach (char c in best.Image)
+        {
+            if (c == '\n')
+            {
+                column = 0;
+                row += 1;
+            }
+            else if (!char.IsControl(c) || c == '\t')
+            {
+                column += 1;
+            }
+        }
+
         return best;
     }
 }

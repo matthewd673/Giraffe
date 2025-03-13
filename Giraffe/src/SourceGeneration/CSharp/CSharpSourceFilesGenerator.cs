@@ -23,6 +23,8 @@ public class CSharpSourceFilesGenerator(GrammarSets grammarSets) {
   public string TokenKindPropertyName { get; init; } = "Kind";
   public string TokenImagePropertyName { get; init; } = "Image";
   public string TokenIndexPropertyName { get; init; } = "Index";
+  public string TokenRowPropertyName { get; init; } = "Row";
+  public string TokenColumnPropertyName { get; init; } = "Column";
 
   public string NonterminalRecordName { get; init; } = "Nonterminal";
   public string NonterminalKindPropertyName { get; init; } = "Kind";
@@ -101,6 +103,8 @@ public class CSharpSourceFilesGenerator(GrammarSets grammarSets) {
       KindPropertyName = TokenKindPropertyName,
       ImagePropertyName = TokenImagePropertyName,
       IndexPropertyName = TokenIndexPropertyName,
+      RowPropertyName = TokenRowPropertyName,
+      ColumnPropertyName = TokenColumnPropertyName,
     };
     sourceFiles.Add(new(GetFileName(TokenRecordName), tokenSourceGenerator.Generate()));
 
