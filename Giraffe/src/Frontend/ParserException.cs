@@ -1,7 +1,4 @@
 namespace Giraffe.Frontend;
-public class ParserException : Exception
+public class ParserException(string message, int index, int row, int column) : FrontendException(message, index, row, column)
 {
-    public ParserException(string message) : base(message)
-    {
-    }
-}
+};

@@ -56,7 +56,8 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
     MethodDeclaration(IdentifierName(ParseTreeRecordName), Identifier(EntryMethodName))
       .WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
       .WithBody(Block((IEnumerable<StatementSyntax>)[..GenerateEntryPredictions(entryRoutine.Predictions),
-                                                     GenerateExceptionThrowStatement(ParserExceptionClassName, GetParseEntryRoutineExceptionMessage(entryRoutine))]));
+                                                       GenerateParserExceptionThrowStatement(GetParseEntryRoutineExceptionMessage(entryRoutine)),
+                                                    ]));
 
   private IEnumerable<IfStatementSyntax> GenerateEntryPredictions(IEnumerable<Prediction> predictions) =>
     predictions.Select(GenerateEntryPrediction);
@@ -73,7 +74,8 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
                       Identifier(GetParseMethodName(routine.Nonterminal)))
       .WithModifiers(TokenList(Token(SyntaxKind.PrivateKeyword)))
       .WithBody(Block((IEnumerable<StatementSyntax>)[..GeneratePredictions(routine.Predictions, routine.Nonterminal),
-                                                     GenerateExceptionThrowStatement(ParserExceptionClassName, GetParseRoutineExceptionMessage(routine))]));
+                                                       GenerateParserExceptionThrowStatement(GetParseRoutineExceptionMessage(routine)),
+                                                    ]));
 
   private IEnumerable<IfStatementSyntax> GeneratePredictions(IEnumerable<Prediction> predictions, Nonterminal nt) =>
     predictions.Select(p => GeneratePrediction(p, nt));
@@ -190,6 +192,39 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
 
   private static string GetParseMethodName(Nonterminal nt) => $"Parse{StringToCSharpFormat(nt.Value)}";
 
+  private ThrowStatementSyntax GenerateParserExceptionThrowStatement(InterpolatedStringExpressionSyntax message) =>
+    ThrowStatement(GenerateParserExceptionObjectCreation(message));
+
+  private ThrowExpressionSyntax GenerateParserExceptionThrowExpression(InterpolatedStringExpressionSyntax message) =>
+    ThrowExpression(GenerateParserExceptionObjectCreation(message));
+
+  private ObjectCreationExpressionSyntax GenerateParserExceptionObjectCreation(InterpolatedStringExpressionSyntax message) {
+    InvocationExpressionSyntax scannerPeekCall = InvocationExpression(MemberAccessExpression(
+                                                                       SyntaxKind.SimpleMemberAccessExpression,
+                                                                       IdentifierName(ScannerFieldName),
+                                                                       IdentifierName(ScannerPeekMethodName)));
+
+    return ObjectCreationExpression(IdentifierName(ParserExceptionClassName))
+      .WithArgumentList(ArgumentList(SeparatedList<ArgumentSyntax>(new SyntaxNodeOrToken[] {
+        Argument(message),
+        Token(SyntaxKind.CommaToken),
+        Argument(MemberAccessExpression(
+                                        SyntaxKind.SimpleMemberAccessExpression,
+                                        scannerPeekCall,
+                                        IdentifierName(ParseNodeIndexPropertyName))),
+        Token(SyntaxKind.CommaToken),
+        Argument(MemberAccessExpression(
+                                        SyntaxKind.SimpleMemberAccessExpression,
+                                        scannerPeekCall,
+                                        IdentifierName(ParseNodeRowPropertyName))),
+        Token(SyntaxKind.CommaToken),
+        Argument(MemberAccessExpression(
+                                        SyntaxKind.SimpleMemberAccessExpression,
+                                        scannerPeekCall,
+                                        IdentifierName(ParseNodeColumnPropertyName))),
+      })));
+  }
+
   private InterpolatedStringExpressionSyntax GetParseEntryRoutineExceptionMessage(EntryRoutine entryRoutine) {
     string[] textTokens = ["Cannot parse {{" +
                             string.Join(", ", grammarSets.Grammar.EntryNonterminals
@@ -278,8 +313,7 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
                                                                            InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                                                              IdentifierName(ScannerFieldName),
                                                                              IdentifierName(ScannerEatMethodName))),
-                                                                           GenerateExceptionThrowExpression(
-                                                                            ParserExceptionClassName,
+                                                                           GenerateParserExceptionThrowExpression(
                                                                             GetUnexpectedTerminalExceptionMessage(
                                                                              InvocationExpression(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                                                                  IdentifierName(ScannerFieldName),

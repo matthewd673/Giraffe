@@ -10,11 +10,11 @@ public class Parser(Scanner scanner)
             return new([s0, s1]);
         }
 
-        throw new ParserException($"Cannot parse {{GRAMMAR}}, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{term_name, nonterm_name}}");
+        throw new ParserException($"Cannot parse {{GRAMMAR}}, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{term_name, nonterm_name}}", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
     }
 
     private bool See(params TokenKind[] terminals) => terminals.Contains(scanner.Peek().Kind);
-    private Token Eat(TokenKind terminal) => See(terminal) ? scanner.Eat() : throw new ParserException($"Unexpected terminal, saw '{scanner.NameOf(scanner.Peek().Kind)}' but expected '{scanner.NameOf(terminal)}'");
+    private Token Eat(TokenKind terminal) => See(terminal) ? scanner.Eat() : throw new ParserException($"Unexpected terminal, saw '{scanner.NameOf(scanner.Peek().Kind)}' but expected '{scanner.NameOf(terminal)}'", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
     private Nonterminal ParseGrammar()
     {
         if (See(TokenKind.TermName, TokenKind.NontermName))
@@ -24,7 +24,7 @@ public class Parser(Scanner scanner)
             return new(NtKind.Grammar, [s0, ..s1.Children], s0.Index, s0.Row, s0.Column);
         }
 
-        throw new ParserException($"Cannot parse GRAMMAR, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{term_name, nonterm_name}}");
+        throw new ParserException($"Cannot parse GRAMMAR, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{term_name, nonterm_name}}", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
     }
 
     private Nonterminal ParseAnyDef()
@@ -41,7 +41,7 @@ public class Parser(Scanner scanner)
             return new(NtKind.AnyDef, [s0], s0.Index, s0.Row, s0.Column);
         }
 
-        throw new ParserException($"Cannot parse ANY_DEF, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{term_name, nonterm_name}}");
+        throw new ParserException($"Cannot parse ANY_DEF, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{term_name, nonterm_name}}", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
     }
 
     private Nonterminal ParseAnyDefT()
@@ -58,7 +58,7 @@ public class Parser(Scanner scanner)
             return new(NtKind.AnyDefT, [], -1, -1, -1);
         }
 
-        throw new ParserException($"Cannot parse ANY_DEF_T, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{term_name, nonterm_name, eof}}");
+        throw new ParserException($"Cannot parse ANY_DEF_T, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{term_name, nonterm_name, eof}}", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
     }
 
     private Nonterminal ParseTermDef()
@@ -73,7 +73,7 @@ public class Parser(Scanner scanner)
             return new(NtKind.TermDef, [s0, s1, s3], s0.Index, s0.Row, s0.Column);
         }
 
-        throw new ParserException($"Cannot parse TERM_DEF, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{term_name}}");
+        throw new ParserException($"Cannot parse TERM_DEF, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{term_name}}", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
     }
 
     private Nonterminal ParseTermRhs()
@@ -84,7 +84,7 @@ public class Parser(Scanner scanner)
             return new(NtKind.TermRhs, [s0], s0.Index, s0.Row, s0.Column);
         }
 
-        throw new ParserException($"Cannot parse TERM_RHS, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{regex}}");
+        throw new ParserException($"Cannot parse TERM_RHS, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{regex}}", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
     }
 
     private Nonterminal ParseNontermDef()
@@ -99,7 +99,7 @@ public class Parser(Scanner scanner)
             return new(NtKind.NontermDef, [s0, s1, s2, ..s3.Children], s0.Index, s0.Row, s0.Column);
         }
 
-        throw new ParserException($"Cannot parse NONTERM_DEF, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{nonterm_name}}");
+        throw new ParserException($"Cannot parse NONTERM_DEF, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{nonterm_name}}", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
     }
 
     private Nonterminal ParseRule()
@@ -111,7 +111,7 @@ public class Parser(Scanner scanner)
             return new(NtKind.Rule, [..s1.Children], s0.Index, s0.Row, s0.Column);
         }
 
-        throw new ParserException($"Cannot parse RULE, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{arrow}}");
+        throw new ParserException($"Cannot parse RULE, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{arrow}}", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
     }
 
     private Nonterminal ParseRuleT()
@@ -128,7 +128,7 @@ public class Parser(Scanner scanner)
             return new(NtKind.RuleT, [], -1, -1, -1);
         }
 
-        throw new ParserException($"Cannot parse RULE_T, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{arrow, end}}");
+        throw new ParserException($"Cannot parse RULE_T, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{arrow, end}}", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
     }
 
     private Nonterminal ParseSymbols()
@@ -145,7 +145,7 @@ public class Parser(Scanner scanner)
             return new(NtKind.Symbols, [], -1, -1, -1);
         }
 
-        throw new ParserException($"Cannot parse SYMBOLS, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{discard, term_name, expand, nonterm_name, arrow, end}}");
+        throw new ParserException($"Cannot parse SYMBOLS, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{discard, term_name, expand, nonterm_name, arrow, end}}", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
     }
 
     private Nonterminal ParseSymbol()
@@ -165,7 +165,7 @@ public class Parser(Scanner scanner)
             return new(NtKind.Symbol, [s0, s1, s2], s0.Index, s0.Row, s0.Column);
         }
 
-        throw new ParserException($"Cannot parse SYMBOL, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{discard, term_name, discard, expand, nonterm_name}}");
+        throw new ParserException($"Cannot parse SYMBOL, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{discard, term_name, discard, expand, nonterm_name}}", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
     }
 
     private Nonterminal ParseOptStar()
@@ -181,7 +181,7 @@ public class Parser(Scanner scanner)
             return new(NtKind.OptStar, [], -1, -1, -1);
         }
 
-        throw new ParserException($"Cannot parse OPT_STAR, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{star, arrow}}");
+        throw new ParserException($"Cannot parse OPT_STAR, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{star, arrow}}", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
     }
 
     private Nonterminal ParseOptExpand()
@@ -197,7 +197,7 @@ public class Parser(Scanner scanner)
             return new(NtKind.OptExpand, [], -1, -1, -1);
         }
 
-        throw new ParserException($"Cannot parse OPT_EXPAND, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{expand, nonterm_name}}");
+        throw new ParserException($"Cannot parse OPT_EXPAND, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{expand, nonterm_name}}", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
     }
 
     private Nonterminal ParseOptDiscard()
@@ -213,6 +213,6 @@ public class Parser(Scanner scanner)
             return new(NtKind.OptDiscard, [], -1, -1, -1);
         }
 
-        throw new ParserException($"Cannot parse OPT_DISCARD, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{discard, arrow, term_name, expand, nonterm_name}}");
+        throw new ParserException($"Cannot parse OPT_DISCARD, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{discard, arrow, term_name, expand, nonterm_name}}", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
     }
 }

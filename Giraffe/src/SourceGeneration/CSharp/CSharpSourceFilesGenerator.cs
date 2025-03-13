@@ -14,6 +14,10 @@ public class CSharpSourceFilesGenerator(GrammarSets grammarSets) {
   public string ParserClassName { get; init; } = "Parser";
   public string ParserEntryMethodName { get; init; } = "Parse";
 
+  public string FrontendExceptionClassName { get; init; } = "FrontendException";
+  public string FrontendExceptionIndexPropertyName { get; init; } = "Index";
+  public string FrontendExceptionRowPropertyName { get; init; } = "Row";
+  public string FrontendExceptionColumnPropertyName { get; init; } = "Column";
   public string ScannerExceptionClassName { get; init; } = "ScannerException";
   public string ParserExceptionClassName { get; init; } = "ParserException";
 
@@ -82,13 +86,24 @@ public class CSharpSourceFilesGenerator(GrammarSets grammarSets) {
     };
     sourceFiles.Add(new(GetFileName(ParserClassName), parserSourceGenerator.Generate()));
 
-    CSharpExceptionSourceGenerator scannerExceptionSourceGenerator = new(ScannerExceptionClassName) {
+    CSharpFrontendExceptionSourceGenerator frontendExceptionSourceGenerator = new() {
       FileNamespace = Namespace,
+      FrontendExceptionClassName = FrontendExceptionClassName,
+      IndexPropertyName = FrontendExceptionIndexPropertyName,
+      RowPropertyName = FrontendExceptionRowPropertyName,
+      ColumnPropertyName = FrontendExceptionColumnPropertyName,
     };
-    sourceFiles.Add(new(GetFileName(ScannerExceptionClassName), scannerExceptionSourceGenerator.Generate()));
+    sourceFiles.Add(new(GetFileName(FrontendExceptionClassName), frontendExceptionSourceGenerator.Generate()));
 
-    CSharpExceptionSourceGenerator parserExceptionSourceGenerator = new(ParserExceptionClassName) {
+    CSharpFrontendExceptionSubClassSourceGenerator scannerExceptionSourceGenerator = new(ScannerExceptionClassName) {
       FileNamespace = Namespace,
+      FrontendExceptionClassName = FrontendExceptionClassName,
+    };
+    sourceFiles.Add(new(GetFileName(ScannerExceptionClassName),scannerExceptionSourceGenerator.Generate()));
+
+    CSharpFrontendExceptionSubClassSourceGenerator parserExceptionSourceGenerator = new(ParserExceptionClassName) {
+      FileNamespace = Namespace,
+      FrontendExceptionClassName = FrontendExceptionClassName,
     };
     sourceFiles.Add(new(GetFileName(ParserExceptionClassName), parserExceptionSourceGenerator.Generate()));
 

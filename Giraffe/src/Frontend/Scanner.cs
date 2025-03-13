@@ -7,8 +7,8 @@ public class Scanner(string input)
     private readonly string[] names = ["term_name", "nonterm_name", "arrow", "end", "regex", "star", "expand", "discard", "ws", "eof"];
     private readonly TokenKind[] ignored = [TokenKind.Ws];
     private int scanIndex;
-    private int row;
-    private int column;
+    private int row = 1;
+    private int column = 1;
     private Token? nextToken;
     public string NameOf(TokenKind terminal) => names[(int)terminal];
     public Token Peek()
@@ -61,7 +61,7 @@ public class Scanner(string input)
 
         if (best is null)
         {
-            throw new ScannerException($"Illegal character '{input[scanIndex]}' at {row + 1}:{column + 1}");
+            throw new ScannerException($"Illegal character '{input[scanIndex]}'", scanIndex, row, column);
         }
 
         scanIndex += best.Image.Length;
@@ -69,7 +69,7 @@ public class Scanner(string input)
         {
             if (c == '\n')
             {
-                column = 0;
+                column = 1;
                 row += 1;
             }
             else if (!char.IsControl(c) || c == '\t')

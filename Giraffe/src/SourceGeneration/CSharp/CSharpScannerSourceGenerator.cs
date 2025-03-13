@@ -127,12 +127,20 @@ public class CSharpScannerSourceGenerator(Grammar grammar) : CSharpSourceGenerat
 
   private static FieldDeclarationSyntax GenerateRowField() =>
       FieldDeclaration(VariableDeclaration(PredefinedType(Token(SyntaxKind.IntKeyword)))
-                           .WithVariables(SingletonSeparatedList(VariableDeclarator(Identifier(RowFieldName)))))
+                           .WithVariables(SingletonSeparatedList(VariableDeclarator(Identifier(RowFieldName))
+                                                                   .WithInitializer(EqualsValueClause(
+                                                                    LiteralExpression(
+                                                                     SyntaxKind.NumericLiteralExpression,
+                                                                     Literal(1)))))))
           .WithModifiers(TokenList(Token(SyntaxKind.PrivateKeyword)));
 
   private static FieldDeclarationSyntax GenerateColumnField() =>
       FieldDeclaration(VariableDeclaration(PredefinedType(Token(SyntaxKind.IntKeyword)))
-                           .WithVariables(SingletonSeparatedList(VariableDeclarator(Identifier(ColumnFieldName)))))
+                           .WithVariables(SingletonSeparatedList(VariableDeclarator(Identifier(ColumnFieldName))
+                                                                   .WithInitializer(EqualsValueClause(
+                                                                    LiteralExpression(
+                                                                     SyntaxKind.NumericLiteralExpression,
+                                                                     Literal(1)))))))
           .WithModifiers(TokenList(Token(SyntaxKind.PrivateKeyword)));
 
   private FieldDeclarationSyntax GenerateNextTokenField() =>
@@ -339,22 +347,12 @@ public class CSharpScannerSourceGenerator(Grammar grammar) : CSharpSourceGenerat
   private IfStatementSyntax GenerateScanNextMethodBestNullCheck() =>
       IfStatement(IsPatternExpression(IdentifierName("best"),
                                       ConstantPattern(LiteralExpression(SyntaxKind.NullLiteralExpression))),
-                  Block(SingletonList<StatementSyntax>(GenerateExceptionThrowStatement(ScannerExceptionClassName,
-                                                           GetIllegalCharacterExceptionMessage(
-                                                            ElementAccessExpression(IdentifierName(InputFieldName))
-                                                                .WithArgumentList(BracketedArgumentList(
-                                                                 SingletonSeparatedList(Argument(
-                                                                  IdentifierName(ScanIndexFieldName))))),
-                                                            BinaryExpression(SyntaxKind.AddExpression,
-                                                                             IdentifierName(RowFieldName),
-                                                                             LiteralExpression(
-                                                                              SyntaxKind.NumericLiteralExpression,
-                                                                              Literal(1))),
-                                                            BinaryExpression(SyntaxKind.AddExpression,
-                                                                             IdentifierName(ColumnFieldName),
-                                                                             LiteralExpression(
-                                                                              SyntaxKind.NumericLiteralExpression,
-                                                                              Literal(1))))))));
+                  Block(SingletonList<StatementSyntax>(GenerateScannerExceptionThrowStatement(
+                                                        GetIllegalCharacterExceptionMessage(
+                                                         ElementAccessExpression(IdentifierName(InputFieldName))
+                                                           .WithArgumentList(BracketedArgumentList(
+                                                                              SingletonSeparatedList(Argument(
+                                                                               IdentifierName(ScanIndexFieldName))))))))));
 
   private ExpressionStatementSyntax GenerateScanNextMethodScanIndexUpdate() =>
     ExpressionStatement(AssignmentExpression(SyntaxKind.AddAssignmentExpression,
@@ -384,7 +382,7 @@ public class CSharpScannerSourceGenerator(Grammar grammar) : CSharpSourceGenerat
                                                                               IdentifierName(ColumnFieldName),
                                                                               LiteralExpression(
                                                                                SyntaxKind.NumericLiteralExpression,
-                                                                               Literal(0)))),
+                                                                               Literal(1)))),
                                                                             ExpressionStatement(
                                                                              AssignmentExpression(
                                                                               SyntaxKind.AddAssignmentExpression,
@@ -421,19 +419,25 @@ public class CSharpScannerSourceGenerator(Grammar grammar) : CSharpSourceGenerat
                                                                                     SyntaxKind.NumericLiteralExpression,
                                                                                     Literal(1))))))))))));
 
-  private static InterpolatedStringExpressionSyntax GetIllegalCharacterExceptionMessage(ExpressionSyntax characterExpression,
-      ExpressionSyntax rowExpression,
-      ExpressionSyntax columnExpression) =>
+  private ThrowStatementSyntax GenerateScannerExceptionThrowStatement(InterpolatedStringExpressionSyntax message) =>
+    ThrowStatement(ObjectCreationExpression(IdentifierName(ScannerExceptionClassName))
+                     .WithArgumentList(ArgumentList(SeparatedList<ArgumentSyntax>(new SyntaxNodeOrToken[] {
+                       Argument(message),
+                       Token(SyntaxKind.CommaToken),
+                       Argument(IdentifierName(ScanIndexFieldName)),
+                       Token(SyntaxKind.CommaToken),
+                       Argument(IdentifierName(RowFieldName)),
+                       Token(SyntaxKind.CommaToken),
+                       Argument(IdentifierName(ColumnFieldName)),
+                     }))));
+
+  private static InterpolatedStringExpressionSyntax GetIllegalCharacterExceptionMessage(ExpressionSyntax characterExpression) =>
       InterpolatedStringExpression(Token(SyntaxKind.InterpolatedStringStartToken))
           .WithContents(List(new InterpolatedStringContentSyntax[] {
               InterpolatedStringText()
                   .WithTextToken(Token(TriviaList(), SyntaxKind.InterpolatedStringTextToken, "Illegal character '", "Illegal character '", TriviaList())),
               Interpolation(characterExpression),
               InterpolatedStringText()
-                  .WithTextToken(Token(TriviaList(), SyntaxKind.InterpolatedStringTextToken, "' at ", "' at ", TriviaList())),
-              Interpolation(rowExpression),
-              InterpolatedStringText()
-                  .WithTextToken(Token(TriviaList(), SyntaxKind.InterpolatedStringTextToken, ":", ":", TriviaList())),
-              Interpolation(columnExpression),
+                  .WithTextToken(Token(TriviaList(), SyntaxKind.InterpolatedStringTextToken, "'", "'", TriviaList())),
           }));
 }

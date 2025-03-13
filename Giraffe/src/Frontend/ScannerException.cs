@@ -1,7 +1,4 @@
 namespace Giraffe.Frontend;
-public class ScannerException : Exception
+public class ScannerException(string message, int index, int row, int column) : FrontendException(message, index, row, column)
 {
-    public ScannerException(string message) : base(message)
-    {
-    }
-}
+};
