@@ -24,6 +24,19 @@ public class CSharpParseTreeSourceGenerator : CSharpSourceGenerator {
                                                                             .WithRankSpecifiers(SingletonList(
                                                                              ArrayRankSpecifier(SingletonSeparatedList<ExpressionSyntax>(
                                                                               OmittedArraySizeExpression()))))))))
-      .WithBaseList(BaseList(SingletonSeparatedList<BaseTypeSyntax>(SimpleBaseType(IdentifierName(ParseNodeRecordName)))))
+      .WithBaseList(BaseList(SingletonSeparatedList<BaseTypeSyntax>(PrimaryConstructorBaseType(IdentifierName(ParseNodeRecordName))
+                                                                        .WithArgumentList(ArgumentList(
+                                                                         SeparatedList<ArgumentSyntax>(new SyntaxNodeOrToken[] {
+                                                                           Argument(LiteralExpression(
+                                                                            SyntaxKind.NumericLiteralExpression,
+                                                                            Literal(0))),
+                                                                           Token(SyntaxKind.CommaToken),
+                                                                           Argument(LiteralExpression(
+                                                                            SyntaxKind.NumericLiteralExpression,
+                                                                            Literal(0))),
+                                                                           Token(SyntaxKind.CommaToken),
+                                                                           Argument(LiteralExpression(
+                                                                            SyntaxKind.NumericLiteralExpression,
+                                                                            Literal(0)))}))))))
       .WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
 }

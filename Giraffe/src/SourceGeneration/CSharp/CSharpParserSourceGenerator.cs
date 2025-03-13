@@ -14,6 +14,9 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
   public required string ParseTreeRecordName { get; init; }
   public required string TokenKindEnumName { get; init; }
   public required string NonterminalKindEnumName { get; init; }
+  public required string ParseNodeIndexPropertyName { get; init; }
+  public required string ParseNodeRowPropertyName { get; init; }
+  public required string ParseNodeColumnPropertyName { get; init; }
   public required string TokenRecordName { get; init; }
   public required string TokenKindPropertyName { get; init; }
   public required string NonterminalRecordName { get; init; }
@@ -119,12 +122,21 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
                                        ?? throw new CSharpSourceGeneratorException("Cannot parse member declarations")];
 
   private ReturnStatementSyntax GeneratePredictionOutputReturnStatement(Nonterminal nt,
-                                                                        IEnumerable<Consumption> consumptions) =>
+                                                                        List<Consumption> consumptions) =>
     ReturnStatement(ImplicitObjectCreationExpression()
                       .WithArgumentList(ArgumentList(SeparatedList<ArgumentSyntax>(new SyntaxNodeOrToken[] {
                         NonterminalToNonterminalKindArgument(nt),
                         Token(SyntaxKind.CommaToken),
                         Argument(GeneratePredictionOutputCollection(consumptions)),
+                        Token(SyntaxKind.CommaToken),
+                        GeneratePredictionOutputPositionPropertyArgument(ParseNodeIndexPropertyName,
+                                                                         consumptions.Count == 0),
+                        Token(SyntaxKind.CommaToken),
+                        GeneratePredictionOutputPositionPropertyArgument(ParseNodeRowPropertyName,
+                                                                         consumptions.Count == 0),
+                        Token(SyntaxKind.CommaToken),
+                        GeneratePredictionOutputPositionPropertyArgument(ParseNodeColumnPropertyName,
+                                                                         consumptions.Count == 0),
                       }))));
 
   private ReturnStatementSyntax GenerateParseTreeReturnStatement(IEnumerable<Consumption> consumptions) =>
@@ -155,6 +167,14 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
 
     return ExpressionElement(IdentifierName(idName));
   }
+
+  private ArgumentSyntax GeneratePredictionOutputPositionPropertyArgument(string positionPropertyName,
+                                                                          bool consumptionsEmpty) =>
+    Argument(consumptionsEmpty
+      ? LiteralExpression(SyntaxKind.NumericLiteralExpression, Literal(-1))
+      : MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
+                               IdentifierName(GetSymbolIdFromIndex(0)),
+                               IdentifierName(positionPropertyName)));
 
   private ArgumentSyntax TerminalToTokenKindArgument(Terminal terminal) =>
     Argument(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
@@ -227,7 +247,6 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
       }));
   }
 
-  // Generates: `private bool See(params TokenKind[] terminals) => terminals.Contains(scanner.Peek().Type);`
   private MethodDeclarationSyntax GenerateSeeMethod() {
     const string terminalsParamName = "terminals";
     return MethodDeclaration(PredefinedType(Token(SyntaxKind.BoolKeyword)), Identifier(SeeMethodName))
@@ -248,7 +267,6 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
            .WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
   }
 
-  // Generates: `private Token Eat(int terminal) => See(terminal) ? scanner.Eat() : throw new Exception();`
   private MethodDeclarationSyntax GenerateEatMethod() {
     const string terminalParamName = "terminal";
     return MethodDeclaration(IdentifierName(TokenRecordName), Identifier(EatMethodName))

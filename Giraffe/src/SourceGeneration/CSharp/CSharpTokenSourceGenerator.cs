@@ -7,13 +7,13 @@ namespace Giraffe.SourceGeneration.CSharp;
 
 public class CSharpTokenSourceGenerator : CSharpSourceGenerator {
   public required string ParseNodeRecordName { get; init; }
+  public required string ParseNodeIndexPropertyName { get; init; }
+  public required string ParseNodeRowPropertyName { get; init; }
+  public required string ParseNodeColumnPropertyName { get; init; }
   public required string TokenRecordName { get; init; }
   public required string TokenKindEnumName { get; init; }
   public required string KindPropertyName { get; init; }
   public required string ImagePropertyName { get; init; }
-  public required string IndexPropertyName { get; init; }
-  public required string RowPropertyName { get; init; }
-  public required string ColumnPropertyName { get; init; }
 
   public override CompilationUnitSyntax Generate() =>
     CompilationUnit()
@@ -31,15 +31,23 @@ public class CSharpTokenSourceGenerator : CSharpSourceGenerator {
         Parameter(Identifier(ImagePropertyName))
           .WithType(PredefinedType(Token(SyntaxKind.StringKeyword))),
           Token(SyntaxKind.CommaToken),
-          Parameter(Identifier(IndexPropertyName))
+          Parameter(Identifier(ParseNodeIndexPropertyName))
             .WithType(PredefinedType(Token(SyntaxKind.IntKeyword))),
           Token(SyntaxKind.CommaToken),
-          Parameter(Identifier(RowPropertyName))
+          Parameter(Identifier(ParseNodeRowPropertyName))
             .WithType(PredefinedType(Token(SyntaxKind.IntKeyword))),
           Token(SyntaxKind.CommaToken),
-          Parameter(Identifier(ColumnPropertyName))
+          Parameter(Identifier(ParseNodeColumnPropertyName))
             .WithType(PredefinedType(Token(SyntaxKind.IntKeyword))),
       })))
-      .WithBaseList(BaseList(SingletonSeparatedList<BaseTypeSyntax>(SimpleBaseType(IdentifierName(ParseNodeRecordName)))))
+      .WithBaseList(BaseList(SingletonSeparatedList<BaseTypeSyntax>(PrimaryConstructorBaseType(
+                                                                       IdentifierName(ParseNodeRecordName))
+                                                                      .WithArgumentList(ArgumentList(
+                                                                       SeparatedList<ArgumentSyntax>(new SyntaxNodeOrToken[] {
+                                                                         Argument(IdentifierName(ParseNodeIndexPropertyName)),
+                                                                         Token(SyntaxKind.CommaToken),
+                                                                         Argument(IdentifierName(ParseNodeRowPropertyName)),
+                                                                         Token(SyntaxKind.CommaToken),
+                                                                         Argument(IdentifierName(ParseNodeColumnPropertyName))}))))))
       .WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
 }
