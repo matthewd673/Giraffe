@@ -1,3 +1,4 @@
+# === Terminals ===
 term_name -> /[a-z][a-z0-9_]*/ ;
 nonterm_name -> /[A-Z][A-Z0-9_]*/ ;
 arrow -> /->/ ;
@@ -7,7 +8,9 @@ star -> /\*/ ;
 expand -> /\.\./ ;
 discard -> /_/ ;
 ws _ -> /\s+/ ;
+comment _ -> /#.*\n/ ;
 
+# === Nonterminals ===
 GRAMMAR * -> ANY_DEF ..ANY_DEF_T ;
 ANY_DEF -> TERM_DEF
         -> NONTERM_DEF ;

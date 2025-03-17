@@ -10,5 +10,6 @@ public enum TokenKind
     Expand,
     Discard,
     Ws,
+    Comment,
     Eof
 }
