@@ -5,8 +5,13 @@ using TerminalDefinition = Giraffe.AST.TerminalDefinition;
 
 namespace Giraffe;
 
-public class GrammarBuilder(GrammarDefinition grammarDefinition) {
-  public Grammar GrammarOfAST() {
+public static class GrammarBuilder {
+  /// <summary>
+  /// Convert the given GrammarDefinition AST into a Grammar object.
+  /// </summary>
+  /// <param name="grammarDefinition">The GrammarDefinition to convert.</param>
+  /// <returns>A Grammar containing the Symbols and Rules represented in the GrammarDefinition.</returns>
+  public static Grammar GrammarOfAST(GrammarDefinition grammarDefinition) {
     Dictionary<Terminal, GIR.TerminalDefinition> terminalDefinitions = [];
     HashSet<Rule> rules = [];
     HashSet<Nonterminal> entryNonterminals = [];

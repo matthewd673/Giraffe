@@ -66,6 +66,4 @@ public record Grammar {
     Rules.RemoveWhere(r => r.Nonterminal.Equals(nonterminal));
     Rules.RemoveWhere(r => r.Symbols.Contains(nonterminal));
   }
-
-  public static bool IsParameter(string name) => name.StartsWith('$');
 }

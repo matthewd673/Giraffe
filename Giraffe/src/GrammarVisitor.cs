@@ -42,7 +42,7 @@ public sealed class GrammarVisitor : Visitor<ASTNode> {
     if (termDef.Children is [Token { Kind: TokenKind.TermName } termName,
                               Nonterminal { Kind: NtKind.OptDiscard } optDiscard,
                               Nonterminal { Kind: NtKind.TermRhs } termRhs,
-                    ]) {
+                            ]) {
       return new(termName.Image, (TerminalRhs)Visit(termRhs), optDiscard.Children.Length > 0);
     }
 

@@ -25,8 +25,8 @@ public class Program {
     try {
       grammarText = File.ReadAllText(grammarFilename);
     }
-    catch (Exception e) {
-      PrintError($"Failed to read file \"{grammarFilename}\"");
+    catch (Exception exception) {
+      PrintError($"An error occurred while loading the grammar definition file: {exception.Message}");
       return;
     }
 
@@ -72,8 +72,7 @@ public class Program {
     GrammarDefinition grammarDefinition = visitor.Visit(parseTree);
 
     // Convert AST to Grammar
-    GrammarBuilder builder = new(grammarDefinition);
-    return builder.GrammarOfAST();
+    return GrammarBuilder.GrammarOfAST(grammarDefinition);
   }
 
   private static bool CheckGrammar(Grammar grammar) {
