@@ -1,18 +1,19 @@
 ﻿using Giraffe.Analyses;
 using Giraffe.AST;
+using Giraffe.Checks;
 using Giraffe.Frontend;
 using Giraffe.GIR;
 using Giraffe.Passes;
 using Giraffe.SourceGeneration;
 using Giraffe.SourceGeneration.CSharp;
-using static Giraffe.GIR.GrammarFactory;
+using static Giraffe.Utils.ConsoleUtils;
 
 namespace Giraffe;
 
 public class Program {
   public static void Main(string[] args) {
     if (args.Length != 3) {
-      Console.WriteLine("usage: giraffe <grammar file> <output directory> <namespace>");
+      PrintInfo("usage: giraffe <grammar file> <output directory> <namespace>");
       return;
     }
     string grammarFilename = args[0];
@@ -25,53 +26,90 @@ public class Program {
       grammarText = File.ReadAllText(grammarFilename);
     }
     catch (Exception e) {
-      Console.WriteLine("Failed to read file \"{0}\"", grammarFilename);
+      PrintError($"Failed to read file \"{grammarFilename}\"");
       return;
     }
 
-    // Parse the grammar definition
-    Scanner scanner = new(grammarText);
-    Parser parser = new(scanner);
-
-    ParseTree parseTree;
+    // Create the Grammar
+    Grammar grammar;
     try {
-      parseTree = parser.Parse();
+      grammar = CreateGrammar(grammarText);
     }
-    catch (ScannerException e) {
-      Console.WriteLine("A ScannerException occurred at ({0},{1}): {2}", e.Row, e.Column, e.Message);
+    catch (FrontendException exception) {
+      PrintError($"A {exception.GetType().Name} occurred at ({exception.Row},{exception.Column}): {exception.Message}");
       return;
     }
-    catch (ParserException e) {
-      Console.WriteLine("A ParserException occurred at ({0},{1}): {2}", e.Row, e.Column, e.Message);
-      return;
-    }
-
-    // Walk the definition
-    GrammarVisitor visitor = new();
-
-    GrammarDefinition grammarDefinition;
-    try {
-      grammarDefinition = visitor.Visit(parseTree);
-    }
-    catch (VisitorException e) {
-      Console.WriteLine("A VisitorException occurred: {0}", e.Message);
+    catch (Exception exception) {
+      PrintError($"An internal error occurred while constructing the grammar: {exception.Message}");
       return;
     }
 
-    Console.WriteLine("Generating grammar...");
+    // Run semantic checks on the Grammar
+    if (!CheckGrammar(grammar)) {
+      return;
+    }
 
-    // Convert AST to Grammar
-    GrammarBuilder builder = new(grammarDefinition);
-    Grammar grammar = builder.GrammarOfAST();
-
+    // Compute the sets and generate the source code output
     try {
       ProcessGrammarAndGenerateSourceFiles(grammar, outputDirectory, @namespace);
     }
     catch (Exception e) {
-      Console.WriteLine("An error occurred while processing the grammar and generating the parser: {0}", e.Message);
+      PrintError($"An error occurred while generating the parser: {e.Message}");
     }
 
-    Console.WriteLine("Done");
+    PrintInfo("Done");
+  }
+
+  private static Grammar CreateGrammar(string grammarText) {
+    // Parse the grammar definition
+    Scanner scanner = new(grammarText);
+    Parser parser = new(scanner);
+
+    ParseTree parseTree = parser.Parse();
+
+    // Walk the definition
+    GrammarVisitor visitor = new();
+    GrammarDefinition grammarDefinition = visitor.Visit(parseTree);
+
+    // Convert AST to Grammar
+    GrammarBuilder builder = new(grammarDefinition);
+    return builder.GrammarOfAST();
+  }
+
+  private static bool CheckGrammar(Grammar grammar) {
+    // Run checks to ensure grammar is semantically valid
+    CheckResult undefinedSymbolsCheckResult = new UndefinedSymbolsCheck(grammar).Evaluate();
+    if (!undefinedSymbolsCheckResult.Pass) {
+      PrintError($"{nameof(UndefinedSymbolsCheck)} failed: {undefinedSymbolsCheckResult.Message}");
+      return false;
+    }
+
+    // Run analyses to find warnings
+    IgnoredTerminalUsageAnalysis ignoredTerminalUsageAnalysis = new(grammar);
+    HashSet<Rule> rulesContainingIgnoredTerminals = ignoredTerminalUsageAnalysis.Analyze();
+    if (rulesContainingIgnoredTerminals.Count > 0) {
+      // TODO: Improve this message, it's very vague
+      PrintWarning($"Warning: {rulesContainingIgnoredTerminals.Count} rule(s) contain ignored terminals");
+    }
+
+    UnreachableSymbolsAnalysis unreachableSymbolsAnalysis = new(grammar);
+    HashSet<Symbol> unreachableSymbols = unreachableSymbolsAnalysis.Analyze().ToHashSet();
+    // Don't report ignored terminals or EOF as unreachable
+    unreachableSymbols.RemoveWhere(s => s is Terminal t && (t.Equals(Grammar.Eof) ||
+                                                            grammar.TerminalDefinitions[t].Ignore));
+    if (unreachableSymbols.Count > 0) {
+      PrintWarning($"Warning: Grammar contains unreachable symbols: {string.Join(", ",
+        unreachableSymbols.Select(s => $"\"{s.Value}\""))}");
+    }
+
+    NonProductiveRuleAnalysis nonProductiveRuleAnalysis = new(grammar);
+    HashSet<Rule> nonProductiveRules = nonProductiveRuleAnalysis.Analyze();
+    if (nonProductiveRules.Count > 0) {
+      // TODO: Improve this message, it's very vague
+      PrintWarning($"Warning: {nonProductiveRules.Count} rule(s) are non-productive");
+    }
+
+    return true;
   }
 
   private static void ProcessGrammarAndGenerateSourceFiles(Grammar grammar, string outputDirectory, string @namespace) {
@@ -91,7 +129,7 @@ public class Program {
                                           string outputDirectory) where T : notnull {
     foreach (SourceFile<T> file in sourceFiles) {
       string filePath = Path.Combine(outputDirectory, file.Filename);
-      Console.WriteLine("Writing \"{0}\"", filePath);
+      PrintInfo($"Writing \"{filePath}\"");
 
       using StreamWriter writer = new(filePath);
       writer.Write(file.Contents.ToString());

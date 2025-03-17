@@ -16,6 +16,7 @@ public class UndefinedSymbolsCheck(Grammar grammar) : Check(grammar) {
 
     return undefined.Count == 0
              ? new(true)
-             : new(false, $"Grammar contains undefined symbols: [{string.Join(", ", undefined)}]");
+             : new(false, $"Grammar contains undefined symbol(s): {string.Join(", ",
+                                                                               undefined.Select(s => $"\"{s.Value}\""))}");
   }
 }
