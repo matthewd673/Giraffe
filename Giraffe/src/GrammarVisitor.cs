@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Giraffe.AST;
 using Giraffe.Frontend;
 using Nonterminal = Giraffe.Frontend.Nonterminal;
@@ -50,6 +51,7 @@ public sealed class GrammarVisitor : Visitor<ASTNode> {
 
   protected override TerminalRhs VisitTermRhs(ParseNode[] children) => children switch {
     [Token { Kind: TokenKind.Regex } regex] => new(new(CleanRegex(regex.Image))),
+    [Token { Kind: TokenKind.String } str] => new(new(CleanStringToRegex(str.Image))),
     _ => throw new VisitorException("Cannot visit TermRhs, unexpected children"),
   };
 
@@ -91,6 +93,7 @@ public sealed class GrammarVisitor : Visitor<ASTNode> {
   protected override ASTNode VisitTermName(Token token) => throw new NotImplementedException();
   protected override ASTNode VisitNontermName(Token token) => throw new NotImplementedException();
   protected override ASTNode VisitRegex(Token token) => throw new NotImplementedException();
+  protected override ASTNode VisitString(Token token) => throw new NotImplementedException();
   protected override ASTNode VisitStar(Token token) => throw new NotImplementedException();
   protected override ASTNode VisitExpand(Token token) => throw new NotImplementedException();
   protected override ASTNode VisitDiscard(Token token) => throw new NotImplementedException();
@@ -100,5 +103,11 @@ public sealed class GrammarVisitor : Visitor<ASTNode> {
     string trimmed = input[1..^1]; // Trim '/' at start and end
     string unEscaped = trimmed.Replace("\\/", "/"); // Un-sanitize escaped '/'
     return unEscaped;
+  }
+
+  private static string CleanStringToRegex(string input) {
+    string trimmed = input[1..^1]; // Trim '"' at start and end
+    string escaped = Regex.Escape(trimmed);
+    return escaped;
   }
 }

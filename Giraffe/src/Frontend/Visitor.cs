@@ -27,6 +27,7 @@ public abstract class Visitor<T>
         TokenKind.TermName => VisitTermName(token),
         TokenKind.NontermName => VisitNontermName(token),
         TokenKind.Regex => VisitRegex(token),
+        TokenKind.String => VisitString(token),
         TokenKind.Star => VisitStar(token),
         TokenKind.Expand => VisitExpand(token),
         TokenKind.Discard => VisitDiscard(token),
@@ -46,6 +47,7 @@ public abstract class Visitor<T>
     protected abstract T VisitTermName(Token token);
     protected abstract T VisitNontermName(Token token);
     protected abstract T VisitRegex(Token token);
+    protected abstract T VisitString(Token token);
     protected abstract T VisitStar(Token token);
     protected abstract T VisitExpand(Token token);
     protected abstract T VisitDiscard(Token token);

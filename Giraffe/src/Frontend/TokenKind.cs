@@ -6,6 +6,7 @@ public enum TokenKind
     Arrow,
     End,
     Regex,
+    String,
     Star,
     Expand,
     Discard,

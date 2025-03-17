@@ -84,7 +84,13 @@ public class Parser(Scanner scanner)
             return new(NtKind.TermRhs, [s0], s0.Index, s0.Row, s0.Column);
         }
 
-        throw new ParserException($"Cannot parse TERM_RHS, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{regex}}", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
+        if (See(TokenKind.String))
+        {
+            Token s0 = Eat(TokenKind.String);
+            return new(NtKind.TermRhs, [s0], s0.Index, s0.Row, s0.Column);
+        }
+
+        throw new ParserException($"Cannot parse TERM_RHS, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{regex, string}}", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
     }
 
     private Nonterminal ParseNontermDef()
