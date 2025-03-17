@@ -99,18 +99,16 @@ public class CSharpVisitorSourceGenerator(List<Terminal> relevantTerminals,
                                                                            string nonterminalParameterName) =>
     SwitchExpressionArm(ConstantPattern(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                                                IdentifierName(NonterminalKindEnumName),
-                                                               IdentifierName(StringToCSharpFormat(nonterminal.Value)))),
+                                                               IdentifierName(StringToSafeUpperCamelCase(nonterminal.Value)))),
                                         InvocationExpression(IdentifierName(GetVisitMethodName(nonterminal)))
                                           .WithArgumentList(ArgumentList(SingletonSeparatedList(
                                                                             Argument(
-                                                                             MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
-                                                                               IdentifierName(nonterminalParameterName),
-                                                                               IdentifierName(NonterminalChildrenPropertyName)))))));
+                                                                               IdentifierName(nonterminalParameterName))))));
 
   private SwitchExpressionArmSyntax GenerateTokenSwitchExpressionArm(Terminal token, string tokenParameterName) =>
     SwitchExpressionArm(ConstantPattern(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                                                IdentifierName(TokenKindEnumName),
-                                                               IdentifierName(StringToCSharpFormat(token.Value)))),
+                                                               IdentifierName(StringToSafeUpperCamelCase(token.Value)))),
                                         InvocationExpression(IdentifierName(GetVisitMethodName(token)))
                                           .WithArgumentList(ArgumentList(SingletonSeparatedList(
                                                                           Argument(IdentifierName(tokenParameterName))))));
@@ -118,11 +116,8 @@ public class CSharpVisitorSourceGenerator(List<Terminal> relevantTerminals,
   private MethodDeclarationSyntax GenerateVisitNonterminalMethodStub(Nonterminal nonterminal) =>
     MethodDeclaration(IdentifierName(GenericName), Identifier(GetVisitMethodName(nonterminal)))
       .WithModifiers(TokenList(Token(SyntaxKind.ProtectedKeyword), Token(SyntaxKind.AbstractKeyword)))
-      .WithParameterList(ParameterList(SingletonSeparatedList(Parameter(Identifier("children"))
-                                                                .WithType(ArrayType(IdentifierName(ParseNodeRecordName))
-                                                                            .WithRankSpecifiers(SingletonList(
-                                                                             ArrayRankSpecifier(SingletonSeparatedList<ExpressionSyntax>(
-                                                                              OmittedArraySizeExpression()))))))))
+      .WithParameterList(ParameterList(SingletonSeparatedList(Parameter(Identifier(StringToSafeCamelCase(nonterminal.Value)))
+                                                                .WithType(IdentifierName(NonterminalRecordName)))))
       .WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
 
   private MethodDeclarationSyntax GenerateVisitTokenMethodStub(Terminal token) =>
@@ -132,7 +127,7 @@ public class CSharpVisitorSourceGenerator(List<Terminal> relevantTerminals,
                                                                 .WithType(IdentifierName(TokenRecordName)))))
       .WithSemicolonToken(Token(SyntaxKind.SemicolonToken));
 
-  private static string GetVisitMethodName(Symbol symbol) => $"Visit{StringToCSharpFormat(symbol.Value)}";
+  private static string GetVisitMethodName(Symbol symbol) => $"Visit{StringToSafeUpperCamelCase(symbol.Value)}";
 
   private SwitchExpressionArmSyntax GenerateDefaultThrowSwitchExpressionArm() =>
     SwitchExpressionArm(DiscardPattern(), GenerateThrowArgumentOutOfRangeExceptionExpression());

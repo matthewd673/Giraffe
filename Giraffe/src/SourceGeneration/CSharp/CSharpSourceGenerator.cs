@@ -32,8 +32,11 @@ public abstract class CSharpSourceGenerator {
     return FileScopedNamespaceDeclaration(nameSyntax);
   }
 
-  protected static string StringToCSharpFormat(string name) =>
+  protected static string StringToSafeUpperCamelCase(string name) =>
     StringUtils.Capitalize(StringUtils.SnakeCaseToCamelCase(StringUtils.SanitizeNonWordCharacters(name)));
+
+  protected static string StringToSafeCamelCase(string name) =>
+    StringUtils.SnakeCaseToCamelCase(StringUtils.SanitizeNonWordCharacters(name));
 
   protected static string GetDisplayName(Grammar grammar, Symbol symbol) =>
     grammar.DisplayNames.GetValueOrDefault(symbol.Value, symbol.Value);

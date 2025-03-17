@@ -181,16 +181,16 @@ public class CSharpParserSourceGenerator(GrammarSets grammarSets) : CSharpSource
   private ArgumentSyntax TerminalToTokenKindArgument(Terminal terminal) =>
     Argument(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                     IdentifierName(TokenKindEnumName),
-                                    IdentifierName(StringToCSharpFormat(terminal.Value))));
+                                    IdentifierName(StringToSafeUpperCamelCase(terminal.Value))));
 
   private ArgumentSyntax NonterminalToNonterminalKindArgument(Nonterminal nt) =>
     Argument(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                     IdentifierName(NonterminalKindEnumName),
-                                    IdentifierName(StringToCSharpFormat(nt.Value))));
+                                    IdentifierName(StringToSafeUpperCamelCase(nt.Value))));
 
   private static string GetSymbolIdFromIndex(int id) => $"s{id}";
 
-  private static string GetParseMethodName(Nonterminal nt) => $"Parse{StringToCSharpFormat(nt.Value)}";
+  private static string GetParseMethodName(Nonterminal nt) => $"Parse{StringToSafeUpperCamelCase(nt.Value)}";
 
   private ThrowStatementSyntax GenerateParserExceptionThrowStatement(InterpolatedStringExpressionSyntax message) =>
     ThrowStatement(GenerateParserExceptionObjectCreation(message));

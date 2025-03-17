@@ -118,7 +118,7 @@ public class CSharpScannerSourceGenerator(Grammar grammar) : CSharpSourceGenerat
                                                                        .Where(t => grammar.GetTerminalDefinition(t).Ignore),
                                                                 t => ExpressionElement(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                                                         IdentifierName(TokenKindEnumName),
-                                                                        IdentifierName(StringToCSharpFormat(t.Value)))))));
+                                                                        IdentifierName(StringToSafeUpperCamelCase(t.Value)))))));
 
   private static FieldDeclarationSyntax GenerateScanIndexField() =>
       FieldDeclaration(VariableDeclaration(PredefinedType(Token(SyntaxKind.IntKeyword)))
@@ -221,7 +221,7 @@ public class CSharpScannerSourceGenerator(Grammar grammar) : CSharpSourceGenerat
                                                                             new SyntaxNodeOrToken[] {
                                                                                 Argument(MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                                                                                     IdentifierName(TokenKindEnumName),
-                                                                                    IdentifierName(StringToCSharpFormat(Grammar.Eof.Value)))),
+                                                                                    IdentifierName(StringToSafeUpperCamelCase(Grammar.Eof.Value)))),
                                                                                 Token(SyntaxKind.CommaToken),
                                                                                 Argument(LiteralExpression(
                                                                                  SyntaxKind.StringLiteralExpression,

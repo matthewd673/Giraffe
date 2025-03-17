@@ -10,16 +10,16 @@ public abstract class Visitor<T>
     };
     public T Visit(Nonterminal nonterminal) => nonterminal.Kind switch
     {
-        NtKind.Grammar => VisitGrammar(nonterminal.Children),
-        NtKind.AnyDef => VisitAnyDef(nonterminal.Children),
-        NtKind.TermDef => VisitTermDef(nonterminal.Children),
-        NtKind.TermRhs => VisitTermRhs(nonterminal.Children),
-        NtKind.NontermDef => VisitNontermDef(nonterminal.Children),
-        NtKind.Rule => VisitRule(nonterminal.Children),
-        NtKind.Symbol => VisitSymbol(nonterminal.Children),
-        NtKind.OptStar => VisitOptStar(nonterminal.Children),
-        NtKind.OptExpand => VisitOptExpand(nonterminal.Children),
-        NtKind.OptDiscard => VisitOptDiscard(nonterminal.Children),
+        NtKind.Grammar => VisitGrammar(nonterminal),
+        NtKind.AnyDef => VisitAnyDef(nonterminal),
+        NtKind.TermDef => VisitTermDef(nonterminal),
+        NtKind.TermRhs => VisitTermRhs(nonterminal),
+        NtKind.NontermDef => VisitNontermDef(nonterminal),
+        NtKind.Rule => VisitRule(nonterminal),
+        NtKind.Symbol => VisitSymbol(nonterminal),
+        NtKind.OptStar => VisitOptStar(nonterminal),
+        NtKind.OptExpand => VisitOptExpand(nonterminal),
+        NtKind.OptDiscard => VisitOptDiscard(nonterminal),
         _ => throw new ArgumentOutOfRangeException(),
     };
     public T Visit(Token token) => token.Kind switch
@@ -34,16 +34,16 @@ public abstract class Visitor<T>
         TokenKind.Eof => VisitEof(token),
         _ => throw new ArgumentOutOfRangeException(),
     };
-    protected abstract T VisitGrammar(ParseNode[] children);
-    protected abstract T VisitAnyDef(ParseNode[] children);
-    protected abstract T VisitTermDef(ParseNode[] children);
-    protected abstract T VisitTermRhs(ParseNode[] children);
-    protected abstract T VisitNontermDef(ParseNode[] children);
-    protected abstract T VisitRule(ParseNode[] children);
-    protected abstract T VisitSymbol(ParseNode[] children);
-    protected abstract T VisitOptStar(ParseNode[] children);
-    protected abstract T VisitOptExpand(ParseNode[] children);
-    protected abstract T VisitOptDiscard(ParseNode[] children);
+    protected abstract T VisitGrammar(Nonterminal grammar);
+    protected abstract T VisitAnyDef(Nonterminal anyDef);
+    protected abstract T VisitTermDef(Nonterminal termDef);
+    protected abstract T VisitTermRhs(Nonterminal termRhs);
+    protected abstract T VisitNontermDef(Nonterminal nontermDef);
+    protected abstract T VisitRule(Nonterminal rule);
+    protected abstract T VisitSymbol(Nonterminal symbol);
+    protected abstract T VisitOptStar(Nonterminal optStar);
+    protected abstract T VisitOptExpand(Nonterminal optExpand);
+    protected abstract T VisitOptDiscard(Nonterminal optDiscard);
     protected abstract T VisitTermName(Token token);
     protected abstract T VisitNontermName(Token token);
     protected abstract T VisitRegex(Token token);

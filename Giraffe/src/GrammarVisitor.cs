@@ -15,9 +15,9 @@ public sealed class GrammarVisitor : Visitor<ASTNode> {
     };
   }
 
-  protected override GrammarDefinition VisitGrammar(ParseNode[] children) {
+  protected override GrammarDefinition VisitGrammar(Nonterminal grammar) {
     List<SymbolDefinition> symbolDefinitions = [];
-    foreach (ParseNode child in children) {
+    foreach (ParseNode child in grammar.Children) {
       if (child is not Nonterminal nt) {
         throw new VisitorException($"Unexpected child in Grammar, child has type {child.GetType()}");
       }
@@ -32,16 +32,16 @@ public sealed class GrammarVisitor : Visitor<ASTNode> {
     return new(symbolDefinitions);
   }
 
-  protected override SymbolDefinition VisitAnyDef(ParseNode[] children) => children switch {
+  protected override SymbolDefinition VisitAnyDef(Nonterminal anyDef) => anyDef.Children switch {
     [Nonterminal { Kind: NtKind.TermDef } termDef] => (SymbolDefinition)Visit(termDef),
     [Nonterminal { Kind: NtKind.NontermDef } nontermDef] => (SymbolDefinition)Visit(nontermDef),
     _ => throw new VisitorException("Cannot visit AnyDef, unexpected children"),
   };
 
-  protected override TerminalDefinition VisitTermDef(ParseNode[] children) {
-    if (children is [Token { Kind: TokenKind.TermName } termName,
-                     Nonterminal { Kind: NtKind.OptDiscard } optDiscard,
-                     Nonterminal { Kind: NtKind.TermRhs } termRhs,
+  protected override TerminalDefinition VisitTermDef(Nonterminal termDef) {
+    if (termDef.Children is [Token { Kind: TokenKind.TermName } termName,
+                              Nonterminal { Kind: NtKind.OptDiscard } optDiscard,
+                              Nonterminal { Kind: NtKind.TermRhs } termRhs,
                     ]) {
       return new(termName.Image, (TerminalRhs)Visit(termRhs), optDiscard.Children.Length > 0);
     }
@@ -49,34 +49,34 @@ public sealed class GrammarVisitor : Visitor<ASTNode> {
     throw new VisitorException("Cannot visit TermDef, unexpected children");
   }
 
-  protected override TerminalRhs VisitTermRhs(ParseNode[] children) => children switch {
+  protected override TerminalRhs VisitTermRhs(Nonterminal termRhs) => termRhs.Children switch {
     [Token { Kind: TokenKind.Regex } regex] => new(new(CleanRegex(regex.Image))),
     [Token { Kind: TokenKind.String } str] => new(new(CleanStringToRegex(str.Image))),
     _ => throw new VisitorException("Cannot visit TermRhs, unexpected children"),
   };
 
-  protected override NonterminalDefinition VisitNontermDef(ParseNode[] children) {
+  protected override NonterminalDefinition VisitNontermDef(Nonterminal nontermDef) {
     List<RuleDefinition> ruleDefinitions = [];
 
-    if (children[0] is not Token { Kind: TokenKind.NontermName } nontermName) {
+    if (nontermDef.Children[0] is not Token { Kind: TokenKind.NontermName } nontermName) {
       throw new VisitorException("Cannot visit NonterminalDefinition, unexpected children");
     }
 
-    if (children[1] is not Nonterminal { Kind: NtKind.OptStar } optStar) {
+    if (nontermDef.Children[1] is not Nonterminal { Kind: NtKind.OptStar } optStar) {
       throw new VisitorException("Cannot visit NonterminalDefinition, unexpected children");
     }
 
-    for (int i = 2; i < children.Length; i++) {
-      ruleDefinitions.Add((RuleDefinition)Visit(children[i]));
+    for (int i = 2; i < nontermDef.Children.Length; i++) {
+      ruleDefinitions.Add((RuleDefinition)Visit(nontermDef.Children[i]));
     }
 
     return new(nontermName.Image, ruleDefinitions, optStar.Children.Length > 0);
   }
 
-  protected override RuleDefinition VisitRule(ParseNode[] children) =>
-    new(children.Select(s => (SymbolUsage)Visit(s)).ToList());
+  protected override RuleDefinition VisitRule(Nonterminal rule) =>
+    new(rule.Children.Select(s => (SymbolUsage)Visit(s)).ToList());
 
-  protected override SymbolUsage VisitSymbol(ParseNode[] children) => children switch {
+  protected override SymbolUsage VisitSymbol(Nonterminal symbol) => symbol.Children switch {
     [Nonterminal { Kind: NtKind.OptDiscard } optDiscard,
      Nonterminal { Kind: NtKind.OptExpand } optExpand,
      Token { Kind: TokenKind.NontermName } nontermName] =>
@@ -87,9 +87,9 @@ public sealed class GrammarVisitor : Visitor<ASTNode> {
     _ => throw new VisitorException("Cannot visit Symbol, unexpected children"),
   };
 
-  protected override ASTNode VisitOptStar(ParseNode[] children) => throw new NotImplementedException();
-  protected override ASTNode VisitOptExpand(ParseNode[] children) => throw new NotImplementedException();
-  protected override ASTNode VisitOptDiscard(ParseNode[] children) => throw new NotImplementedException();
+  protected override ASTNode VisitOptStar(Nonterminal optStar) => throw new NotImplementedException();
+  protected override ASTNode VisitOptExpand(Nonterminal optExpand) => throw new NotImplementedException();
+  protected override ASTNode VisitOptDiscard(Nonterminal optDiscard) => throw new NotImplementedException();
   protected override ASTNode VisitTermName(Token token) => throw new NotImplementedException();
   protected override ASTNode VisitNontermName(Token token) => throw new NotImplementedException();
   protected override ASTNode VisitRegex(Token token) => throw new NotImplementedException();
