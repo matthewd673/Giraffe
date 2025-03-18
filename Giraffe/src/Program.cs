@@ -1,6 +1,5 @@
 ﻿using Giraffe.Analyses;
 using Giraffe.AST;
-using Giraffe.Checks;
 using Giraffe.Frontend;
 using Giraffe.GIR;
 using Giraffe.Passes;
@@ -76,36 +75,44 @@ public class Program {
   }
 
   private static bool CheckGrammar(Grammar grammar) {
-    // Run checks to ensure grammar is semantically valid
-    CheckResult undefinedSymbolsCheckResult = new UndefinedSymbolsCheck(grammar).Evaluate();
-    if (!undefinedSymbolsCheckResult.Pass) {
-      PrintError($"{nameof(UndefinedSymbolsCheck)} failed: {undefinedSymbolsCheckResult.Message}");
+    // Run analyses to ensure grammar is semantically valid
+    HashSet<Symbol> undefinedSymbols = new UndefinedSymbolsAnalysis(grammar).Analyze();
+    if (undefinedSymbols.Count > 0) {
+      PrintError($"Grammar references the following undefined symbols: " +
+                 $"{string.Join(", ", undefinedSymbols.Select(s => $"\"{s.Value}\""))}");
+      return false;
+    }
+
+    Dictionary<string, List<string>> nameCollisions = new SanitizedCamelCaseNameCollisionAnalysis(grammar).Analyze();
+    if (nameCollisions.Count > 0) {
+      PrintError("Grammar contains the following sets of symbol names which collide when formatted:\n" +
+                 $"{string.Join("\n", nameCollisions.Keys.Select(k =>
+                                                                   $"\t{{{string.Join(", ",
+                                                                     nameCollisions[k].Select(n => $"\"{n}\""))}}}" +
+                                                                   $" -> \"{k}\""))}");
       return false;
     }
 
     // Run analyses to find warnings
-    IgnoredTerminalUsageAnalysis ignoredTerminalUsageAnalysis = new(grammar);
-    HashSet<Rule> rulesContainingIgnoredTerminals = ignoredTerminalUsageAnalysis.Analyze();
+    HashSet<Rule> rulesContainingIgnoredTerminals = new IgnoredTerminalUsageAnalysis(grammar).Analyze();
     if (rulesContainingIgnoredTerminals.Count > 0) {
       // TODO: Improve this message, it's very vague
-      PrintWarning($"Warning: {rulesContainingIgnoredTerminals.Count} rule(s) contain ignored terminals");
+      PrintWarning($"{rulesContainingIgnoredTerminals.Count} rule(s) contain ignored terminals");
     }
 
-    UnreachableSymbolsAnalysis unreachableSymbolsAnalysis = new(grammar);
-    HashSet<Symbol> unreachableSymbols = unreachableSymbolsAnalysis.Analyze().ToHashSet();
+    HashSet<Symbol> unreachableSymbols = new UnreachableSymbolsAnalysis(grammar).Analyze().ToHashSet();
     // Don't report ignored terminals or EOF as unreachable
     unreachableSymbols.RemoveWhere(s => s is Terminal t && (t.Equals(Grammar.Eof) ||
                                                             grammar.TerminalDefinitions[t].Ignore));
     if (unreachableSymbols.Count > 0) {
-      PrintWarning($"Warning: Grammar contains unreachable symbols: {string.Join(", ",
+      PrintWarning($"Grammar contains unreachable symbols: {string.Join(", ",
         unreachableSymbols.Select(s => $"\"{s.Value}\""))}");
     }
 
-    NonProductiveRuleAnalysis nonProductiveRuleAnalysis = new(grammar);
-    HashSet<Rule> nonProductiveRules = nonProductiveRuleAnalysis.Analyze();
+    HashSet<Rule> nonProductiveRules = new NonProductiveRuleAnalysis(grammar).Analyze();
     if (nonProductiveRules.Count > 0) {
       // TODO: Improve this message, it's very vague
-      PrintWarning($"Warning: {nonProductiveRules.Count} rule(s) are non-productive");
+      PrintWarning($"{nonProductiveRules.Count} rule(s) are non-productive");
     }
 
     return true;
