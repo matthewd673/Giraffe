@@ -3,108 +3,105 @@ public class Parser(Scanner scanner)
 {
     public ParseTree Parse()
     {
-        if (See(TokenKind.a, TokenKind.b, TokenKind.c))
+        if (See(TokenKind.A, TokenKind.B, TokenKind.C))
         {
             Nonterminal s0 = ParseS();
-            Token s1 = Eat(TokenKind._eof);
-            return new([s0]);
+            Token s1 = Eat(TokenKind.Eof);
+            return new([s0, s1]);
         }
 
-        throw new ParserException($"Cannot parse {{Start}}, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{a, b, c}}");
+        throw new ParserException($"Cannot parse {{S}}, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{a, b, c}}", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
     }
 
     private bool See(params TokenKind[] terminals) => terminals.Contains(scanner.Peek().Kind);
-    private Token Eat(TokenKind terminal) => See(terminal) ? scanner.Eat() : throw new ParserException($"Unexpected terminal, saw '{scanner.NameOf(scanner.Peek().Kind)}' but expected '{scanner.NameOf(terminal)}'");
+    private Token Eat(TokenKind terminal) => See(terminal) ? scanner.Eat() : throw new ParserException($"Unexpected terminal, saw '{scanner.NameOf(scanner.Peek().Kind)}' but expected '{scanner.NameOf(terminal)}'", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
     private Nonterminal ParseS()
     {
-        if (See(TokenKind.a, TokenKind.b, TokenKind.c))
+        if (See(TokenKind.A, TokenKind.B, TokenKind.C))
         {
-            Console.WriteLine("Semantic action!");
-            Nonterminal s0 = ParseA();
-            Nonterminal s1 = ParseB();
-            Nonterminal s2 = ParseC(s0, s1);
-            Nonterminal s3 = ParseD();
-            Nonterminal s4 = ParseE();
-            Console.WriteLine("Done :D");
-            return new(NtKind.S, [s0, s1, s2, s3, s4]);
+            Nonterminal s0 = ParseOptA();
+            Nonterminal s1 = ParseOptB();
+            Nonterminal s2 = ParseReqC();
+            Nonterminal s3 = ParseOptD();
+            Nonterminal s4 = ParseOptE();
+            return new(NtKind.S, [s0, s1, s2, s3, s4], s0.Index, s0.Row, s0.Column);
         }
 
-        throw new ParserException($"Cannot parse Start, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{a, b, c}}");
+        throw new ParserException($"Cannot parse S, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{a, b, c}}", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
     }
 
-    private Nonterminal ParseA()
+    private Nonterminal ParseOptA()
     {
-        if (See(TokenKind.a))
+        if (See(TokenKind.A))
         {
-            Token s0 = Eat(TokenKind.a);
-            return new(NtKind.A, [s0]);
+            Token s0 = Eat(TokenKind.A);
+            return new(NtKind.OptA, [s0], s0.Index, s0.Row, s0.Column);
         }
 
-        if (See(TokenKind.b, TokenKind.c))
+        if (See(TokenKind.B, TokenKind.C))
         {
-            return new(NtKind.A, []);
+            return new(NtKind.OptA, [], -1, -1, -1);
         }
 
-        throw new ParserException($"Cannot parse A, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{a, b, c}}");
+        throw new ParserException($"Cannot parse OPT_A, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{a, b, c}}", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
     }
 
-    private Nonterminal ParseB()
+    private Nonterminal ParseOptB()
     {
-        if (See(TokenKind.b))
+        if (See(TokenKind.B))
         {
-            Token s0 = Eat(TokenKind.b);
-            return new(NtKind.B, [s0]);
+            Token s0 = Eat(TokenKind.B);
+            return new(NtKind.OptB, [s0], s0.Index, s0.Row, s0.Column);
         }
 
-        if (See(TokenKind.c))
+        if (See(TokenKind.C))
         {
-            return new(NtKind.B, []);
+            return new(NtKind.OptB, [], -1, -1, -1);
         }
 
-        throw new ParserException($"Cannot parse B, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{b, c}}");
+        throw new ParserException($"Cannot parse OPT_B, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{b, c}}", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
     }
 
-    private Nonterminal ParseC(ParseNode a0, ParseNode a1)
+    private Nonterminal ParseReqC()
     {
-        if (See(TokenKind.c))
+        if (See(TokenKind.C))
         {
-            Console.WriteLine("See C");
-            Token s0 = Eat(TokenKind.c);
-            return new(NtKind.C, [a0, s0, a1]);
+            Token s0 = Eat(TokenKind.C);
+            return new(NtKind.ReqC, [s0], s0.Index, s0.Row, s0.Column);
         }
 
-        throw new ParserException($"Cannot parse C, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{c}}");
+        throw new ParserException($"Cannot parse REQ_C, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{c}}", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
     }
 
-    private Nonterminal ParseD()
+    private Nonterminal ParseOptD()
     {
-        if (See(TokenKind.d))
+        if (See(TokenKind.D))
         {
-            Token s0 = Eat(TokenKind.d);
-            return new(NtKind.D, [s0]);
+            Token s0 = Eat(TokenKind.D);
+            return new(NtKind.OptD, [s0], s0.Index, s0.Row, s0.Column);
         }
 
-        if (See(TokenKind.e, TokenKind._eof))
+        if (See(TokenKind.E, TokenKind.Eof))
         {
-            return new(NtKind.D, []);
+            return new(NtKind.OptD, [], -1, -1, -1);
         }
 
-        throw new ParserException($"Cannot parse D, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{d, e, <end of input>}}");
+        throw new ParserException($"Cannot parse OPT_D, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{d, e, eof}}", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
     }
 
-    private Nonterminal ParseE()
+    private Nonterminal ParseOptE()
     {
-        if (See(TokenKind.e))
+        if (See(TokenKind.E))
         {
-            Token s0 = Eat(TokenKind.e);
-            return new(NtKind.E, [s0]);
+            Token s0 = Eat(TokenKind.E);
+            return new(NtKind.OptE, [s0], s0.Index, s0.Row, s0.Column);
         }
 
-        if (See(TokenKind._eof))
+        if (See(TokenKind.Eof))
         {
-            return new(NtKind.E, []);
+            return new(NtKind.OptE, [], -1, -1, -1);
         }
 
-        throw new ParserException($"Cannot parse E, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{e, <end of input>}}");
+        throw new ParserException($"Cannot parse OPT_E, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{e, eof}}", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
     }
 }

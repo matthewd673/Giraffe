@@ -1,0 +1,18 @@
+# ExampleRecognizer grammar
+
+a -> "a" ;
+b -> "b" ;
+c -> "c" ;
+d -> "d" ;
+e -> "e" ;
+
+S * -> OPT_A OPT_B REQ_C OPT_D OPT_E ;
+OPT_A -> a
+      -> ;
+OPT_B -> b
+      -> ;
+REQ_C -> c ;
+OPT_D -> d
+      -> ;
+OPT_E -> e
+      -> ;
