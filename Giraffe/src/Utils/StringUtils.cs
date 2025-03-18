@@ -25,11 +25,11 @@ public static class StringUtils {
   }
 
   /// <summary>
-  /// Convert a string from snake_case or SCREAMING_SNAKE_CASE to CamelCase. Non-word characters in the input will not
+  /// Convert a string from snake_case or SCREAMING_SNAKE_CASE to camelCase. Non-word characters in the input will not
   /// be sanitized.
   /// </summary>
   /// <param name="str">The string to convert.</param>
-  /// <returns>The string converted to CamelCase.</returns>
+  /// <returns>The string converted to camelCase.</returns>
   public static string SnakeCaseToCamelCase(string str) {
     StringBuilder builder = new();
     bool capitalize = false;
