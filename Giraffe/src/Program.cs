@@ -83,6 +83,12 @@ public class Program {
       return false;
     }
 
+    HashSet<Rule> directLeftRecursiveRules = new DirectLeftRecursionAnalysis(grammar).Analyze();
+    if (directLeftRecursiveRules.Count > 0) {
+      PrintError($"Grammar contains {directLeftRecursiveRules.Count} direct left-recursive rule{(directLeftRecursiveRules.Count != 1 ? "s" : "")}");
+      return false;
+    }
+
     Dictionary<string, List<string>> nameCollisions = new SanitizedCamelCaseNameCollisionAnalysis(grammar).Analyze();
     if (nameCollisions.Count > 0) {
       PrintError("Grammar contains the following sets of symbol names which collide when formatted:\n" +
@@ -112,7 +118,7 @@ public class Program {
     HashSet<Rule> nonProductiveRules = new NonProductiveRuleAnalysis(grammar).Analyze();
     if (nonProductiveRules.Count > 0) {
       // TODO: Improve this message, it's very vague
-      PrintWarning($"{nonProductiveRules.Count} rule(s) are non-productive");
+      PrintWarning($"Grammar contains {nonProductiveRules.Count} non-productive rule{(nonProductiveRules.Count != 1 ? "s" : "")}");
     }
 
     return true;
