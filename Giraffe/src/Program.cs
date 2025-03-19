@@ -89,6 +89,11 @@ public class Program {
       return false;
     }
 
+    if (!new IsLl1Analysis(grammar).Analyze()) {
+      PrintError("Grammar is not LL(1)");
+      return false;
+    }
+
     Dictionary<string, List<string>> nameCollisions = new SanitizedCamelCaseNameCollisionAnalysis(grammar).Analyze();
     if (nameCollisions.Count > 0) {
       PrintError("Grammar contains the following sets of symbol names which collide when formatted:\n" +
