@@ -26,8 +26,9 @@ RULE_T -> RULE ..RULE_T
        -> ;
 SYMBOLS -> SYMBOL ..SYMBOLS
         -> ;
-SYMBOL -> OPT_DISCARD term_name
-       -> OPT_DISCARD OPT_EXPAND nonterm_name ;
+SYMBOL -> OPT_DISCARD ..SYMBOL_T ;
+SYMBOL_T -> term_name ;
+SYMBOL_T -> OPT_EXPAND nonterm_name ;
 OPT_STAR -> star
          -> ;
 OPT_EXPAND -> expand

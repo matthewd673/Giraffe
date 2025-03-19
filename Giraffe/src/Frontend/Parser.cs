@@ -156,22 +156,32 @@ public class Parser(Scanner scanner)
 
     private Nonterminal ParseSymbol()
     {
-        if (See(TokenKind.Discard, TokenKind.TermName))
+        if (See(TokenKind.Discard, TokenKind.TermName, TokenKind.Expand, TokenKind.NontermName))
         {
             Nonterminal s0 = ParseOptDiscard();
-            Token s1 = Eat(TokenKind.TermName);
-            return new(NtKind.Symbol, [s0, s1], s0.Index, s0.Row, s0.Column);
+            Nonterminal s1 = ParseSymbolT();
+            return new(NtKind.Symbol, [s0, ..s1.Children], s0.Index, s0.Row, s0.Column);
         }
 
-        if (See(TokenKind.Discard, TokenKind.Expand, TokenKind.NontermName))
+        throw new ParserException($"Cannot parse SYMBOL, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{discard, term_name, expand, nonterm_name}}", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
+    }
+
+    private Nonterminal ParseSymbolT()
+    {
+        if (See(TokenKind.TermName))
         {
-            Nonterminal s0 = ParseOptDiscard();
-            Nonterminal s1 = ParseOptExpand();
-            Token s2 = Eat(TokenKind.NontermName);
-            return new(NtKind.Symbol, [s0, s1, s2], s0.Index, s0.Row, s0.Column);
+            Token s0 = Eat(TokenKind.TermName);
+            return new(NtKind.SymbolT, [s0], s0.Index, s0.Row, s0.Column);
         }
 
-        throw new ParserException($"Cannot parse SYMBOL, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{discard, term_name, discard, expand, nonterm_name}}", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
+        if (See(TokenKind.Expand, TokenKind.NontermName))
+        {
+            Nonterminal s0 = ParseOptExpand();
+            Token s1 = Eat(TokenKind.NontermName);
+            return new(NtKind.SymbolT, [s0, s1], s0.Index, s0.Row, s0.Column);
+        }
+
+        throw new ParserException($"Cannot parse SYMBOL_T, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{term_name, expand, nonterm_name}}", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
     }
 
     private Nonterminal ParseOptStar()

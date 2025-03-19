@@ -11,6 +11,7 @@ public enum NtKind
     RuleT,
     Symbols,
     Symbol,
+    SymbolT,
     OptStar,
     OptExpand,
     OptDiscard
