@@ -33,4 +33,6 @@ public record Rule {
     Symbols.SequenceEqual(other.Symbols) &&
     SemanticAction.Equals(other.SemanticAction) &&
     SymbolArguments.SequenceEqual(other.SymbolArguments);
+
+  public override string ToString() => $"R({Nonterminal}, [{string.Join(", ", Symbols)}])";
 }

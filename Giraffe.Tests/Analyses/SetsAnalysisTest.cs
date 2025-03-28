@@ -175,4 +175,44 @@ public class SetsAnalysisTest {
       { rules[3], [T("b")] },
     }, sets.Predict);
   }
+
+  [Fact]
+  public void GivenGrammarWithMutualRightRecursion_WhenAnalyzeCalled_ThenExpectedSetsReturned() {
+    List<Rule> rules = [
+      R("S", [Nt("A"), Nt("B"), T("d")]),
+      R("A", [T("a")]),
+      R("B", [T("b"), Nt("S")]),
+      R("B", [T("c")]),
+      R("B", []),
+    ];
+    Grammar grammar = new(new() {
+      { T("a"), new(new("a")) },
+      { T("b"), new(new("b")) },
+      { T("c"), new(new("c")) },
+      { T("d"), new(new("d")) },
+    }, rules.ToHashSet(), [Nt("S")]);
+
+    SetsAnalysis setsAnalysis = new(grammar);
+    GrammarSets sets = setsAnalysis.Analyze();
+
+    Assert.Equal(new() {
+      { Nt("S"), [T("a")] },
+      { Nt("A"), [T("a")] },
+      { Nt("B"), [T("b"), T("c")] },
+    }, sets.First);
+
+    Assert.Equal(new() {
+      { Nt("S"), [T("d"), Grammar.Eof] },
+      { Nt("A"), [T("b"), T("c"), T("d")]},
+      { Nt("B"), [T("d")] },
+    }, sets.Follow);
+
+    Assert.Equal(new() {
+      { rules[0], [T("a")] },
+      { rules[1], [T("a")] },
+      { rules[2], [T("b")] },
+      { rules[3], [T("c")] },
+      { rules[4], [T("d")] },
+    }, sets.Predict);
+  }
 }

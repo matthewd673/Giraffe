@@ -9,7 +9,7 @@ using static Giraffe.Utils.ConsoleUtils;
 
 namespace Giraffe;
 
-public class Program {
+public static class Program {
   public static void Main(string[] args) {
     if (args.Length != 3) {
       PrintInfo("usage: giraffe <grammar file> <output directory> <namespace>");

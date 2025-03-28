@@ -47,6 +47,9 @@ public class CSharpSourceFilesGenerator(GrammarSets grammarSets) {
     List<Terminal> terminalsOrdering = grammarSets.Grammar.Terminals.ToList();
     List<Nonterminal> nonterminalsOrdering = grammarSets.Grammar.Nonterminals.ToList();
 
+    (List<Terminal> relevantTerminals, List<Nonterminal> relevantNonterminals) =
+      GetRelevantSymbols(terminalsOrdering, nonterminalsOrdering);
+
     List<CSharpSourceFile> sourceFiles = [];
 
     CSharpScannerSourceGenerator scannerSourceGenerator = new(grammarSets.Grammar) {
@@ -165,23 +168,6 @@ public class CSharpSourceFilesGenerator(GrammarSets grammarSets) {
     sourceFiles.Add(new(GetFileName(TokenKindEnumName), tokenKindSourceGenerator.Generate()));
 
     // Filter out irrelevant terminals and nonterminals for the Visitor class
-    DiscardedSymbolAnalysis discardedSymbolAnalysis = new(grammarSets.Grammar);
-    HashSet<Symbol> discardedSymbols = discardedSymbolAnalysis.Analyze();
-    ExpandedNonterminalAnalysis expandedNonterminalAnalysis = new(grammarSets.Grammar);
-    HashSet<Nonterminal> expandedNonterminals = expandedNonterminalAnalysis.Analyze();
-
-    List<Terminal> relevantTerminals = terminalsOrdering
-                                       // Don't generate methods for ignored terminals
-                                       .Where(t => !grammarSets.Grammar.TerminalDefinitions[t].Ignore)
-                                       .Where(t => !discardedSymbols.Contains(t))
-                                       .ToList();
-    List<Nonterminal> relevantNonterminals = nonterminalsOrdering
-                                             .Where(nt => !discardedSymbols.Contains(nt))
-                                             .Where(nt => !expandedNonterminals.Contains(nt))
-                                             // Entry nonterminals are always relevant for the Visitor class
-                                             .Union(grammarSets.Grammar.EntryNonterminals)
-                                             .ToList();
-
     CSharpVisitorSourceGenerator visitorSourceGenerator = new(relevantTerminals, relevantNonterminals) {
       FileNamespace = Namespace,
       VisitorClassName = VisitorClassName,
@@ -199,6 +185,28 @@ public class CSharpSourceFilesGenerator(GrammarSets grammarSets) {
     sourceFiles.Add(new(GetFileName(VisitorClassName), visitorSourceGenerator.Generate()));
 
     return sourceFiles;
+  }
+
+  private (List<Terminal>, List<Nonterminal>) GetRelevantSymbols(List<Terminal> terminalsOrdering,
+                                                                 List<Nonterminal> nonterminalsOrdering) {
+    DiscardedSymbolAnalysis discardedSymbolAnalysis = new(grammarSets.Grammar);
+    HashSet<Symbol> discardedSymbols = discardedSymbolAnalysis.Analyze();
+    ExpandedNonterminalAnalysis expandedNonterminalAnalysis = new(grammarSets.Grammar);
+    HashSet<Nonterminal> expandedNonterminals = expandedNonterminalAnalysis.Analyze();
+
+    List<Terminal> relevantTerminals = terminalsOrdering
+                                       // Don't generate methods for ignored terminals
+                                       .Where(t => !grammarSets.Grammar.TerminalDefinitions[t].Ignore)
+                                       .Where(t => !discardedSymbols.Contains(t))
+                                       .ToList();
+    List<Nonterminal> relevantNonterminals = nonterminalsOrdering
+                                             .Where(nt => !discardedSymbols.Contains(nt))
+                                             .Where(nt => !expandedNonterminals.Contains(nt))
+                                             // Entry nonterminals are always relevant for the Visitor class
+                                             .Union(grammarSets.Grammar.EntryNonterminals)
+                                             .ToList();
+
+    return (relevantTerminals, relevantNonterminals);
   }
 
   private static string GetFileName(string className) => $"{className}.cs";
