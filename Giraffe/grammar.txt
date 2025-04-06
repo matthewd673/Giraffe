@@ -1,4 +1,10 @@
+[properties]
+namespace: "Giraffe.Frontend"
+
+[grammar]
 # === Terminals ===
+kw_properties -> "[properties]" ;
+kw_grammar -> "[grammar]" ;
 kw_entry -> "[entry]" ;
 term_name -> /[a-z][a-z0-9_]*/ ;
 nonterm_name -> /[A-Z][A-Z0-9_]*/ ;
@@ -8,11 +14,19 @@ regex -> /\/(\\\/|[^\/])+\// ;
 string -> /"(\\\\|\\"|[^"])+"/ ;
 expand -> ".." ;
 discard -> "_" ;
+colon -> ":" ;
 ws _ -> /\s+/ ;
 comment _ -> /#.*\n/ ;
 
 # === Nonterminals ===
-GRAMMAR [entry] -> ANY_DEF ..ANY_DEF_T ;
+FILE [entry] -> kw_properties PROPERTIES kw_grammar GRAMMAR ;
+
+PROPERTIES -> ..PROPERTY_DEF_T ;
+PROPERTY_DEF -> term_name colon string ;
+PROPERTY_DEF_T -> PROPERTY_DEF ..PROPERTY_DEF_T
+               -> ;
+
+GRAMMAR -> ANY_DEF ..ANY_DEF_T ;
 ANY_DEF -> TERM_DEF
         -> NONTERM_DEF ;
 ANY_DEF_T -> ANY_DEF ..ANY_DEF_T

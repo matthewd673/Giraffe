@@ -1,6 +1,10 @@
 namespace Giraffe.Frontend;
 public enum NtKind
 {
+    File,
+    Properties,
+    PropertyDef,
+    PropertyDefT,
     Grammar,
     AnyDef,
     AnyDefT,

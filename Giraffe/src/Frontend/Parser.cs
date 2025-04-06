@@ -3,18 +3,73 @@ public class Parser(Scanner scanner)
 {
     public ParseTree Parse()
     {
-        if (See(TokenKind.TermName, TokenKind.NontermName))
+        if (See(TokenKind.KwProperties))
         {
-            Nonterminal s0 = ParseGrammar();
+            Nonterminal s0 = ParseFile();
             Token s1 = Eat(TokenKind.Eof);
             return new([s0, s1]);
         }
 
-        throw new ParserException($"Cannot parse {{GRAMMAR}}, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{term_name, nonterm_name}}", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
+        throw new ParserException($"Cannot parse {{FILE}}, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{kw_properties}}", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
     }
 
     private bool See(params TokenKind[] terminals) => terminals.Contains(scanner.Peek().Kind);
     private Token Eat(TokenKind terminal) => See(terminal) ? scanner.Eat() : throw new ParserException($"Unexpected terminal, saw '{scanner.NameOf(scanner.Peek().Kind)}' but expected '{scanner.NameOf(terminal)}'", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
+    private Nonterminal ParseFile()
+    {
+        if (See(TokenKind.KwProperties))
+        {
+            Token s0 = Eat(TokenKind.KwProperties);
+            Nonterminal s1 = ParseProperties();
+            Token s2 = Eat(TokenKind.KwGrammar);
+            Nonterminal s3 = ParseGrammar();
+            return new(NtKind.File, [s0, s1, s2, s3], s0.Index, s0.Row, s0.Column);
+        }
+
+        throw new ParserException($"Cannot parse FILE, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{kw_properties}}", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
+    }
+
+    private Nonterminal ParseProperties()
+    {
+        if (See(TokenKind.TermName, TokenKind.KwGrammar))
+        {
+            Nonterminal s0 = ParsePropertyDefT();
+            return new(NtKind.Properties, [..s0.Children], s0.Index, s0.Row, s0.Column);
+        }
+
+        throw new ParserException($"Cannot parse PROPERTIES, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{term_name, kw_grammar}}", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
+    }
+
+    private Nonterminal ParsePropertyDef()
+    {
+        if (See(TokenKind.TermName))
+        {
+            Token s0 = Eat(TokenKind.TermName);
+            Token s1 = Eat(TokenKind.Colon);
+            Token s2 = Eat(TokenKind.String);
+            return new(NtKind.PropertyDef, [s0, s1, s2], s0.Index, s0.Row, s0.Column);
+        }
+
+        throw new ParserException($"Cannot parse PROPERTY_DEF, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{term_name}}", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
+    }
+
+    private Nonterminal ParsePropertyDefT()
+    {
+        if (See(TokenKind.TermName))
+        {
+            Nonterminal s0 = ParsePropertyDef();
+            Nonterminal s1 = ParsePropertyDefT();
+            return new(NtKind.PropertyDefT, [s0, ..s1.Children], s0.Index, s0.Row, s0.Column);
+        }
+
+        if (See(TokenKind.KwGrammar))
+        {
+            return new(NtKind.PropertyDefT, [], -1, -1, -1);
+        }
+
+        throw new ParserException($"Cannot parse PROPERTY_DEF_T, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{term_name, kw_grammar}}", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
+    }
+
     private Nonterminal ParseGrammar()
     {
         if (See(TokenKind.TermName, TokenKind.NontermName))

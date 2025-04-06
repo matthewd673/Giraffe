@@ -1,6 +1,8 @@
 namespace Giraffe.Frontend;
 public enum TokenKind
 {
+    KwProperties,
+    KwGrammar,
     KwEntry,
     TermName,
     NontermName,
@@ -10,6 +12,7 @@ public enum TokenKind
     String,
     Expand,
     Discard,
+    Colon,
     Ws,
     Comment,
     Eof

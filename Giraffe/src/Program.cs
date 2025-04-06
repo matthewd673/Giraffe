@@ -2,7 +2,6 @@
 using Giraffe.AST;
 using Giraffe.Frontend;
 using Giraffe.GIR;
-using Giraffe.Passes;
 using Giraffe.SourceGeneration;
 using Giraffe.SourceGeneration.CSharp;
 using static Giraffe.Utils.ConsoleUtils;
@@ -12,12 +11,11 @@ namespace Giraffe;
 public static class Program {
   public static void Main(string[] args) {
     if (args.Length != 3) {
-      PrintInfo("usage: giraffe <grammar file> <output directory> <namespace>");
+      PrintInfo("usage: giraffe <grammar file> <output directory>");
       return;
     }
     string grammarFilename = args[0];
     string outputDirectory = args[1];
-    string @namespace = args[2];
 
     // Load the grammar file
     string grammarText;
@@ -31,8 +29,9 @@ public static class Program {
 
     // Create the Grammar
     Grammar grammar;
+    Dictionary<string, string> properties;
     try {
-      grammar = CreateGrammar(grammarText);
+      (properties, grammar) = CreateGrammar(grammarText);
     }
     catch (FrontendException exception) {
       PrintError($"A {exception.GetType().Name} occurred at ({exception.Row},{exception.Column}): {exception.Message}");
@@ -50,7 +49,7 @@ public static class Program {
 
     // Compute the sets and generate the source code output
     try {
-      ProcessGrammarAndGenerateSourceFiles(grammar, outputDirectory, @namespace);
+      ProcessGrammarAndGenerateSourceFiles(grammar, properties, outputDirectory);
     }
     catch (Exception e) {
       PrintError($"An error occurred while generating the parser: {e.Message}");
@@ -59,7 +58,7 @@ public static class Program {
     PrintInfo("Done");
   }
 
-  private static Grammar CreateGrammar(string grammarText) {
+  private static (Dictionary<string, string>, Grammar) CreateGrammar(string grammarText) {
     // Parse the grammar definition
     Scanner scanner = new(grammarText);
     Parser parser = new(scanner);
@@ -68,10 +67,15 @@ public static class Program {
 
     // Walk the definition
     GrammarVisitor visitor = new();
-    GrammarDefinition grammarDefinition = visitor.Visit(parseTree);
+    FileDefinition fileDefinition = visitor.Visit(parseTree);
 
-    // Convert AST to Grammar
-    return GrammarBuilder.GrammarOfAST(grammarDefinition);
+    Grammar grammar = GrammarBuilder.GrammarOfAST(fileDefinition.GrammarGroup);
+    Dictionary<string, string> properties = [];
+    foreach (PropertyDefinition propDef in fileDefinition.PropertiesGroup.Definitions) {
+      properties.Add(propDef.Name, propDef.Value);
+    }
+
+    return (properties, grammar);
   }
 
   private static bool CheckGrammar(Grammar grammar) =>
@@ -138,11 +142,13 @@ public static class Program {
     return true;
   }
 
-  private static void ProcessGrammarAndGenerateSourceFiles(Grammar grammar, string outputDirectory, string @namespace) {
+  private static void ProcessGrammarAndGenerateSourceFiles(Grammar grammar,
+                                                           Dictionary<string, string> properties,
+                                                           string outputDirectory) {
     SetsAnalysis setsAnalysis = new(grammar);
     GrammarSets grammarSets = setsAnalysis.Analyze();
 
-    CSharpSourceFilesGenerator sourceFilesGenerator = new(grammarSets) { Namespace = @namespace };
+    CSharpSourceFilesGenerator sourceFilesGenerator = new(grammarSets) { Namespace = properties["namespace"] };
     List<CSharpSourceFile> sourceFiles = sourceFilesGenerator.GenerateSourceFiles();
 
     if (!Directory.Exists(outputDirectory)) {

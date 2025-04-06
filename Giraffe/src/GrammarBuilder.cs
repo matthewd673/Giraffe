@@ -9,14 +9,14 @@ public static class GrammarBuilder {
   /// <summary>
   /// Convert the given GrammarDefinition AST into a Grammar object.
   /// </summary>
-  /// <param name="grammarDefinition">The GrammarDefinition to convert.</param>
+  /// <param name="grammarGroup">The GrammarDefinition to convert.</param>
   /// <returns>A Grammar containing the Symbols and Rules represented in the GrammarDefinition.</returns>
-  public static Grammar GrammarOfAST(GrammarDefinition grammarDefinition) {
+  public static Grammar GrammarOfAST(GrammarGroup grammarGroup) {
     Dictionary<Terminal, GIR.TerminalDefinition> terminalDefinitions = [];
     HashSet<Rule> rules = [];
     HashSet<Nonterminal> entryNonterminals = [];
 
-    foreach (SymbolDefinition symbolDef in grammarDefinition.SymbolDefinitions) {
+    foreach (SymbolDefinition symbolDef in grammarGroup.SymbolDefinitions) {
       if (symbolDef is NonterminalDefinition nontermDef) {
         rules.UnionWith(nontermDef.Rules.Select(r => GetRuleDefinition(nontermDef.Name, r)).ToHashSet());
         if (nontermDef.Entry) {

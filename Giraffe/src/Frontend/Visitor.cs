@@ -10,6 +10,9 @@ public abstract class Visitor<T>
     };
     public T Visit(Nonterminal nonterminal) => nonterminal.Kind switch
     {
+        NtKind.File => VisitFile(nonterminal),
+        NtKind.Properties => VisitProperties(nonterminal),
+        NtKind.PropertyDef => VisitPropertyDef(nonterminal),
         NtKind.Grammar => VisitGrammar(nonterminal),
         NtKind.AnyDef => VisitAnyDef(nonterminal),
         NtKind.TermDef => VisitTermDef(nonterminal),
@@ -24,6 +27,8 @@ public abstract class Visitor<T>
     };
     public T Visit(Token token) => token.Kind switch
     {
+        TokenKind.KwProperties => VisitKwProperties(token),
+        TokenKind.KwGrammar => VisitKwGrammar(token),
         TokenKind.KwEntry => VisitKwEntry(token),
         TokenKind.TermName => VisitTermName(token),
         TokenKind.NontermName => VisitNontermName(token),
@@ -31,9 +36,13 @@ public abstract class Visitor<T>
         TokenKind.String => VisitString(token),
         TokenKind.Expand => VisitExpand(token),
         TokenKind.Discard => VisitDiscard(token),
+        TokenKind.Colon => VisitColon(token),
         TokenKind.Eof => VisitEof(token),
         _ => throw new ArgumentOutOfRangeException(),
     };
+    protected abstract T VisitFile(Nonterminal file);
+    protected abstract T VisitProperties(Nonterminal properties);
+    protected abstract T VisitPropertyDef(Nonterminal propertyDef);
     protected abstract T VisitGrammar(Nonterminal grammar);
     protected abstract T VisitAnyDef(Nonterminal anyDef);
     protected abstract T VisitTermDef(Nonterminal termDef);
@@ -44,6 +53,8 @@ public abstract class Visitor<T>
     protected abstract T VisitOptKwEntry(Nonterminal optKwEntry);
     protected abstract T VisitOptExpand(Nonterminal optExpand);
     protected abstract T VisitOptDiscard(Nonterminal optDiscard);
+    protected abstract T VisitKwProperties(Token token);
+    protected abstract T VisitKwGrammar(Token token);
     protected abstract T VisitKwEntry(Token token);
     protected abstract T VisitTermName(Token token);
     protected abstract T VisitNontermName(Token token);
@@ -51,5 +62,6 @@ public abstract class Visitor<T>
     protected abstract T VisitString(Token token);
     protected abstract T VisitExpand(Token token);
     protected abstract T VisitDiscard(Token token);
+    protected abstract T VisitColon(Token token);
     protected abstract T VisitEof(Token token);
 }

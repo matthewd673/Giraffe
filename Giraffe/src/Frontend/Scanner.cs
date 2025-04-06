@@ -3,8 +3,8 @@ using System.Text.RegularExpressions;
 namespace Giraffe.Frontend;
 public class Scanner(string input)
 {
-    private readonly Regex[] tokenDef = [new("\\[entry]"), new("[a-z][a-z0-9_]*"), new("[A-Z][A-Z0-9_]*"), new("->"), new(";"), new("/(\\\\/|[^/])+/"), new("\"(\\\\\\\\|\\\\\"|[^\"])+\""), new("\\.\\."), new("_"), new("\\s+"), new("#.*\\n")];
-    private readonly string[] names = ["kw_entry", "term_name", "nonterm_name", "arrow", "end", "regex", "string", "expand", "discard", "ws", "comment", "eof"];
+    private readonly Regex[] tokenDef = [new("\\[properties]"), new("\\[grammar]"), new("\\[entry]"), new("[a-z][a-z0-9_]*"), new("[A-Z][A-Z0-9_]*"), new("->"), new(";"), new("/(\\\\/|[^/])+/"), new("\"(\\\\\\\\|\\\\\"|[^\"])+\""), new("\\.\\."), new("_"), new(":"), new("\\s+"), new("#.*\\n")];
+    private readonly string[] names = ["kw_properties", "kw_grammar", "kw_entry", "term_name", "nonterm_name", "arrow", "end", "regex", "string", "expand", "discard", "colon", "ws", "comment", "eof"];
     private readonly TokenKind[] ignored = [TokenKind.Ws, TokenKind.Comment];
     private int scanIndex;
     private int row = 1;

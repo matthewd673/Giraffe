@@ -1,21 +1,41 @@
-using System.Text.RegularExpressions;
 using Giraffe.AST;
 using Giraffe.Frontend;
+using Giraffe.Utils;
 using Nonterminal = Giraffe.Frontend.Nonterminal;
 using TerminalDefinition = Giraffe.AST.TerminalDefinition;
 
 namespace Giraffe;
 
 public sealed class GrammarVisitor : Visitor<ASTNode> {
-  public override GrammarDefinition Visit(ParseTree parseTree) {
+  public override FileDefinition Visit(ParseTree parseTree) {
     return parseTree.Children switch {
-      [Nonterminal { Kind: NtKind.Grammar } grammar, Token { Kind: TokenKind.Eof }] =>
-        (GrammarDefinition)Visit(grammar),
+      [Nonterminal { Kind: NtKind.File } file, Token { Kind: TokenKind.Eof }] =>
+        (FileDefinition)Visit(file),
       _ => throw new VisitorException("Cannot visit ParseTree, unexpected children"),
     };
   }
 
-  protected override GrammarDefinition VisitGrammar(Nonterminal grammar) {
+  protected override FileDefinition VisitFile(Nonterminal file) => file.Children switch {
+    [Token { Kind: TokenKind.KwProperties },
+     Nonterminal { Kind: NtKind.Properties } properties,
+     Token { Kind: TokenKind.KwGrammar },
+     Nonterminal { Kind: NtKind.Grammar } grammar] =>
+      new((PropertiesGroup)Visit(properties), (GrammarGroup)Visit(grammar)),
+    _ => throw new VisitorException("Cannot visit File, unexpected children"),
+  };
+
+  protected override PropertiesGroup VisitProperties(Nonterminal properties) =>
+    new(properties.Children.Select(c => (PropertyDefinition)Visit(c)).ToList());
+
+  protected override ASTNode VisitPropertyDef(Nonterminal propertyDef) => propertyDef.Children switch {
+    [Token { Kind: TokenKind.TermName } name,
+     Token { Kind: TokenKind.Colon },
+     Token { Kind: TokenKind.String } value] =>
+      new PropertyDefinition(name.Image, StringUtils.CleanStringLiteral(value.Image)),
+    _ => throw new VisitorException("Cannot visit PropertyDef, unexpected children"),
+  };
+
+  protected override GrammarGroup VisitGrammar(Nonterminal grammar) {
     List<SymbolDefinition> symbolDefinitions = [];
     foreach (ParseNode child in grammar.Children) {
       if (child is not Nonterminal nt) {
@@ -50,8 +70,8 @@ public sealed class GrammarVisitor : Visitor<ASTNode> {
   }
 
   protected override TerminalRhs VisitTermRhs(Nonterminal termRhs) => termRhs.Children switch {
-    [Token { Kind: TokenKind.Regex } regex] => new(new(CleanRegex(regex.Image))),
-    [Token { Kind: TokenKind.String } str] => new(new(CleanStringToRegex(str.Image))),
+    [Token { Kind: TokenKind.Regex } regex] => new(new(StringUtils.CleanRegexLiteral(regex.Image))),
+    [Token { Kind: TokenKind.String } str] => new(new(StringUtils.CleanStringLiteralToRegex(str.Image))),
     _ => throw new VisitorException("Cannot visit TermRhs, unexpected children"),
   };
 
@@ -90,6 +110,8 @@ public sealed class GrammarVisitor : Visitor<ASTNode> {
   protected override ASTNode VisitOptKwEntry(Nonterminal optKwEntry) => throw new NotImplementedException();
   protected override ASTNode VisitOptExpand(Nonterminal optExpand) => throw new NotImplementedException();
   protected override ASTNode VisitOptDiscard(Nonterminal optDiscard) => throw new NotImplementedException();
+  protected override ASTNode VisitKwProperties(Token token) => throw new NotImplementedException();
+  protected override ASTNode VisitKwGrammar(Token token) => throw new NotImplementedException();
   protected override ASTNode VisitKwEntry(Token token) => throw new NotImplementedException();
   protected override ASTNode VisitTermName(Token token) => throw new NotImplementedException();
   protected override ASTNode VisitNontermName(Token token) => throw new NotImplementedException();
@@ -97,17 +119,6 @@ public sealed class GrammarVisitor : Visitor<ASTNode> {
   protected override ASTNode VisitString(Token token) => throw new NotImplementedException();
   protected override ASTNode VisitExpand(Token token) => throw new NotImplementedException();
   protected override ASTNode VisitDiscard(Token token) => throw new NotImplementedException();
+  protected override ASTNode VisitColon(Token token) => throw new NotImplementedException();
   protected override ASTNode VisitEof(Token token) => throw new NotImplementedException();
-
-  private static string CleanRegex(string input) {
-    string trimmed = input[1..^1]; // Trim '/' at start and end
-    string unEscaped = trimmed.Replace("\\/", "/"); // Un-sanitize escaped '/'
-    return unEscaped;
-  }
-
-  private static string CleanStringToRegex(string input) {
-    string trimmed = input[1..^1]; // Trim '"' at start and end
-    string escaped = Regex.Escape(trimmed);
-    return escaped;
-  }
 }

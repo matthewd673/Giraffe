@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Giraffe.Utils;
 
@@ -66,4 +67,22 @@ public static class StringUtils {
     str.Length > 0 && char.IsLower(str[0])
       ? char.ToUpper(str[0]) + str.Remove(0, 1)
       : str;
+
+  public static string CleanStringLiteral(string input) {
+    string trimmed = input[1..^1]; // Trim '"' at start and end
+    string unescapedBackslashes = trimmed.Replace(@"\\", "\\");
+    string unescapedQuotes = trimmed.Replace("\\\"", "\"");
+    return unescapedQuotes;
+  }
+
+  public static string CleanRegexLiteral(string input) {
+    string trimmed = input[1..^1]; // Trim '/' at start and end
+    string unEscaped = trimmed.Replace("\\/", "/"); // Un-sanitize escaped '/'
+    return unEscaped;
+  }
+
+  public static string CleanStringLiteralToRegex(string input) {
+    string escaped = Regex.Escape(CleanStringLiteral(input));
+    return escaped;
+  }
 }
