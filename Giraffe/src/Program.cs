@@ -74,8 +74,10 @@ public static class Program {
     return GrammarBuilder.GrammarOfAST(grammarDefinition);
   }
 
-  private static bool CheckGrammar(Grammar grammar) {
-    // Run analyses to ensure grammar is semantically valid
+  private static bool CheckGrammar(Grammar grammar) =>
+    CheckGrammarForErrors(grammar) && CheckGrammarForWarnings(grammar);
+
+  private static bool CheckGrammarForErrors(Grammar grammar) {
     HashSet<Symbol> undefinedSymbols = new UndefinedSymbolsAnalysis(grammar).Analyze();
     if (undefinedSymbols.Count > 0) {
       PrintError($"Grammar references the following undefined symbols: " +
@@ -104,7 +106,14 @@ public static class Program {
       return false;
     }
 
-    // Run analyses to find warnings
+    return true;
+  }
+
+  private static bool CheckGrammarForWarnings(Grammar grammar) {
+    if (grammar.EntryNonterminals.Count == 0) {
+      PrintWarning("Grammar does not contain any entry-point nonterminals, it produces the empty language");
+    }
+
     HashSet<Rule> rulesContainingIgnoredTerminals = new IgnoredTerminalUsageAnalysis(grammar).Analyze();
     if (rulesContainingIgnoredTerminals.Count > 0) {
       // TODO: Improve this message, it's very vague
