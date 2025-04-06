@@ -10,7 +10,7 @@ namespace Giraffe;
 
 public static class Program {
   public static void Main(string[] args) {
-    if (args.Length != 3) {
+    if (args.Length != 2) {
       PrintInfo("usage: giraffe <grammar file> <output directory>");
       return;
     }
@@ -42,6 +42,11 @@ public static class Program {
       return;
     }
 
+    // Ensure that the properties are valid
+    if (!CheckProperties(properties)) {
+      return;
+    }
+
     // Run semantic checks on the Grammar
     if (!CheckGrammar(grammar)) {
       return;
@@ -69,13 +74,26 @@ public static class Program {
     GrammarVisitor visitor = new();
     FileDefinition fileDefinition = visitor.Visit(parseTree);
 
-    Grammar grammar = GrammarBuilder.GrammarOfAST(fileDefinition.GrammarGroup);
+    Grammar grammar = GrammarBuilder.AstToGrammar(fileDefinition.GrammarGroup);
     Dictionary<string, string> properties = [];
     foreach (PropertyDefinition propDef in fileDefinition.PropertiesGroup.Definitions) {
       properties.Add(propDef.Name, propDef.Value);
     }
 
     return (properties, grammar);
+  }
+
+  private static bool CheckProperties(Dictionary<string, string> properties) {
+    List<string> missingRequiredProperties = Properties.RequiredProperties
+                                                       .Where(p => !properties.ContainsKey(p))
+                                                       .ToList();
+    if (missingRequiredProperties.Count > 0) {
+      PrintError($"The following required properties are missing:\n{string.Join("\n", missingRequiredProperties
+                                                                                  .Select(p => $"\t{p}"))}");
+      return false;
+    }
+
+    return true;
   }
 
   private static bool CheckGrammar(Grammar grammar) =>
@@ -148,7 +166,7 @@ public static class Program {
     SetsAnalysis setsAnalysis = new(grammar);
     GrammarSets grammarSets = setsAnalysis.Analyze();
 
-    CSharpSourceFilesGenerator sourceFilesGenerator = new(grammarSets) { Namespace = properties["namespace"] };
+    CSharpSourceFilesGenerator sourceFilesGenerator = new(grammarSets) { Namespace = properties[Properties.Namespace] };
     List<CSharpSourceFile> sourceFiles = sourceFilesGenerator.GenerateSourceFiles();
 
     if (!Directory.Exists(outputDirectory)) {

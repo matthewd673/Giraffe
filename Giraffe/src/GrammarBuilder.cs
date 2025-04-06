@@ -11,7 +11,7 @@ public static class GrammarBuilder {
   /// </summary>
   /// <param name="grammarGroup">The GrammarDefinition to convert.</param>
   /// <returns>A Grammar containing the Symbols and Rules represented in the GrammarDefinition.</returns>
-  public static Grammar GrammarOfAST(GrammarGroup grammarGroup) {
+  public static Grammar AstToGrammar(GrammarGroup grammarGroup) {
     Dictionary<Terminal, GIR.TerminalDefinition> terminalDefinitions = [];
     HashSet<Rule> rules = [];
     HashSet<Nonterminal> entryNonterminals = [];
@@ -24,7 +24,7 @@ public static class GrammarBuilder {
         }
       }
       else if (symbolDef is TerminalDefinition termDef) {
-        terminalDefinitions.Add(T(termDef.Name), GetGIRTerminalDefinition(termDef.TerminalRhs, termDef.Ignore));
+        terminalDefinitions.Add(T(termDef.Name), GetGirTerminalDefinition(termDef.TerminalRhs, termDef.Ignore));
       }
     }
 
@@ -40,6 +40,6 @@ public static class GrammarBuilder {
       _ => throw new ArgumentOutOfRangeException(),
     }));
 
-  private static GIR.TerminalDefinition GetGIRTerminalDefinition(TerminalRhs terminalRhs, bool ignore) =>
+  private static GIR.TerminalDefinition GetGirTerminalDefinition(TerminalRhs terminalRhs, bool ignore) =>
     new(terminalRhs.Regex, ignore);
 }
