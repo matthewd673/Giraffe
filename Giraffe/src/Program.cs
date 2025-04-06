@@ -145,7 +145,8 @@ public static class Program {
   private static void WriteSourceFiles<T>(IEnumerable<SourceFile<T>> sourceFiles,
                                           string outputDirectory) where T : notnull {
     foreach (SourceFile<T> file in sourceFiles) {
-      string filePath = Path.Combine(outputDirectory, file.Filename);
+      string absPath = Path.GetFullPath(outputDirectory, Directory.GetCurrentDirectory());
+      string filePath = Path.Combine(absPath, file.Filename);
       PrintInfo($"Writing \"{filePath}\"");
 
       using StreamWriter writer = new(filePath);
