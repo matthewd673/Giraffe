@@ -98,7 +98,7 @@ public class Parser(Scanner scanner)
         if (See(TokenKind.NontermName))
         {
             Token s0 = Eat(TokenKind.NontermName);
-            Nonterminal s1 = ParseOptStar();
+            Nonterminal s1 = ParseOptKwEntry();
             Nonterminal s2 = ParseRule();
             Nonterminal s3 = ParseRuleT();
             Token s4 = Eat(TokenKind.End);
@@ -184,20 +184,20 @@ public class Parser(Scanner scanner)
         throw new ParserException($"Cannot parse SYMBOL_T, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{term_name, expand, nonterm_name}}", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
     }
 
-    private Nonterminal ParseOptStar()
+    private Nonterminal ParseOptKwEntry()
     {
-        if (See(TokenKind.Star))
+        if (See(TokenKind.KwEntry))
         {
-            Token s0 = Eat(TokenKind.Star);
-            return new(NtKind.OptStar, [s0], s0.Index, s0.Row, s0.Column);
+            Token s0 = Eat(TokenKind.KwEntry);
+            return new(NtKind.OptKwEntry, [s0], s0.Index, s0.Row, s0.Column);
         }
 
         if (See(TokenKind.Arrow))
         {
-            return new(NtKind.OptStar, [], -1, -1, -1);
+            return new(NtKind.OptKwEntry, [], -1, -1, -1);
         }
 
-        throw new ParserException($"Cannot parse OPT_STAR, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{star, arrow}}", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
+        throw new ParserException($"Cannot parse OPT_KW_ENTRY, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{kw_entry, arrow}}", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
     }
 
     private Nonterminal ParseOptExpand()

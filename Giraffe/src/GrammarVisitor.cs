@@ -9,7 +9,7 @@ namespace Giraffe;
 public sealed class GrammarVisitor : Visitor<ASTNode> {
   public override GrammarDefinition Visit(ParseTree parseTree) {
     return parseTree.Children switch {
-      [Nonterminal { Kind: NtKind.Grammar } grammar, Token { Kind: TokenKind.Eof } _] =>
+      [Nonterminal { Kind: NtKind.Grammar } grammar, Token { Kind: TokenKind.Eof }] =>
         (GrammarDefinition)Visit(grammar),
       _ => throw new VisitorException("Cannot visit ParseTree, unexpected children"),
     };
@@ -62,7 +62,7 @@ public sealed class GrammarVisitor : Visitor<ASTNode> {
       throw new VisitorException("Cannot visit NonterminalDefinition, unexpected children");
     }
 
-    if (nontermDef.Children[1] is not Nonterminal { Kind: NtKind.OptStar } optStar) {
+    if (nontermDef.Children[1] is not Nonterminal { Kind: NtKind.OptKwEntry } optKwEntry) {
       throw new VisitorException("Cannot visit NonterminalDefinition, unexpected children");
     }
 
@@ -70,7 +70,7 @@ public sealed class GrammarVisitor : Visitor<ASTNode> {
       ruleDefinitions.Add((RuleDefinition)Visit(nontermDef.Children[i]));
     }
 
-    return new(nontermName.Image, ruleDefinitions, optStar.Children.Length > 0);
+    return new(nontermName.Image, ruleDefinitions, optKwEntry.Children.Length > 0);
   }
 
   protected override RuleDefinition VisitRule(Nonterminal rule) =>
@@ -87,14 +87,14 @@ public sealed class GrammarVisitor : Visitor<ASTNode> {
     _ => throw new VisitorException("Cannot visit Symbol, unexpected children"),
   };
 
-  protected override ASTNode VisitOptStar(Nonterminal optStar) => throw new NotImplementedException();
+  protected override ASTNode VisitOptKwEntry(Nonterminal optKwEntry) => throw new NotImplementedException();
   protected override ASTNode VisitOptExpand(Nonterminal optExpand) => throw new NotImplementedException();
   protected override ASTNode VisitOptDiscard(Nonterminal optDiscard) => throw new NotImplementedException();
+  protected override ASTNode VisitKwEntry(Token token) => throw new NotImplementedException();
   protected override ASTNode VisitTermName(Token token) => throw new NotImplementedException();
   protected override ASTNode VisitNontermName(Token token) => throw new NotImplementedException();
   protected override ASTNode VisitRegex(Token token) => throw new NotImplementedException();
   protected override ASTNode VisitString(Token token) => throw new NotImplementedException();
-  protected override ASTNode VisitStar(Token token) => throw new NotImplementedException();
   protected override ASTNode VisitExpand(Token token) => throw new NotImplementedException();
   protected override ASTNode VisitDiscard(Token token) => throw new NotImplementedException();
   protected override ASTNode VisitEof(Token token) => throw new NotImplementedException();

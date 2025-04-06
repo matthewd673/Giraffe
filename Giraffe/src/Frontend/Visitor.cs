@@ -17,18 +17,18 @@ public abstract class Visitor<T>
         NtKind.NontermDef => VisitNontermDef(nonterminal),
         NtKind.Rule => VisitRule(nonterminal),
         NtKind.Symbol => VisitSymbol(nonterminal),
-        NtKind.OptStar => VisitOptStar(nonterminal),
+        NtKind.OptKwEntry => VisitOptKwEntry(nonterminal),
         NtKind.OptExpand => VisitOptExpand(nonterminal),
         NtKind.OptDiscard => VisitOptDiscard(nonterminal),
         _ => throw new ArgumentOutOfRangeException(),
     };
     public T Visit(Token token) => token.Kind switch
     {
+        TokenKind.KwEntry => VisitKwEntry(token),
         TokenKind.TermName => VisitTermName(token),
         TokenKind.NontermName => VisitNontermName(token),
         TokenKind.Regex => VisitRegex(token),
         TokenKind.String => VisitString(token),
-        TokenKind.Star => VisitStar(token),
         TokenKind.Expand => VisitExpand(token),
         TokenKind.Discard => VisitDiscard(token),
         TokenKind.Eof => VisitEof(token),
@@ -41,14 +41,14 @@ public abstract class Visitor<T>
     protected abstract T VisitNontermDef(Nonterminal nontermDef);
     protected abstract T VisitRule(Nonterminal rule);
     protected abstract T VisitSymbol(Nonterminal symbol);
-    protected abstract T VisitOptStar(Nonterminal optStar);
+    protected abstract T VisitOptKwEntry(Nonterminal optKwEntry);
     protected abstract T VisitOptExpand(Nonterminal optExpand);
     protected abstract T VisitOptDiscard(Nonterminal optDiscard);
+    protected abstract T VisitKwEntry(Token token);
     protected abstract T VisitTermName(Token token);
     protected abstract T VisitNontermName(Token token);
     protected abstract T VisitRegex(Token token);
     protected abstract T VisitString(Token token);
-    protected abstract T VisitStar(Token token);
     protected abstract T VisitExpand(Token token);
     protected abstract T VisitDiscard(Token token);
     protected abstract T VisitEof(Token token);

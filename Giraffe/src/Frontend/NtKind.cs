@@ -12,7 +12,7 @@ public enum NtKind
     Symbols,
     Symbol,
     SymbolT,
-    OptStar,
+    OptKwEntry,
     OptExpand,
     OptDiscard
 }
