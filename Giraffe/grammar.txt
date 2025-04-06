@@ -19,10 +19,10 @@ ws _ -> /\s+/ ;
 comment _ -> /#.*\n/ ;
 
 # === Nonterminals ===
-FILE [entry] -> kw_properties PROPERTIES kw_grammar GRAMMAR ;
+FILE [entry] -> _kw_properties PROPERTIES _kw_grammar GRAMMAR ;
 
 PROPERTIES -> ..PROPERTY_DEF_T ;
-PROPERTY_DEF -> term_name colon string ;
+PROPERTY_DEF -> term_name _colon string ;
 PROPERTY_DEF_T -> PROPERTY_DEF ..PROPERTY_DEF_T
                -> ;
 

@@ -23,7 +23,7 @@ public class Parser(Scanner scanner)
             Nonterminal s1 = ParseProperties();
             Token s2 = Eat(TokenKind.KwGrammar);
             Nonterminal s3 = ParseGrammar();
-            return new(NtKind.File, [s0, s1, s2, s3], s0.Index, s0.Row, s0.Column);
+            return new(NtKind.File, [s1, s3], s0.Index, s0.Row, s0.Column);
         }
 
         throw new ParserException($"Cannot parse FILE, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{kw_properties}}", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);
@@ -47,7 +47,7 @@ public class Parser(Scanner scanner)
             Token s0 = Eat(TokenKind.TermName);
             Token s1 = Eat(TokenKind.Colon);
             Token s2 = Eat(TokenKind.String);
-            return new(NtKind.PropertyDef, [s0, s1, s2], s0.Index, s0.Row, s0.Column);
+            return new(NtKind.PropertyDef, [s0, s2], s0.Index, s0.Row, s0.Column);
         }
 
         throw new ParserException($"Cannot parse PROPERTY_DEF, saw {scanner.NameOf(scanner.Peek().Kind)} but expected one of {{term_name}}", scanner.Peek().Index, scanner.Peek().Row, scanner.Peek().Column);

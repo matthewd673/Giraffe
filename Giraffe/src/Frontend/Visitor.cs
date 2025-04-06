@@ -27,8 +27,6 @@ public abstract class Visitor<T>
     };
     public T Visit(Token token) => token.Kind switch
     {
-        TokenKind.KwProperties => VisitKwProperties(token),
-        TokenKind.KwGrammar => VisitKwGrammar(token),
         TokenKind.KwEntry => VisitKwEntry(token),
         TokenKind.TermName => VisitTermName(token),
         TokenKind.NontermName => VisitNontermName(token),
@@ -36,7 +34,6 @@ public abstract class Visitor<T>
         TokenKind.String => VisitString(token),
         TokenKind.Expand => VisitExpand(token),
         TokenKind.Discard => VisitDiscard(token),
-        TokenKind.Colon => VisitColon(token),
         TokenKind.Eof => VisitEof(token),
         _ => throw new ArgumentOutOfRangeException(),
     };
@@ -53,8 +50,6 @@ public abstract class Visitor<T>
     protected abstract T VisitOptKwEntry(Nonterminal optKwEntry);
     protected abstract T VisitOptExpand(Nonterminal optExpand);
     protected abstract T VisitOptDiscard(Nonterminal optDiscard);
-    protected abstract T VisitKwProperties(Token token);
-    protected abstract T VisitKwGrammar(Token token);
     protected abstract T VisitKwEntry(Token token);
     protected abstract T VisitTermName(Token token);
     protected abstract T VisitNontermName(Token token);
@@ -62,6 +57,5 @@ public abstract class Visitor<T>
     protected abstract T VisitString(Token token);
     protected abstract T VisitExpand(Token token);
     protected abstract T VisitDiscard(Token token);
-    protected abstract T VisitColon(Token token);
     protected abstract T VisitEof(Token token);
 }

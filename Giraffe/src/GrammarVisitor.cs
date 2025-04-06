@@ -16,9 +16,7 @@ public sealed class GrammarVisitor : Visitor<ASTNode> {
   }
 
   protected override FileDefinition VisitFile(Nonterminal file) => file.Children switch {
-    [Token { Kind: TokenKind.KwProperties },
-     Nonterminal { Kind: NtKind.Properties } properties,
-     Token { Kind: TokenKind.KwGrammar },
+    [Nonterminal { Kind: NtKind.Properties } properties,
      Nonterminal { Kind: NtKind.Grammar } grammar] =>
       new((PropertiesGroup)Visit(properties), (GrammarGroup)Visit(grammar)),
     _ => throw new VisitorException("Cannot visit File, unexpected children"),
@@ -29,7 +27,6 @@ public sealed class GrammarVisitor : Visitor<ASTNode> {
 
   protected override ASTNode VisitPropertyDef(Nonterminal propertyDef) => propertyDef.Children switch {
     [Token { Kind: TokenKind.TermName } name,
-     Token { Kind: TokenKind.Colon },
      Token { Kind: TokenKind.String } value] =>
       new PropertyDefinition(name.Image, StringUtils.CleanStringLiteral(value.Image)),
     _ => throw new VisitorException("Cannot visit PropertyDef, unexpected children"),
@@ -110,8 +107,6 @@ public sealed class GrammarVisitor : Visitor<ASTNode> {
   protected override ASTNode VisitOptKwEntry(Nonterminal optKwEntry) => throw new NotImplementedException();
   protected override ASTNode VisitOptExpand(Nonterminal optExpand) => throw new NotImplementedException();
   protected override ASTNode VisitOptDiscard(Nonterminal optDiscard) => throw new NotImplementedException();
-  protected override ASTNode VisitKwProperties(Token token) => throw new NotImplementedException();
-  protected override ASTNode VisitKwGrammar(Token token) => throw new NotImplementedException();
   protected override ASTNode VisitKwEntry(Token token) => throw new NotImplementedException();
   protected override ASTNode VisitTermName(Token token) => throw new NotImplementedException();
   protected override ASTNode VisitNontermName(Token token) => throw new NotImplementedException();
@@ -119,6 +114,5 @@ public sealed class GrammarVisitor : Visitor<ASTNode> {
   protected override ASTNode VisitString(Token token) => throw new NotImplementedException();
   protected override ASTNode VisitExpand(Token token) => throw new NotImplementedException();
   protected override ASTNode VisitDiscard(Token token) => throw new NotImplementedException();
-  protected override ASTNode VisitColon(Token token) => throw new NotImplementedException();
   protected override ASTNode VisitEof(Token token) => throw new NotImplementedException();
 }
